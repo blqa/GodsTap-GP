@@ -376,6 +376,15 @@ export default function HomePage() {
             <circle cx="200" cy="200" r="160" strokeOpacity="0.1" strokeWidth="1.5" />
             <circle cx="200" cy="200" r="198" strokeOpacity="0.06" strokeWidth="1.5" />
           </svg>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src="/brand/godstap-logo.jpg"
+            alt="Logo de GodsTap"
+            width={900}
+            height={900}
+            loading="lazy"
+            className="absolute right-10 top-1/2 hidden h-64 w-64 -translate-y-1/2 rounded-3xl object-cover shadow-2xl shadow-black/40 ring-1 ring-white/20 lg:block"
+          />
           <div className="relative max-w-xl">
             <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">¿Ya tienes tu GT?</h2>
             <p className="mt-4 text-brand-100">Crea tu cuenta y vincúlalo con el código de tu empaque.</p>

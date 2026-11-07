@@ -14,8 +14,21 @@ const body = Instrument_Sans({
 });
 
 export const metadata = {
+  metadataBase: new URL("https://godstap.godsplan.site"),
   title: "GodsTap · by God’s Plan",
   description: "Smart Tags NFC para negocios locales.",
+  openGraph: {
+    title: "GodsTap · by God’s Plan",
+    description: "Acerca el celular y aparece tu negocio. Smart Tags NFC para negocios locales.",
+    siteName: "GodsTap · by God’s Plan",
+    locale: "es_MX",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "GodsTap · by God’s Plan",
+    description: "Acerca el celular y aparece tu negocio. Smart Tags NFC para negocios locales.",
+  },
 };
 
 // Se ejecuta antes de pintar la página para que no haya parpadeo al cambiar de tema.
