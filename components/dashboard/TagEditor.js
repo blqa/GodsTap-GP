@@ -5,6 +5,7 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { ICONS } from "@/lib/linkIcons";
 import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
+import { PLANS, SUPPORT_EMAIL, isPaid, planOf, showBrand } from "@/lib/plans";
 import Microsite from "@/components/Microsite";
 
 const MAX_LINKS = 6;
@@ -20,7 +21,30 @@ function isValidUrl(url) {
   }
 }
 
+function Locked({ title, tagId, children }) {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4">
+      <div className="flex items-center gap-2">
+        <span>🔒</span>
+        <h3 className="text-sm font-semibold text-white">{title}</h3>
+        <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs text-indigo-300 ring-1 ring-indigo-500/30">
+          Pro
+        </span>
+      </div>
+      <p className="mt-2 text-xs text-slate-400">{children}</p>
+      <a
+        href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Quiero el plan Pro para " + tagId)}`}
+        className="mt-3 inline-block text-sm text-indigo-400 hover:underline"
+      >
+        Pedir el plan Pro
+      </a>
+    </div>
+  );
+}
+
 export default function TagEditor({ tag, onClose, onSaved }) {
+  const paid = isPaid(tag.plan);
+
   const [name, setName] = useState(tag.business_name || "");
   const [mode, setMode] = useState(tag.mode === "redirect" ? "redirect" : "microsite");
   const [url, setUrl] = useState(tag.target_url || "");
@@ -73,32 +97,37 @@ export default function TagEditor({ tag, onClose, onSaved }) {
       return;
     }
 
-    const cleanLinks = [];
-    for (let i = 0; i < links.length; i++) {
-      const label = links[i].label.trim();
-      const link = links[i].url.trim();
-      if (!label && !link) continue; // fila vacía: se ignora
-      if (!label || label.length > 30) {
-        setError(`Botón ${i + 1}: escribe un texto (máximo 30 caracteres).`);
-        return;
+    const payload = {
+      business_name: cleanName,
+      mode,
+      target_url: cleanUrl,
+      updated_at: serverTimestamp(),
+    };
+
+    // Botones y colores solo se guardan en planes de pago
+    if (paid) {
+      const cleanLinks = [];
+      for (let i = 0; i < links.length; i++) {
+        const label = links[i].label.trim();
+        const link = links[i].url.trim();
+        if (!label && !link) continue; // fila vacía: se ignora
+        if (!label || label.length > 30) {
+          setError(`Botón ${i + 1}: escribe un texto (máximo 30 caracteres).`);
+          return;
+        }
+        if (!isValidUrl(link)) {
+          setError(`Botón ${i + 1}: el enlace debe empezar con http:// o https://`);
+          return;
+        }
+        cleanLinks.push({ label, url: link, icon: links[i].icon });
       }
-      if (!isValidUrl(link)) {
-        setError(`Botón ${i + 1}: el enlace debe empezar con http:// o https://`);
-        return;
-      }
-      cleanLinks.push({ label, url: link, icon: links[i].icon });
+      payload.links = cleanLinks;
+      payload.theme = { bg: theme.bg, accent: theme.accent };
     }
 
     setSaving(true);
     try {
-      await updateDoc(doc(db, "tags", tag.id), {
-        business_name: cleanName,
-        mode,
-        target_url: cleanUrl,
-        links: cleanLinks,
-        theme: { bg: theme.bg, accent: theme.accent },
-        updated_at: serverTimestamp(),
-      });
+      await updateDoc(doc(db, "tags", tag.id), payload);
       await onSaved();
       onClose();
     } catch (err) {
@@ -115,9 +144,20 @@ export default function TagEditor({ tag, onClose, onSaved }) {
         className="mx-auto my-6 w-full max-w-5xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
-          <h2 className="text-lg font-semibold text-white">
-            Editar GT <span className="font-mono text-sm text-slate-400">{tag.id}</span>
-          </h2>
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="text-lg font-semibold text-white">
+              Editar GT <span className="font-mono text-sm text-slate-400">{tag.id}</span>
+            </h2>
+            <span
+              className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
+                paid
+                  ? "bg-indigo-500/10 text-indigo-300 ring-indigo-500/30"
+                  : "bg-slate-500/10 text-slate-400 ring-slate-500/30"
+              }`}
+            >
+              Plan {PLANS[planOf(tag.plan)].label}
+            </span>
+          </div>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="text-slate-500 hover:text-white">
             ✕
           </button>
@@ -152,7 +192,18 @@ export default function TagEditor({ tag, onClose, onSaved }) {
               </div>
             </div>
 
-            {mode === "microsite" ? (
+            {mode === "microsite" && !paid && (
+              <div className="space-y-3 border-t border-slate-800 pt-5">
+                <Locked title="Colores personalizados" tagId={tag.id}>
+                  Elige paletas o los colores de tu marca para tu micrositio.
+                </Locked>
+                <Locked title="Botones adicionales" tagId={tag.id}>
+                  Agrega hasta {MAX_LINKS} botones: WhatsApp, Instagram, menú, ubicación, reseñas y más.
+                </Locked>
+              </div>
+            )}
+
+            {mode === "microsite" && paid && (
               <>
                 {/* Colores */}
                 <div className="border-t border-slate-800 pt-5">
@@ -290,10 +341,11 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                   </p>
                 </div>
               </>
-            ) : (
+            )}
+
+            {mode === "redirect" && (
               <p className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-xs text-slate-500">
-                En modo redirección no se muestra ninguna página: el cliente va directo al enlace. Tus botones
-                y colores se conservan por si vuelves a Micrositio.
+                En modo redirección no se muestra ninguna página: el cliente va directo al enlace.
               </p>
             )}
           </div>
@@ -306,7 +358,14 @@ export default function TagEditor({ tag, onClose, onSaved }) {
             {mode === "microsite" ? (
               <div className="mx-auto w-[300px] rounded-[2.5rem] border-4 border-slate-700 bg-slate-800 p-2 shadow-xl">
                 <div className="h-[560px] overflow-y-auto rounded-[2rem]">
-                  <Microsite preview name={name} mainUrl={url} links={links} theme={theme} />
+                  <Microsite
+                    preview
+                    name={name}
+                    mainUrl={url}
+                    links={paid ? links : []}
+                    theme={paid ? theme : undefined}
+                    hideBrand={!showBrand(tag.plan)}
+                  />
                 </div>
               </div>
             ) : (

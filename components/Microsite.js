@@ -3,7 +3,7 @@
 import { getEmoji } from "@/lib/linkIcons";
 import { alpha, getSafeUrl, normalizeTheme, textOn } from "@/lib/microsite";
 
-export default function Microsite({ name, mainUrl, links, theme, preview = false }) {
+export default function Microsite({ name, mainUrl, links, theme, preview = false, hideBrand = false }) {
   const t = normalizeTheme(theme);
   const fg = textOn(t.bg);
   const onAccent = textOn(t.accent);
@@ -107,9 +107,11 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
           </p>
         )}
 
-        <p className="mt-10 text-xs" style={{ color: alpha(fg, 0.45) }}>
-          <span className="font-medium">GodsTap</span> · by God’s Plan
-        </p>
+        {!hideBrand && (
+          <p className="mt-10 text-xs" style={{ color: alpha(fg, 0.45) }}>
+            <span className="font-medium">GodsTap</span> · by God’s Plan
+          </p>
+        )}
       </div>
     </main>
   );

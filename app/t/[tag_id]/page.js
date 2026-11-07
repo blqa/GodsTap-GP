@@ -6,6 +6,7 @@ import { doc, getDoc } from "firebase/firestore/lite";
 import { dbLite } from "@/lib/firebaseLite";
 import Microsite from "@/components/Microsite";
 import { countScan } from "@/lib/scans";
+import { isPaid, showBrand } from "@/lib/plans";
 
 // Solo permite http/https (bloquea javascript:, data:, etc.)
 function getSafeUrl(url) {
@@ -195,13 +196,15 @@ function PublicTag() {
     );
   }
 
-  // Microsite
+  // Microsite (botones extra, colores y quitar la marca son de planes de pago)
+  const paid = isPaid(tag.plan);
   return (
     <Microsite
       name={tag.business_name}
       mainUrl={tag.target_url}
-      links={tag.links}
-      theme={tag.theme}
+      links={paid ? tag.links : []}
+      theme={paid ? tag.theme : undefined}
+      hideBrand={!showBrand(tag.plan)}
     />
   );
 }
