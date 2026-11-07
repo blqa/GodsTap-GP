@@ -126,14 +126,14 @@ export default function AccountsPage() {
             setCreateError("");
             if (!showForm) setForm((f) => ({ ...f, password: f.password || randomPassword() }));
           }}
-          className="w-fit rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
+          className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-500 sm:w-fit sm:py-2"
         >
           {showForm ? "Cerrar" : "+ Nueva cuenta"}
         </button>
       </div>
 
       {createdInfo && (
-        <section className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5 text-sm">
+        <section className="mb-6 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4 text-sm sm:p-5">
           <h2 className="text-base font-semibold text-slate-50">Cuenta creada</h2>
           <p className="mt-1 text-slate-300">
             Entrega estos datos a tu cliente. La contraseña no se vuelve a mostrar.
@@ -145,11 +145,11 @@ export default function AccountsPage() {
                 navigator.clipboard?.writeText(message);
                 setCopied(true);
               }}
-              className="rounded-lg bg-brand-600 px-3 py-1.5 text-xs font-semibold text-white hover:bg-brand-500"
+              className="rounded-lg bg-brand-600 px-3.5 py-2.5 text-xs font-semibold text-white hover:bg-brand-500 sm:px-3 sm:py-1.5"
             >
               {copied ? "Copiado" : "Copiar mensaje"}
             </button>
-            <Link href={`/dashboard/admin/cuenta/${createdInfo.uid}`} className="rounded-lg border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 hover:bg-slate-800">
+            <Link href={`/dashboard/admin/cuenta/${createdInfo.uid}`} className="rounded-lg border border-slate-700 px-3.5 py-2.5 text-xs font-medium text-slate-200 hover:bg-slate-800 sm:px-3 sm:py-1.5">
               Abrir la cuenta
             </Link>
             <button
@@ -157,7 +157,7 @@ export default function AccountsPage() {
                 setCreatedInfo(null);
                 setCopied(false);
               }}
-              className="px-2 py-1.5 text-xs text-slate-400 hover:text-slate-50"
+              className="px-2 py-2.5 text-xs text-slate-400 hover:text-slate-50 sm:py-1.5"
             >
               Ocultar
             </button>
@@ -166,7 +166,7 @@ export default function AccountsPage() {
       )}
 
       {showForm && (
-        <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+        <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-6">
           <h2 className="text-base font-semibold text-slate-50">Nueva cuenta</h2>
           {createError && (
             <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
@@ -199,7 +199,7 @@ export default function AccountsPage() {
           <button
             type="submit"
             disabled={creating}
-            className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-brand-600 px-5 py-2.5 text-sm sm:w-auto sm:py-2 font-semibold text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {creating ? "Creando..." : "Crear cuenta"}
           </button>
@@ -222,7 +222,31 @@ export default function AccountsPage() {
       {!loading && visible.length === 0 && <p className="text-sm text-slate-400">No hay cuentas que mostrar.</p>}
 
       {visible.length > 0 && (
-        <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60">
+        <ul className="space-y-3 md:hidden">
+          {visible.map((u) => (
+            <li key={u.uid}>
+              <Link
+                href={`/dashboard/admin/cuenta/${u.uid}`}
+                className="block rounded-2xl border border-slate-800 bg-slate-900/60 p-4 transition hover:bg-slate-900"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <p className="min-w-0 break-words font-semibold text-slate-50">{u.business_name || u.name || u.email || "Sin nombre"}</p>
+                  <StatusBadge profile={u} />
+                </div>
+                {u.name && u.business_name && <p className="mt-0.5 text-sm text-slate-300">{u.name}</p>}
+                <p className="mt-0.5 break-all text-xs text-slate-400">{u.email || "—"}</p>
+                <p className="mt-2 flex items-center justify-between text-xs text-slate-500">
+                  <span>{gtCount[u.uid] || 0} GT{u.created_at ? ` · Alta ${formatDate(tsMs(u.created_at))}` : ""}</span>
+                  <span className="font-medium text-brand-400">Ver y editar →</span>
+                </p>
+              </Link>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {visible.length > 0 && (
+        <div className="hidden overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60 md:block">
           <table className="w-full text-left text-sm">
             <thead className="text-xs text-slate-500">
               <tr>

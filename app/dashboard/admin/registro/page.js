@@ -55,7 +55,7 @@ export default function LogPage() {
     <div>
       <div className="mb-6 flex items-end justify-between gap-3">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-50">Registro de movimientos</h1>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">Registro de movimientos</h1>
           <p className="mt-1 text-sm text-slate-400">
             Lo que hacen tus clientes y lo que haces tú. Se muestran los últimos {PAGE}. Los registros no se pueden editar ni borrar.
           </p>
@@ -67,13 +67,13 @@ export default function LogPage() {
 
       <div className="mb-5 grid gap-3 sm:grid-cols-[1fr_auto_auto]">
         <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por negocio, correo, GT o texto" className={inputClass} />
-        <select value={action} onChange={(e) => setAction(e.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50" aria-label="Tipo de movimiento">
+        <select value={action} onChange={(e) => setAction(e.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-50 sm:py-2" aria-label="Tipo de movimiento">
           <option value="">Todos los movimientos</option>
           {Object.entries(ACTION_LABELS).map(([k, label]) => (
             <option key={k} value={k}>{label}</option>
           ))}
         </select>
-        <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50" aria-label="Quién lo hizo">
+        <select value={role} onChange={(e) => setRole(e.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2.5 text-sm text-slate-50 sm:py-2" aria-label="Quién lo hizo">
           <option value="">Admin y clientes</option>
           <option value="admin">Solo admin</option>
           <option value="cliente">Solo clientes</option>
@@ -89,7 +89,33 @@ export default function LogPage() {
       {!loading && !error && visible.length === 0 && <p className="text-sm text-slate-400">No hay movimientos que mostrar.</p>}
 
       {visible.length > 0 && (
-        <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60">
+        <ul className="space-y-3 md:hidden">
+          {visible.map((l) => (
+            <li key={l.id} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-sm">
+              <div className="flex items-start justify-between gap-3">
+                <p className="font-medium text-slate-50">{ACTION_LABELS[l.action] || l.action}</p>
+                <span className={`shrink-0 rounded-full px-2 py-0.5 text-xs ring-1 ${l.actor_role === "admin" ? "bg-brand-500/10 text-brand-300 ring-brand-500/30" : "bg-slate-500/10 text-slate-400 ring-slate-500/30"}`}>
+                  {l.actor_role === "admin" ? "Admin" : "Cliente"}
+                </span>
+              </div>
+              <p className="mt-1 break-words text-slate-400">{l.summary}</p>
+              <p className="mt-2 text-xs text-slate-500">
+                {formatDateTime(tsMs(l.at))}
+                {l.tag_id ? <> · <span className="font-mono">{l.tag_id}</span></> : null}
+              </p>
+              <p className="mt-0.5 break-all text-xs text-slate-500">{l.actor_email || l.actor_uid}</p>
+              {l.owner_uid && (
+                <Link href={`/dashboard/admin/cuenta/${l.owner_uid}`} className="mt-2 inline-block text-xs font-medium text-brand-400">
+                  {l.business_name || "Ver cuenta"} →
+                </Link>
+              )}
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {visible.length > 0 && (
+        <div className="hidden overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60 md:block">
           <table className="w-full text-left text-sm">
             <thead className="text-xs text-slate-500">
               <tr>

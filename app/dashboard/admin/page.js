@@ -18,6 +18,9 @@ const NO_OWNER = "__sin_vincular__";
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
+const rowBtn =
+  "rounded-lg border border-slate-700 px-3 py-2.5 text-center font-medium text-slate-200 transition hover:bg-slate-800";
+
 function randomString(length, chars) {
   let out = "";
   const limit = 256 - (256 % chars.length);
@@ -326,7 +329,7 @@ export default function AdminPage() {
       )}
 
       <div className="mb-8">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-50">Administración de GT</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">Administración de GT</h1>
         <p className="mt-1 text-sm text-slate-400">
           {rows.length} GT · {accountCount} cuentas con GT vinculados
         </p>
@@ -360,7 +363,7 @@ export default function AdminPage() {
       )}
 
       {/* Crear lote */}
-      <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-6">
         <h2 className="text-base font-semibold text-slate-50">Crear lote</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
@@ -375,14 +378,14 @@ export default function AdminPage() {
         <button
           type="submit"
           disabled={creating}
-          className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:opacity-60"
+          className="w-full rounded-lg bg-brand-600 px-5 py-2.5 text-sm sm:w-auto sm:py-2 font-semibold text-white transition hover:bg-brand-500 disabled:opacity-60"
         >
           {creating ? "Creando..." : "Crear GT"}
         </button>
       </form>
 
       {created.length > 0 && (
-        <div className="mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6">
+        <div className="mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-4 sm:p-6">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h2 className="text-base font-semibold text-slate-50">Lote creado: {created.length} GT</h2>
@@ -390,12 +393,21 @@ export default function AdminPage() {
             </div>
             <button
               onClick={() => downloadCsv(created)}
-              className="w-fit rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-500"
+              className="w-full rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-500 sm:w-fit sm:py-2"
             >
               Descargar CSV
             </button>
           </div>
-          <div className="overflow-x-auto">
+          <ul className="space-y-2 md:hidden">
+            {created.map((c) => (
+              <li key={c.id} className="rounded-lg border border-slate-800 bg-slate-950/40 p-3 font-mono text-xs text-slate-300">
+                <p className="font-semibold text-slate-50">{c.id}</p>
+                <p className="mt-1 break-all text-slate-400">{c.url}</p>
+                <p className="mt-1">Código: <span className="text-emerald-300">{c.code}</span></p>
+              </li>
+            ))}
+          </ul>
+          <div className="hidden overflow-x-auto md:block">
             <table className="w-full text-left text-sm">
               <thead className="text-xs text-slate-500">
                 <tr>
@@ -419,7 +431,7 @@ export default function AdminPage() {
       )}
 
       {/* Cuentas */}
-      <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center">
+      <div className="mb-4 flex items-center gap-3">
         <input
           value={search}
           onChange={(e) => setSearch(e.target.value)}
@@ -433,7 +445,7 @@ export default function AdminPage() {
 
       {/* Planes por vencer o vencidos */}
       {!loading && attention.length > 0 && (
-        <section className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+        <section className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 sm:p-5">
           <h2 className="text-base font-semibold text-slate-50">
             Planes por vencer o vencidos ({attention.length})
           </h2>
@@ -457,7 +469,7 @@ export default function AdminPage() {
                     <PlanBadge r={r} />
                     <button
                       onClick={() => setPlanFor([r], st.plan, 1)}
-                      className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-brand-500"
+                      className="rounded-md bg-brand-600 px-3 py-2 text-xs font-semibold text-white transition hover:bg-brand-500 sm:px-2.5 sm:py-1"
                     >
                       Renovar 1 mes
                     </button>
@@ -479,9 +491,9 @@ export default function AdminPage() {
           const proCount = g.items.filter((r) => planStatus(r).paid).length;
           return (
             <details key={g.key} open={!!q || g.items.length <= 5} className="rounded-2xl border border-slate-800 bg-slate-900/60">
-              <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-4">
+              <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-4 py-4 sm:px-5">
                 <span>
-                  <span className="inline-flex items-center gap-2 font-semibold text-slate-50"><span className={`h-2 w-2 rounded-full ${linked ? "bg-emerald-500" : "bg-slate-500"}`} aria-hidden="true" />{g.title}</span>
+                  <span className="inline-flex max-w-full items-center gap-2 break-words font-semibold text-slate-50"><span className={`h-2 w-2 rounded-full ${linked ? "bg-emerald-500" : "bg-slate-500"}`} aria-hidden="true" />{g.title}</span>
                   {g.subtitle && <span className="block text-xs text-slate-500">{g.subtitle}</span>}
                 </span>
                 <span className="text-xs text-slate-400">
@@ -498,7 +510,7 @@ export default function AdminPage() {
                 </span>
               </summary>
 
-              <div className="border-t border-slate-800 px-5 pb-5 pt-3">
+              <div className="border-t border-slate-800 px-3 pb-4 pt-3 sm:px-5 sm:pb-5">
                 {linked && (
                   <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                     <span>Cambiar el plan de todos sus GT:</span>
@@ -512,7 +524,50 @@ export default function AdminPage() {
                   </div>
                 )}
 
-                <div className="overflow-x-auto">
+                {/* Celular: una tarjeta por GT */}
+                <ul className="space-y-3 md:hidden">
+                  {g.items.map((r) => (
+                    <li key={r.id} className="rounded-xl border border-slate-800 bg-slate-950/50 p-3">
+                      <p className="break-words font-medium text-slate-50">{r.nickname || r.business_name || "—"}</p>
+                      <p className="mt-0.5 break-all text-xs text-slate-500">
+                        <span className="font-mono">{r.id}</span>
+                        {r.nickname && r.business_name ? ` · ${r.business_name}` : ""}
+                      </p>
+                      <p className="mt-1 text-xs text-slate-500">
+                        Código: <span className="font-mono text-slate-300">{r.code || "—"}</span>
+                      </p>
+                      <div className="mt-2 space-y-2">
+                        <PlanBadge r={r} />
+                        <PlanPicker initialPlan={planOf(r.plan)} onApply={(plan, months) => setPlanFor([r], plan, months)} />
+                      </div>
+                      <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+                        <button onClick={() => setEditing(r)} className={`${rowBtn} border-brand-500/40 text-brand-300`}>
+                          Editar
+                        </button>
+                        <button onClick={() => copy(`${BASE_URL}/t/${r.id}`)} className={rowBtn}>
+                          Copiar URL
+                        </button>
+                        {r.owner_uid && (
+                          <button
+                            onClick={() => {
+                              setRevokeTarget(r);
+                              setRevokeReason("");
+                              setRevokeError("");
+                            }}
+                            className={`${rowBtn} text-amber-300`}
+                          >
+                            Revocar
+                          </button>
+                        )}
+                        <button onClick={() => handleDelete(r)} className={`${rowBtn} text-red-400`}>
+                          Borrar
+                        </button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="hidden overflow-x-auto md:block">
                   <table className="w-full text-left text-sm">
                     <thead className="text-xs text-slate-500">
                       <tr>

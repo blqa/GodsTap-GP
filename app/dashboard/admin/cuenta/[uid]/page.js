@@ -180,7 +180,7 @@ function AccountDetail() {
               placeholder="Motivo"
               className={inputClass}
             />
-            <div className="flex justify-end gap-3">
+            <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
               <button type="button" onClick={() => setRevokeTarget(null)} className={btnGhost}>
                 Cancelar
               </button>
@@ -197,7 +197,7 @@ function AccountDetail() {
       </Link>
 
       <div className="mb-8 mt-3 flex flex-wrap items-center gap-3">
-        <h1 className="text-3xl font-bold tracking-tight text-slate-50">{title}</h1>
+        <h1 className="min-w-0 break-words text-2xl font-bold tracking-tight text-slate-50 sm:text-3xl">{title}</h1>
         {deleted ? (
           <span className="rounded-full bg-red-500/10 px-2.5 py-0.5 text-xs font-medium text-red-300 ring-1 ring-red-500/30">Eliminada</span>
         ) : suspended ? (
@@ -221,7 +221,7 @@ function AccountDetail() {
       {loading && <p className="mb-6 text-sm text-slate-400">Cargando...</p>}
 
       {/* Perfil */}
-      <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-6">
         <h2 className="text-base font-semibold text-slate-50">Perfil</h2>
         {profileMissing ? (
           <p className="mt-2 text-sm text-slate-400">
@@ -229,7 +229,7 @@ function AccountDetail() {
           </p>
         ) : (
           <>
-            <p className="mt-1 text-sm text-slate-400">
+            <p className="mt-1 break-all text-sm text-slate-400">
               {profile?.email || "Sin correo"} · <span className="font-mono text-xs">{uid}</span>
               {profile?.created_at && <> · Alta: {formatDate(tsMs(profile.created_at))}</>}
             </p>
@@ -243,13 +243,13 @@ function AccountDetail() {
                 <input id="p-business" value={form.business} onChange={(e) => setForm({ ...form, business: e.target.value })} maxLength={80} className={inputClass} />
               </div>
               <div className="sm:col-span-2">
-                <button type="submit" disabled={busy === "profile"} className={btnPrimary}>
+                <button type="submit" disabled={busy === "profile"} className={`${btnPrimary} w-full sm:w-auto`}>
                   {busy === "profile" ? "Guardando..." : "Guardar perfil"}
                 </button>
               </div>
             </form>
 
-            <div className="mt-6 flex flex-wrap gap-3 border-t border-slate-800 pt-5">
+            <div className="mt-6 flex flex-col gap-3 border-t border-slate-800 pt-5 sm:flex-row sm:flex-wrap [&>button]:w-full sm:[&>button]:w-auto">
               <button
                 disabled={!profile?.email || busy === "reset"}
                 onClick={() => run("reset", () => sendResetEmail(uid, profile), `Se envió el correo para cambiar contraseña a ${profile.email}.`)}
@@ -276,7 +276,7 @@ function AccountDetail() {
       </section>
 
       {/* GT de la cuenta */}
-      <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-6">
         <h2 className="text-base font-semibold text-slate-50">GT de esta cuenta ({tags.length})</h2>
 
         {tags.length === 0 && !loading && <p className="mt-3 text-sm text-slate-400">Esta cuenta no tiene GT vinculados.</p>}
@@ -300,8 +300,8 @@ function AccountDetail() {
                   />
                 </div>
               </div>
-              <div className="mt-3 flex flex-wrap gap-4 text-sm">
-                <button onClick={() => setEditing(t)} className="font-medium text-brand-400 hover:underline">Editar configuración</button>
+              <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:flex sm:flex-wrap sm:gap-4 [&>*]:rounded-lg [&>*]:border [&>*]:border-slate-700 [&>*]:px-3 [&>*]:py-2.5 [&>*]:text-center sm:[&>*]:border-0 sm:[&>*]:p-0">
+                <button onClick={() => setEditing(t)} className="col-span-2 font-medium text-brand-300 hover:underline sm:col-span-1 sm:!text-brand-400">Editar configuración</button>
                 <a href={`/t/${t.id}`} target="_blank" rel="noopener noreferrer" className="text-slate-300 hover:text-slate-50 hover:underline">Ver página</a>
                 <button onClick={() => navigator.clipboard?.writeText(`${BASE_URL}/t/${t.id}`)} className="text-slate-300 hover:text-slate-50 hover:underline">Copiar URL</button>
                 <button
@@ -326,7 +326,7 @@ function AccountDetail() {
             {freeTags.length === 0 ? (
               <p className="text-sm text-slate-500">No hay GT libres. Crea un lote en la pestaña GT.</p>
             ) : (
-              <div className="flex flex-wrap gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
                 <select value={assignId} onChange={(e) => setAssignId(e.target.value)} className="rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50">
                   <option value="">Elegir GT...</option>
                   {freeTags.map((t) => (
@@ -341,7 +341,7 @@ function AccountDetail() {
                     setAssignId("");
                     run("assign", () => assignTag(tag, uid, profile?.business_name || profile?.email), `GT ${tag.id} asignado.`);
                   }}
-                  className={btnPrimary}
+                  className={`${btnPrimary} w-full sm:w-auto`}
                 >
                   Asignar
                 </button>
@@ -352,7 +352,7 @@ function AccountDetail() {
       </section>
 
       {/* Registro */}
-      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
+      <section className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4 sm:p-6">
         <h2 className="text-base font-semibold text-slate-50">Movimientos de esta cuenta</h2>
         {logsError && (
           <p className="mt-3 text-sm text-amber-300">

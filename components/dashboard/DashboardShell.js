@@ -133,7 +133,7 @@ export default function DashboardShell({ children }) {
             <Logo showBy />
           </Link>
 
-          <div className="flex items-center gap-2 sm:gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3">
             <div className="hidden items-center gap-2 md:flex">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-brand-600/15 text-xs font-semibold uppercase text-brand-400 ring-1 ring-brand-500/30">
                 {user.email?.charAt(0) || "U"}
@@ -144,9 +144,10 @@ export default function DashboardShell({ children }) {
             {isAdmin && (
               <Link
                 href={inAdmin ? "/dashboard" : "/dashboard/admin"}
-                className="rounded-lg border border-brand-500/40 bg-brand-600/10 px-3 py-2 text-sm font-medium text-brand-300 transition hover:bg-brand-600/20"
+                className="rounded-lg border border-brand-500/40 bg-brand-600/10 px-2.5 py-2 text-sm sm:px-3 font-medium text-brand-300 transition hover:bg-brand-600/20"
               >
-                {inAdmin ? "Mis GT" : "Administración"}
+                <span className="sm:hidden">{inAdmin ? "Mis GT" : "Admin"}</span>
+                <span className="hidden sm:inline">{inAdmin ? "Mis GT" : "Administración"}</span>
               </Link>
             )}
 
@@ -155,9 +156,10 @@ export default function DashboardShell({ children }) {
             <button
               onClick={handleSignOut}
               disabled={signingOut}
-              className="rounded-lg border border-slate-700 px-3.5 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60"
+              className="rounded-lg border border-slate-700 px-2.5 py-2 text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-60 sm:px-3.5"
             >
-              {signingOut ? "Saliendo..." : "Cerrar sesión"}
+              <span className="sm:hidden">{signingOut ? "..." : "Salir"}</span>
+              <span className="hidden sm:inline">{signingOut ? "Saliendo..." : "Cerrar sesión"}</span>
             </button>
           </div>
         </div>

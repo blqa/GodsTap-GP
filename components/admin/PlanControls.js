@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { PLANS, formatDate, planStatus } from "@/lib/plans";
 
-const selectClass = "rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-50";
+const selectClass = "rounded-md border border-slate-700 bg-slate-950 px-2.5 py-2 text-sm text-slate-50 sm:px-2 sm:py-1 sm:text-xs";
 
 export const DURATIONS = [
   { value: 1, label: "1 mes" },
@@ -54,7 +54,7 @@ export function PlanPicker({ initialPlan, onApply, confirmText }) {
           if (confirmText && !confirm(confirmText(plan, paid ? months : 0))) return;
           onApply(plan, paid ? months : 0);
         }}
-        className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-brand-500"
+        className="rounded-md bg-brand-600 px-3.5 py-2 text-sm font-semibold sm:px-2.5 sm:py-1 sm:text-xs text-white transition hover:bg-brand-500"
       >
         Aplicar
       </button>
