@@ -14,6 +14,9 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 
+const BASE_URL = "https://godstap.godsplan.site";
+const DEFAULT_NAME = "GT sin activar";
+
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
 
@@ -25,6 +28,14 @@ function isValidUrl(url) {
   }
 }
 
+function isPlaceholderUrl(url) {
+  return !url || url.replace(/\/$/, "") === BASE_URL;
+}
+
+function needsSetup(tag) {
+  return tag.business_name === DEFAULT_NAME || isPlaceholderUrl(tag.target_url);
+}
+
 function modeStyle(mode) {
   if (mode === "redirect")
     return { label: "Redirección", style: "bg-sky-500/10 text-sky-300 ring-sky-500/30" };
@@ -33,6 +44,279 @@ function modeStyle(mode) {
   return { label: mode || "Sin definir", style: "bg-slate-500/10 text-slate-300 ring-slate-500/30" };
 }
 
+/* ---------------------------------------------------------------
+   Asistente de configuración rápida
+   Pasos: 0 bienvenida | 1 nombre | 2 modo | 3 enlace | 4 listo
+---------------------------------------------------------------- */
+function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved }) {
+  const [step, setStep] = useState(startStep);
+  const [name, setName] = useState(tag.business_name === DEFAULT_NAME ? "" : tag.business_name || "");
+  const [mode, setMode] = useState(tag.mode === "redirect" ? "redirect" : "microsite");
+  const [url, setUrl] = useState(isPlaceholderUrl(tag.target_url) ? "" : tag.target_url);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
+
+  const goNext = () => {
+    setError("");
+    if (step === 1) {
+      const n = name.trim();
+      if (!n || n.length > 80) {
+        setError("Escribe el nombre de tu negocio (máximo 80 caracteres).");
+        return;
+      }
+    }
+    setStep(step + 1);
+  };
+
+  const handleSave = async () => {
+    setError("");
+    const link = url.trim();
+    if (!isValidUrl(link)) {
+      setError("El enlace debe empezar con http:// o https://");
+      return;
+    }
+
+    setSaving(true);
+    try {
+      await updateDoc(doc(db, "tags", tag.id), {
+        business_name: name.trim(),
+        mode,
+        target_url: link,
+        updated_at: serverTimestamp(),
+      });
+      await onSaved();
+      setStep(4);
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo guardar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const showProgress = step >= 1 && step <= 3;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+      <div className="relative w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+        <button
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="absolute right-4 top-4 text-slate-500 transition hover:text-white"
+        >
+          ✕
+        </button>
+
+        {showProgress && (
+          <div className="mb-5">
+            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
+              Paso {step} de 3
+            </p>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
+              <div
+                className="h-full rounded-full bg-indigo-500 transition-all"
+                style={{ width: `${(step / 3) * 100}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div role="alert" className="mb-4 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
+
+        {/* 0. Bienvenida */}
+        {step === 0 && (
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-2xl ring-1 ring-emerald-500/30">
+              ✓
+            </div>
+            <h2 className="text-xl font-semibold text-white">¡GT vinculado!</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              <span className="font-mono text-slate-300">{tag.id}</span> ya es tuyo. Configúralo en
+              menos de un minuto o hazlo después desde tu panel.
+            </p>
+            <div className="mt-6 space-y-3">
+              <button
+                onClick={() => setStep(1)}
+                className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
+              >
+                Configurar ahora
+              </button>
+              <button
+                onClick={onClaimAnother}
+                className="w-full rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800"
+              >
+                Vincular otro GT
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-2 text-sm text-slate-400 transition hover:text-white"
+              >
+                Hacerlo más tarde
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* 1. Nombre */}
+        {step === 1 && (
+          <div>
+            <h2 className="text-lg font-semibold text-white">¿Cómo se llama tu negocio?</h2>
+            <p className="mt-1 text-sm text-slate-400">Es el nombre que verán tus clientes al escanear.</p>
+            <input
+              autoFocus
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && goNext()}
+              maxLength={80}
+              placeholder="Ej. Tacos El Güero"
+              className={`${inputClass} mt-5`}
+            />
+          </div>
+        )}
+
+        {/* 2. Modo */}
+        {step === 2 && (
+          <div>
+            <h2 className="text-lg font-semibold text-white">¿Qué pasa al escanear?</h2>
+            <p className="mt-1 text-sm text-slate-400">Puedes cambiarlo cuando quieras.</p>
+            <div className="mt-5 space-y-3">
+              {[
+                {
+                  value: "microsite",
+                  title: "Micrositio",
+                  desc: "Una página con el nombre de tu negocio y un botón destacado.",
+                },
+                {
+                  value: "redirect",
+                  title: "Redirección directa",
+                  desc: "Lleva al cliente de inmediato a tu enlace, sin pantalla intermedia.",
+                },
+              ].map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setMode(opt.value)}
+                  className={`w-full rounded-xl border p-4 text-left transition ${
+                    mode === opt.value
+                      ? "border-indigo-500 bg-indigo-500/10"
+                      : "border-slate-700 bg-slate-950 hover:border-slate-600"
+                  }`}
+                >
+                  <p className="text-sm font-semibold text-white">{opt.title}</p>
+                  <p className="mt-0.5 text-xs text-slate-400">{opt.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* 3. Enlace */}
+        {step === 3 && (
+          <div>
+            <h2 className="text-lg font-semibold text-white">
+              {mode === "redirect" ? "¿A qué enlace quieres llevar a tus clientes?" : "¿A dónde lleva tu botón principal?"}
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Puede ser tu menú, WhatsApp, Instagram, reseñas de Google, tu sitio web...
+            </p>
+            <input
+              autoFocus
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSave()}
+              placeholder="https://..."
+              className={`${inputClass} mt-5`}
+            />
+          </div>
+        )}
+
+        {/* 4. Listo */}
+        {step === 4 && (
+          <div className="text-center">
+            <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-2xl ring-1 ring-emerald-500/30">
+              🎉
+            </div>
+            <h2 className="text-xl font-semibold text-white">¡Listo, {name.trim()}!</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Tu GT ya está configurado. Acércale tu celular para probarlo.
+            </p>
+            <div className="mt-6 space-y-3">
+              <a
+                href={`/t/${tag.id}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="block w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
+              >
+                Probar mi enlace
+              </a>
+              <button
+                onClick={onClaimAnother}
+                className="w-full rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 transition hover:bg-slate-800"
+              >
+                Vincular otro GT
+              </button>
+              <button
+                onClick={onClose}
+                className="w-full px-4 py-2 text-sm text-slate-400 transition hover:text-white"
+              >
+                Ir a mis GT
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Navegación pasos 1-3 */}
+        {showProgress && (
+          <div className="mt-6 flex items-center justify-between">
+            <button
+              onClick={onClose}
+              className="text-sm text-slate-400 transition hover:text-white"
+            >
+              Hacerlo más tarde
+            </button>
+            <div className="flex gap-2">
+              {step > 1 && (
+                <button
+                  onClick={() => {
+                    setError("");
+                    setStep(step - 1);
+                  }}
+                  className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+                >
+                  Atrás
+                </button>
+              )}
+              {step < 3 ? (
+                <button
+                  onClick={goNext}
+                  className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+                >
+                  Siguiente
+                </button>
+              ) : (
+                <button
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Guardando..." : "Guardar y terminar"}
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/* ---------------------------------------------------------------
+   Página principal del dashboard
+---------------------------------------------------------------- */
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
   const [tags, setTags] = useState([]);
@@ -44,7 +328,9 @@ export default function DashboardPage() {
   const [claimForm, setClaimForm] = useState({ tag_id: "", code: "" });
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState("");
-  const [claimOk, setClaimOk] = useState("");
+
+  // Asistente
+  const [wizard, setWizard] = useState(null); // { tag, startStep }
 
   // Editar GT
   const [editing, setEditing] = useState(null);
@@ -58,10 +344,13 @@ export default function DashboardPage() {
     try {
       const q = query(collection(db, "tags"), where("owner_uid", "==", uid));
       const snapshot = await getDocs(q);
-      setTags(snapshot.docs.map((d) => ({ id: d.id, ...d.data() })));
+      const list = snapshot.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setTags(list);
+      return list;
     } catch (err) {
       console.error("Error al cargar tags:", err);
       setError("No se pudieron cargar tus GT. Inténtalo de nuevo.");
+      return [];
     } finally {
       setLoading(false);
     }
@@ -79,7 +368,6 @@ export default function DashboardPage() {
   const handleClaim = async (e) => {
     e.preventDefault();
     setClaimError("");
-    setClaimOk("");
 
     const tagId = claimForm.tag_id.trim().toLowerCase();
     const code = claimForm.code.trim().toUpperCase().replace(/\s+/g, "");
@@ -101,9 +389,12 @@ export default function DashboardPage() {
       });
       await batch.commit();
 
-      setClaimOk(`GT "${tagId}" vinculado a tu cuenta.`);
       setClaimForm({ tag_id: "", code: "" });
-      await loadTags(user.uid);
+      setShowClaim(false);
+
+      const list = await loadTags(user.uid);
+      const claimed = list.find((t) => t.id === tagId);
+      if (claimed) setWizard({ tag: claimed, startStep: 0 });
     } catch (err) {
       console.error("Error al vincular:", err);
       setClaimError(
@@ -112,6 +403,14 @@ export default function DashboardPage() {
     } finally {
       setClaiming(false);
     }
+  };
+
+  const claimAnother = () => {
+    setWizard(null);
+    setClaimForm({ tag_id: "", code: "" });
+    setClaimError("");
+    setShowClaim(true);
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
   const startEdit = (tag) => {
@@ -161,6 +460,18 @@ export default function DashboardPage() {
 
   return (
     <div>
+      {/* Asistente */}
+      {wizard && (
+        <SetupWizard
+          key={wizard.tag.id + wizard.startStep}
+          tag={wizard.tag}
+          startStep={wizard.startStep}
+          onClose={() => setWizard(null)}
+          onClaimAnother={claimAnother}
+          onSaved={() => loadTags(user.uid)}
+        />
+      )}
+
       {/* Encabezado */}
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
@@ -171,7 +482,6 @@ export default function DashboardPage() {
           onClick={() => {
             setShowClaim(!showClaim);
             setClaimError("");
-            setClaimOk("");
           }}
           className="w-fit rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:bg-indigo-500"
         >
@@ -195,11 +505,6 @@ export default function DashboardPage() {
           {claimError && (
             <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {claimError}
-            </div>
-          )}
-          {claimOk && (
-            <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
-              {claimOk}
             </div>
           )}
 
@@ -329,6 +634,7 @@ export default function DashboardPage() {
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
           {tags.map((tag) => {
             const mode = modeStyle(tag.mode);
+            const pending = needsSetup(tag);
             return (
               <article
                 key={tag.id}
@@ -338,9 +644,15 @@ export default function DashboardPage() {
                   <span className="truncate rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-slate-300 ring-1 ring-slate-700">
                     {tag.id}
                   </span>
-                  <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${mode.style}`}>
-                    {mode.label}
-                  </span>
+                  {pending ? (
+                    <span className="inline-flex shrink-0 items-center rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 ring-1 ring-amber-500/30">
+                      Falta configurar
+                    </span>
+                  ) : (
+                    <span className={`inline-flex shrink-0 items-center rounded-full px-2.5 py-1 text-xs font-medium ring-1 ${mode.style}`}>
+                      {mode.label}
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="truncate text-base font-semibold text-white">
@@ -355,6 +667,14 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="mt-4 flex gap-4 text-sm">
+                  {pending && (
+                    <button
+                      onClick={() => setWizard({ tag, startStep: 1 })}
+                      className="font-medium text-amber-300 hover:underline"
+                    >
+                      Configurar
+                    </button>
+                  )}
                   <a
                     href={`/t/${tag.id}`}
                     target="_blank"
