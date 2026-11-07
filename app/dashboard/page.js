@@ -13,6 +13,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
+import TagEditor from "@/components/dashboard/TagEditor";
 
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
@@ -542,73 +543,13 @@ export default function DashboardPage() {
         </form>
       )}
 
-      {/* Panel: editar */}
+      {/* Editor */}
       {editing && (
-        <form
-          onSubmit={handleSaveEdit}
-          className="mb-8 space-y-4 rounded-2xl border border-indigo-500/30 bg-slate-900/60 p-6"
-        >
-          <h2 className="text-base font-semibold text-white">
-            Editar GT <span className="font-mono text-sm text-slate-400">{editing.id}</span>
-          </h2>
-
-          {editError && (
-            <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {editError}
-            </div>
-          )}
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre del negocio</label>
-              <input
-                value={editForm.business_name}
-                onChange={(e) => setEditForm({ ...editForm, business_name: e.target.value })}
-                required
-                maxLength={80}
-                className={inputClass}
-              />
-            </div>
-            <div>
-              <label className="mb-1.5 block text-sm font-medium text-slate-300">Modo</label>
-              <select
-                value={editForm.mode}
-                onChange={(e) => setEditForm({ ...editForm, mode: e.target.value })}
-                className={inputClass}
-              >
-                <option value="microsite">Micrositio</option>
-                <option value="redirect">Redirección</option>
-              </select>
-            </div>
-            <div className="sm:col-span-2">
-              <label className="mb-1.5 block text-sm font-medium text-slate-300">URL destino</label>
-              <input
-                value={editForm.target_url}
-                onChange={(e) => setEditForm({ ...editForm, target_url: e.target.value })}
-                placeholder="https://..."
-                required
-                className={inputClass}
-              />
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              disabled={saving}
-              className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {saving ? "Guardando..." : "Guardar cambios"}
-            </button>
-            <button
-              type="button"
-              onClick={() => setEditing(null)}
-              className="rounded-lg border border-slate-700 px-5 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
-            >
-              Cancelar
-            </button>
-          </div>
-        </form>
+        <TagEditor
+          tag={editing}
+          onClose={() => setEditing(null)}
+          onSaved={() => loadTags(user.uid)}
+        />
       )}
 
       {error && (

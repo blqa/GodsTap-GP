@@ -165,6 +165,7 @@ export default function AdminPage() {
         mode: "microsite",
         target_url: BASE_URL,
         updated_at: serverTimestamp(),
+        links: deleteField(),
       });
       // Código nuevo: el anterior deja de servir
       batch.set(doc(db, "activation_codes", target.id), { code: newCode });
