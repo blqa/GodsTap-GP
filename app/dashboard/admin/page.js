@@ -9,10 +9,11 @@ import {
   doc,
   getDocs,
   serverTimestamp,
+  Timestamp,
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
-import { PLANS, planOf } from "@/lib/plans";
+import { PLANS, addMonths, formatDate, planOf, planStatus } from "@/lib/plans";
 import { SUPPORT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
 
 const ADMIN_UID = "FgBIf9XGbma8nNu8TH49IX28FGn1";
@@ -25,6 +26,63 @@ const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
 const selectClass = "rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-50";
+
+const DURATIONS = [
+  { value: 1, label: "1 mes" },
+  { value: 3, label: "3 meses" },
+  { value: 6, label: "6 meses" },
+  { value: 12, label: "12 meses" },
+  { value: 0, label: "Sin vencimiento" },
+];
+
+// Etiqueta con el estado del plan de un GT
+function PlanBadge({ r }) {
+  const st = planStatus(r);
+  let cls = "bg-slate-500/10 text-slate-400 ring-slate-500/30";
+  let text = PLANS[st.plan].label;
+  if (st.paid) cls = "bg-brand-500/10 text-brand-300 ring-brand-500/30";
+  if (st.paid && st.until) text += ` · vence ${formatDate(st.until)}`;
+  if (st.paid && !st.until) text += " · sin vencimiento";
+  if (st.expiringSoon) cls = "bg-amber-500/10 text-amber-300 ring-amber-500/30";
+  if (st.expired) {
+    cls = "bg-red-500/10 text-red-300 ring-red-500/30";
+    text = `${PLANS[st.plan].label} · venció ${formatDate(st.until)}`;
+  }
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${cls}`}>{text}</span>;
+}
+
+// Elegir plan + duración y aplicarlo
+function PlanPicker({ initialPlan, onApply, confirmText }) {
+  const [plan, setPlan] = useState(initialPlan);
+  const [months, setMonths] = useState(1);
+  const paid = PLANS[plan].paid;
+  return (
+    <div className="flex flex-wrap items-center gap-2">
+      <select value={plan} onChange={(e) => setPlan(e.target.value)} className={selectClass} aria-label="Plan">
+        {Object.entries(PLANS).map(([key, p]) => (
+          <option key={key} value={key}>{p.label}</option>
+        ))}
+      </select>
+      {paid && (
+        <select value={months} onChange={(e) => setMonths(Number(e.target.value))} className={selectClass} aria-label="Duración">
+          {DURATIONS.map((d) => (
+            <option key={d.value} value={d.value}>{d.label}</option>
+          ))}
+        </select>
+      )}
+      <button
+        type="button"
+        onClick={() => {
+          if (confirmText && !confirm(confirmText(plan, paid ? months : 0))) return;
+          onApply(plan, paid ? months : 0);
+        }}
+        className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-brand-500"
+      >
+        Aplicar
+      </button>
+    </div>
+  );
+}
 
 function randomString(length, chars) {
   let out = "";
@@ -154,15 +212,35 @@ export default function AdminPage() {
     }
   };
 
-  const setPlanFor = async (items, plan) => {
+  // months > 0: el plan vence en esa cantidad de meses. Si el GT ya tiene ese plan vigente, se suma a su fecha actual (renovación).
+  // months = 0 o plan Básico: sin vencimiento.
+  const setPlanFor = async (items, plan, months = 0) => {
     try {
+      const now = Date.now();
       const batch = writeBatch(db);
-      items.forEach((r) =>
-        batch.update(doc(db, "tags", r.id), { plan, updated_at: serverTimestamp() })
-      );
+      const newUntil = {};
+      items.forEach((r) => {
+        const data = { plan, updated_at: serverTimestamp() };
+        if (PLANS[plan].paid && months > 0) {
+          const st = planStatus(r);
+          const base = st.paid && st.plan === plan && st.until && st.until > now ? st.until : now;
+          newUntil[r.id] = Timestamp.fromDate(addMonths(base, months));
+          data.plan_until = newUntil[r.id];
+        } else {
+          data.plan_until = deleteField();
+        }
+        batch.update(doc(db, "tags", r.id), data);
+      });
       await batch.commit();
-      const ids = new Set(items.map((r) => r.id));
-      setRows((rs) => rs.map((r) => (ids.has(r.id) ? { ...r, plan } : r)));
+      setRows((rs) =>
+        rs.map((r) => {
+          if (!newUntil[r.id] && !items.some((i) => i.id === r.id)) return r;
+          const next = { ...r, plan };
+          if (newUntil[r.id]) next.plan_until = newUntil[r.id];
+          else delete next.plan_until;
+          return next;
+        })
+      );
     } catch (err) {
       console.error(err);
       setError("No se pudo cambiar el plan.");
@@ -188,6 +266,7 @@ export default function AdminPage() {
         links: deleteField(),
         theme: deleteField(),
         nickname: deleteField(),
+        plan_until: deleteField(),
         plan: "basic",
         status: "unclaimed",
         business_name: DEFAULT_NAME,
@@ -238,6 +317,14 @@ export default function AdminPage() {
 
   // Mientras se confirma la sesión (o se redirige a quien no es admin) no se muestra nada
   if (!user || user.uid !== ADMIN_UID) return null;
+
+  // GT con plan vencido o a punto de vencer (primero los vencidos)
+  const attention = rows
+    .filter((r) => {
+      const st = planStatus(r);
+      return st.expired || st.expiringSoon;
+    })
+    .sort((x, y) => (planStatus(x).until ?? 0) - (planStatus(y).until ?? 0));
 
   // Búsqueda y agrupación por cuenta
   const q = search.trim().toLowerCase();
@@ -437,6 +524,44 @@ export default function AdminPage() {
         </button>
       </div>
 
+      {/* Planes por vencer o vencidos */}
+      {!loading && attention.length > 0 && (
+        <section className="mb-8 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-5">
+          <h2 className="text-base font-semibold text-slate-50">
+            Planes por vencer o vencidos ({attention.length})
+          </h2>
+          <ul className="mt-3 divide-y divide-amber-500/20 text-sm">
+            {attention.map((r) => {
+              const st = planStatus(r);
+              const owner = emails[r.owner_uid];
+              return (
+                <li key={r.id} className="flex flex-col gap-2 py-3 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="min-w-0">
+                    <p className="truncate font-medium text-slate-50">
+                      {owner?.business_name || r.business_name || r.id}
+                      {r.nickname ? ` · ${r.nickname}` : ""}
+                    </p>
+                    <p className="truncate text-xs text-slate-400">
+                      {owner?.name ? `${owner.name} · ` : ""}
+                      {owner?.email || r.owner_uid} · <span className="font-mono">{r.id}</span>
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 flex-wrap items-center gap-3">
+                    <PlanBadge r={r} />
+                    <button
+                      onClick={() => setPlanFor([r], st.plan, 1)}
+                      className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-brand-500"
+                    >
+                      Renovar 1 mes
+                    </button>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
       {loading && <p className="text-sm text-slate-400">Cargando...</p>}
       {!loading && rows.length === 0 && <p className="text-sm text-slate-400">Aún no hay GT. Crea un lote arriba.</p>}
       {!loading && rows.length > 0 && groups.length === 0 && <p className="text-sm text-slate-400">Sin resultados.</p>}
@@ -444,7 +569,7 @@ export default function AdminPage() {
       <div className="space-y-4">
         {groups.map((g) => {
           const linked = g.key !== NO_OWNER;
-          const proCount = g.items.filter((r) => PLANS[planOf(r.plan)].paid).length;
+          const proCount = g.items.filter((r) => planStatus(r).paid).length;
           return (
             <details key={g.key} open={!!q || g.items.length <= 5} className="rounded-2xl border border-slate-800 bg-slate-900/60">
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-4">
@@ -461,22 +586,13 @@ export default function AdminPage() {
                 {linked && (
                   <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-slate-400">
                     <span>Cambiar el plan de todos sus GT:</span>
-                    <select
-                      defaultValue=""
-                      onChange={(e) => {
-                        const plan = e.target.value;
-                        e.target.value = "";
-                        if (plan && confirm(`¿Poner ${g.items.length} GT de ${g.title} en plan ${PLANS[plan].label}?`)) {
-                          setPlanFor(g.items, plan);
-                        }
-                      }}
-                      className={selectClass}
-                    >
-                      <option value="" disabled>Elegir...</option>
-                      {Object.entries(PLANS).map(([key, p]) => (
-                        <option key={key} value={key}>{p.label}</option>
-                      ))}
-                    </select>
+                    <PlanPicker
+                      initialPlan="pro"
+                      confirmText={(plan, months) =>
+                        `¿Poner ${g.items.length} GT de ${g.title} en plan ${PLANS[plan].label}${months ? ` por ${months} ${months === 1 ? "mes" : "meses"}` : ""}?`
+                      }
+                      onApply={(plan, months) => setPlanFor(g.items, plan, months)}
+                    />
                   </div>
                 )}
 
@@ -500,11 +616,10 @@ export default function AdminPage() {
                           </td>
                           <td className="max-w-[180px] truncate py-2 pr-4">{r.business_name || "—"}</td>
                           <td className="py-2 pr-4">
-                            <select value={planOf(r.plan)} onChange={(e) => setPlanFor([r], e.target.value)} className={selectClass}>
-                              {Object.entries(PLANS).map(([key, p]) => (
-                                <option key={key} value={key}>{p.label}</option>
-                              ))}
-                            </select>
+                            <div className="space-y-1.5">
+                              <PlanBadge r={r} />
+                              <PlanPicker initialPlan={planOf(r.plan)} onApply={(plan, months) => setPlanFor([r], plan, months)} />
+                            </div>
                           </td>
                           <td className="py-2 pr-4 font-mono text-xs">{r.code || "—"}</td>
                           <td className="space-x-3 whitespace-nowrap py-2 text-xs">

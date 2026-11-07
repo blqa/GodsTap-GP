@@ -5,7 +5,7 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { ICONS } from "@/lib/linkIcons";
 import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
-import { PLANS, isPaid, planOf, showBrand } from "@/lib/plans";
+import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
 import Microsite from "@/components/Microsite";
 
@@ -46,7 +46,8 @@ function Locked({ title, tagId, children }) {
 }
 
 export default function TagEditor({ tag, onClose, onSaved }) {
-  const paid = isPaid(tag.plan);
+  const paid = tagIsPaid(tag);
+  const status = planStatus(tag);
 
   const [name, setName] = useState(tag.business_name || "");
   const [mode, setMode] = useState(tag.mode === "redirect" ? "redirect" : "microsite");
@@ -166,7 +167,9 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                   : "bg-slate-500/10 text-slate-400 ring-slate-500/30"
               }`}
             >
-              Plan {PLANS[planOf(tag.plan)].label}
+              {status.expired
+                ? `Plan ${PLANS[status.plan].label} vencido el ${formatDate(status.until)}`
+                : `Plan ${PLANS[status.plan].label}${status.until ? ` · vence el ${formatDate(status.until)}` : ""}`}
             </span>
           </div>
           <button type="button" onClick={onClose} aria-label="Cerrar" className="text-slate-500 hover:text-slate-50">
@@ -387,7 +390,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                     mainUrl={url}
                     links={paid ? links : []}
                     theme={paid ? theme : undefined}
-                    hideBrand={!showBrand(tag.plan)}
+                    hideBrand={!tagShowBrand(tag)}
                   />
                 </div>
               </div>

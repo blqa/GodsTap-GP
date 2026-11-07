@@ -6,7 +6,7 @@ import { doc, getDoc } from "firebase/firestore/lite";
 import { dbLite } from "@/lib/firebaseLite";
 import Microsite from "@/components/Microsite";
 import { countScan } from "@/lib/scans";
-import { isPaid, showBrand } from "@/lib/plans";
+import { tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { LogoMark } from "@/components/Logo";
 
 // Solo permite http/https (bloquea javascript:, data:, etc.)
@@ -190,14 +190,14 @@ function PublicTag() {
   }
 
   // Microsite (botones extra, colores y quitar la marca son de planes de pago)
-  const paid = isPaid(tag.plan);
+  const paid = tagIsPaid(tag);
   return (
     <Microsite
       name={tag.business_name}
       mainUrl={tag.target_url}
       links={paid ? tag.links : []}
       theme={paid ? tag.theme : undefined}
-      hideBrand={!showBrand(tag.plan)}
+      hideBrand={!tagShowBrand(tag)}
     />
   );
 }

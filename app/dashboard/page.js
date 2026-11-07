@@ -17,7 +17,7 @@ import {
 import { auth, db } from "@/lib/firebaseConfig";
 import TagEditor from "@/components/dashboard/TagEditor";
 import ScansPanel from "@/components/dashboard/ScansPanel";
-import { PLANS, isPaid, planOf } from "@/lib/plans";
+import { PLANS, formatDate, planStatus, tagIsPaid } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
 
 const BASE_URL = "https://godstap.godsplan.site";
@@ -48,6 +48,53 @@ function modeStyle(mode) {
   if (mode === "microsite")
     return { label: "Micrositio", style: "bg-brand-500/10 text-brand-300 ring-brand-500/30" };
   return { label: mode || "Sin definir", style: "bg-slate-500/10 text-slate-300 ring-slate-500/30" };
+}
+
+/* ---------------------------------------------------------------
+   Aviso: planes por vencer o vencidos
+---------------------------------------------------------------- */
+function PlanNotice({ tags }) {
+  const statuses = tags.map((t) => ({ tag: t, st: planStatus(t) }));
+  const expired = statuses.filter((x) => x.st.expired);
+  const soon = statuses.filter((x) => x.st.expiringSoon);
+  if (expired.length === 0 && soon.length === 0) return null;
+
+  const name = (x) => x.tag.nickname || x.tag.business_name || x.tag.id;
+  const renewMsg = `Hola, quiero renovar mi plan de GodsTap (${[...expired, ...soon].map((x) => x.tag.id).join(", ")})`;
+
+  return (
+    <section
+      role="status"
+      className={`mb-8 rounded-2xl border p-5 ${
+        expired.length > 0 ? "border-red-500/30 bg-red-500/10" : "border-amber-500/30 bg-amber-500/10"
+      }`}
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="space-y-1.5 text-sm">
+          {expired.map((x) => (
+            <p key={x.tag.id} className="text-red-300">
+              <span className="font-semibold">{name(x)}</span>: tu plan {PLANS[x.st.plan].label} venció el {formatDate(x.st.until)}. Volvió a Básico:
+              se ocultan los botones extra y los colores, y regresa la marca GodsTap. Tu configuración se guarda y vuelve al renovar.
+            </p>
+          ))}
+          {soon.map((x) => (
+            <p key={x.tag.id} className="text-amber-300">
+              <span className="font-semibold">{name(x)}</span>: tu plan {PLANS[x.st.plan].label} vence{" "}
+              {x.st.daysLeft === 1 ? "mañana" : `en ${x.st.daysLeft} días`} ({formatDate(x.st.until)}).
+            </p>
+          ))}
+        </div>
+        <a
+          href={whatsappLink(renewMsg)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="w-fit shrink-0 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
+        >
+          Renovar por WhatsApp
+        </a>
+      </div>
+    </section>
+  );
 }
 
 /* ---------------------------------------------------------------
@@ -598,10 +645,13 @@ export default function DashboardPage() {
         </div>
       )}
       
+      {/* Aviso de vencimiento del plan */}
+      {!loading && tags.length > 0 && <PlanNotice tags={tags} />}
+
       {/* Estadísticas */}
       {user && !loading && tags.length > 0 &&
-        (tags.some((t) => isPaid(t.plan)) ? (
-          <ScansPanel uid={user.uid} tags={tags.filter((t) => isPaid(t.plan))} />
+        (tags.some((t) => tagIsPaid(t)) ? (
+          <ScansPanel uid={user.uid} tags={tags.filter((t) => tagIsPaid(t))} />
         ) : (
           <section className="mb-8 rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-center">
             <h2 className="inline-flex items-center gap-2 text-base font-semibold text-slate-50">
@@ -629,6 +679,7 @@ export default function DashboardPage() {
           {tags.map((tag) => {
             const mode = modeStyle(tag.mode);
             const pending = needsSetup(tag);
+            const plan = planStatus(tag);
             return (
               <article
                 key={tag.id}
@@ -656,12 +707,14 @@ export default function DashboardPage() {
                   </h3>
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${
-                      isPaid(tag.plan)
+                      plan.expired
+                        ? "bg-red-500/10 text-red-300 ring-red-500/30"
+                        : plan.paid
                         ? "bg-brand-500/10 text-brand-300 ring-brand-500/30"
                         : "bg-slate-500/10 text-slate-400 ring-slate-500/30"
                     }`}
                   >
-                    {PLANS[planOf(tag.plan)].label}
+                    {plan.expired ? `${PLANS[plan.plan].label} vencido` : PLANS[plan.plan].label}
                   </span>
                 </div>
 
@@ -671,6 +724,12 @@ export default function DashboardPage() {
                     {tag.target_url || "No configurada"}
                   </p>
                 </div>
+
+                {plan.until && (
+                  <p className={`mt-3 text-xs ${plan.expired ? "text-red-300" : plan.expiringSoon ? "text-amber-300" : "text-slate-500"}`}>
+                    {plan.expired ? "Venció" : "Vence"} el {formatDate(plan.until)}
+                  </p>
+                )}
 
                 <div className="mt-4 flex gap-4 text-sm">
                   {pending && (
