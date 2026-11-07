@@ -1,11 +1,15 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { doc, getDoc, setDoc } from "firebase/firestore";
+import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
+
+function hasText(v) {
+  return typeof v === "string" && v.trim().length > 0;
+}
 
 export default function CompleteProfile({ uid }) {
   const [show, setShow] = useState(false);
@@ -16,14 +20,30 @@ export default function CompleteProfile({ uid }) {
 
   useEffect(() => {
     if (!uid) return;
-    getDoc(doc(db, "users", uid))
-      .then((snap) => {
+
+    // Escucha el perfil en vivo
+    const unsub = onSnapshot(
+      doc(db, "users", uid),
+      { includeMetadataChanges: true },
+      (snap) => {
+        // Ignora datos de copia local: espera la respuesta real del servidor
+        if (snap.metadata.fromCache) return;
+
         const data = snap.exists() ? snap.data() : {};
-        setName(data.name || "");
-        setBusiness(data.business_name || "");
-        if (!data.name || !data.business_name) setShow(true);
-      })
-      .catch((err) => console.error(err));
+        const complete = hasText(data.name) && hasText(data.business_name);
+
+        if (complete) {
+          setShow(false);
+        } else {
+          setName((n) => n || data.name || "");
+          setBusiness((b) => b || data.business_name || "");
+          setShow(true);
+        }
+      },
+      (err) => console.error("No se pudo leer el perfil:", err)
+    );
+
+    return () => unsub();
   }, [uid]);
 
   if (!show) return null;
@@ -46,6 +66,7 @@ export default function CompleteProfile({ uid }) {
     } catch (err) {
       console.error(err);
       setError("No se pudo guardar. Inténtalo de nuevo.");
+    } finally {
       setSaving(false);
     }
   };
