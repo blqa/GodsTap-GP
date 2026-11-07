@@ -87,7 +87,7 @@ export default function AdminPage() {
       try {
         const usersSnap = await getDocs(collection(db, "users"));
         const map = {};
-        usersSnap.docs.forEach((d) => (map[d.id] = d.data().email || ""));
+        usersSnap.docs.forEach((d) => (map[d.id] = d.data()));
         setEmails(map);
       } catch (err) {
         console.error("No se pudieron leer las cuentas:", err);
@@ -244,7 +244,7 @@ export default function AdminPage() {
   const visible = rows.filter(
     (r) =>
       !q ||
-      [r.id, r.business_name, r.nickname, r.owner_uid, r.code, emails[r.owner_uid]].some((v) =>
+      [r.id, r.business_name, r.nickname, r.owner_uid, r.code, emails[r.owner_uid]?.email, emails[r.owner_uid]?.name, emails[r.owner_uid]?.business_name].some((v) =>
         String(v || "").toLowerCase().includes(q)
       )
   );
@@ -262,7 +262,9 @@ export default function AdminPage() {
       title:
         key === NO_OWNER
           ? "Sin vincular"
-          : emails[key] || `Cuenta sin correo (${key.slice(0, 8)}…)`,
+          : emails[key]?.business_name || emails[key]?.email || `Cuenta sin datos (${key.slice(0, 8)}…)`,
+      subtitle:
+        key === NO_OWNER ? "" : [emails[key]?.name, emails[key]?.email].filter(Boolean).join(" · "),
       items,
     }))
     .sort((a, b) => {
@@ -446,7 +448,10 @@ export default function AdminPage() {
           return (
             <details key={g.key} open={!!q || g.items.length <= 5} className="rounded-2xl border border-slate-800 bg-slate-900/60">
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-4">
-                <span className="font-semibold text-white">{linked ? "👤 " : "📦 "}{g.title}</span>
+                <span>
+                  <span className="font-semibold text-white">{linked ? "🏪 " : "📦 "}{g.title}</span>
+                  {g.subtitle && <span className="block text-xs text-slate-500">{g.subtitle}</span>}
+                </span>
                 <span className="text-xs text-slate-400">
                   {g.items.length} GT{linked ? ` · ${proCount} de pago` : ""}
                 </span>

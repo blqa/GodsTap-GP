@@ -19,6 +19,8 @@ const inputClass =
 
 export default function RegisterPage() {
   const router = useRouter();
+  const [name, setName] = useState("");
+  const [business, setBusiness] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -29,6 +31,10 @@ export default function RegisterPage() {
     e.preventDefault();
     setError("");
 
+    if (!name.trim() || !business.trim()) {
+      setError("Escribe tu nombre y el nombre de tu negocio.");
+      return;
+    }
     if (password.length < 8) {
       setError("La contraseña debe tener al menos 8 caracteres.");
       return;
@@ -42,12 +48,17 @@ export default function RegisterPage() {
     try {
       const cred = await createUserWithEmailAndPassword(auth, email.trim(), password);
 
-      // Perfil básico. Si falla, la cuenta ya existe y no bloqueamos el acceso.
       try {
-        await setDoc(doc(db, "users", cred.user.uid), {
-          email: cred.user.email,
-          created_at: serverTimestamp(),
-        });
+        await setDoc(
+          doc(db, "users", cred.user.uid),
+          {
+            email: cred.user.email,
+            name: name.trim().slice(0, 60),
+            business_name: business.trim().slice(0, 80),
+            created_at: serverTimestamp(),
+          },
+          { merge: true }
+        );
       } catch (err) {
         console.error("No se pudo crear el perfil:", err);
       }
@@ -60,16 +71,13 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4">
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-10">
       <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-slate-700/20 blur-3xl" />
 
       <div className="relative w-full max-w-md">
         <div className="mb-8 text-center">
           <h1 className="text-2xl font-semibold tracking-tight text-white">Crea tu cuenta</h1>
-          <p className="mt-1 text-sm text-slate-400">
-            Regístrate para vincular y administrar tus GT
-          </p>
+          <p className="mt-1 text-sm text-slate-400">Regístrate para vincular y administrar tus GT</p>
         </div>
 
         <form
@@ -77,66 +85,40 @@ export default function RegisterPage() {
           className="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-8 shadow-2xl backdrop-blur"
         >
           {error && (
-            <div
-              role="alert"
-              className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300"
-            >
+            <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">
-              Correo electrónico
-            </label>
-            <input
-              id="email"
-              type="email"
-              autoComplete="email"
-              required
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="tu@negocio.com"
-              className={inputClass}
-            />
+            <label className="mb-1.5 block text-sm font-medium text-slate-300">Tu nombre</label>
+            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder="Ej. Juan Pérez" className={inputClass} />
           </div>
 
           <div>
-            <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-300">
-              Contraseña
-            </label>
-            <input
-              id="password"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="Mínimo 8 caracteres"
-              className={inputClass}
-            />
+            <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre de tu negocio</label>
+            <input value={business} onChange={(e) => setBusiness(e.target.value)} maxLength={80} required placeholder="Ej. Tacos El Güero" className={inputClass} />
           </div>
 
           <div>
-            <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-slate-300">
-              Confirmar contraseña
-            </label>
-            <input
-              id="confirm"
-              type="password"
-              autoComplete="new-password"
-              required
-              value={confirm}
-              onChange={(e) => setConfirm(e.target.value)}
-              placeholder="Repite tu contraseña"
-              className={inputClass}
-            />
+            <label className="mb-1.5 block text-sm font-medium text-slate-300">Correo electrónico</label>
+            <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@negocio.com" className={inputClass} />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-300">Contraseña</label>
+            <input type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" className={inputClass} />
+          </div>
+
+          <div>
+            <label className="mb-1.5 block text-sm font-medium text-slate-300">Confirmar contraseña</label>
+            <input type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repite tu contraseña" className={inputClass} />
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:bg-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 disabled:cursor-not-allowed disabled:opacity-60"
+            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {loading ? "Creando cuenta..." : "Crear cuenta"}
           </button>
@@ -148,9 +130,8 @@ export default function RegisterPage() {
             </Link>
           </p>
         </form>
-        <p className="mt-6 text-center text-xs text-slate-500">
-  © 2026 GodsTap · by God’s Plan
-</p>
+
+        <p className="mt-6 text-center text-xs text-slate-500">© 2026 GodsTap · by God’s Plan</p>
       </div>
     </main>
   );

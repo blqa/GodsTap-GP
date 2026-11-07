@@ -5,6 +5,7 @@ import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
   doc,
+  getDoc,
   getDocs,
   query,
   serverTimestamp,
@@ -51,9 +52,9 @@ function modeStyle(mode) {
    Asistente de configuración rápida
    Pasos: 0 bienvenida | 1 nombre | 2 modo | 3 enlace | 4 listo
 ---------------------------------------------------------------- */
-function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved }) {
+function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, defaultName }) {
   const [step, setStep] = useState(startStep);
-  const [name, setName] = useState(tag.business_name === DEFAULT_NAME ? "" : tag.business_name || "");
+  const [name, setName] = useState(tag.business_name === DEFAULT_NAME ? defaultName || "" : tag.business_name || "");
   const [mode, setMode] = useState(tag.mode === "redirect" ? "redirect" : "microsite");
   const [url, setUrl] = useState(isPlaceholderUrl(tag.target_url) ? "" : tag.target_url);
   const [saving, setSaving] = useState(false);
@@ -322,6 +323,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved }) {
 ---------------------------------------------------------------- */
 export default function DashboardPage() {
   const [user, setUser] = useState(null);
+  const [profile, setProfile] = useState(null);  
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -364,6 +366,9 @@ export default function DashboardPage() {
       if (!u) return; // El layout redirige a /login
       setUser(u);
       loadTags(u.uid);
+      getDoc(doc(db, "users", u.uid))
+        .then((snap) => setProfile(snap.exists() ? snap.data() : null))
+        .catch(() => {});
     });
     return () => unsubscribe();
   }, []);
@@ -391,7 +396,14 @@ export default function DashboardPage() {
         claimed_at: serverTimestamp(),
       });
       await batch.commit();
-
+      const alias = (claimForm.alias || "").trim().slice(0, 40);
+      if (alias) {
+        try {
+          await updateDoc(doc(db, "tags", tagId), { nickname: alias, updated_at: serverTimestamp() });
+        } catch (err) {
+          console.error("No se pudo guardar el alias:", err);
+        }
+      }
       setClaimForm({ tag_id: "", code: "" });
       setShowClaim(false);
 
@@ -468,6 +480,7 @@ export default function DashboardPage() {
         <SetupWizard
           key={wizard.tag.id + wizard.startStep}
           tag={wizard.tag}
+          defaultName={profile?.business_name}          
           startStep={wizard.startStep}
           onClose={() => setWizard(null)}
           onClaimAnother={claimAnother}
@@ -533,6 +546,16 @@ export default function DashboardPage() {
                 className={`${inputClass} font-mono uppercase`}
               />
             </div>
+            <div className="sm:col-span-2">
+              <label className="mb-1.5 block text-sm font-medium text-slate-300">Alias (opcional)</label>
+              <input
+                value={claimForm.alias || ""}
+                onChange={(e) => setClaimForm({ ...claimForm, alias: e.target.value })}
+                maxLength={40}
+                placeholder="Ej. Barra, Mesa 1, Cobro"
+                className={inputClass}
+              />
+            </div>            
           </div>
 
           <button

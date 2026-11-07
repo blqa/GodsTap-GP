@@ -6,6 +6,7 @@ import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
 import RevokedNotice from "@/components/dashboard/RevokedNotice";
+import CompleteProfile from "@/components/dashboard/CompleteProfile";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -112,6 +113,7 @@ export default function DashboardLayout({ children }) {
         </div>
       </header>
     <RevokedNotice uid={user.uid} />
+    <CompleteProfile uid={user.uid} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {children}
       </main>
