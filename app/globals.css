@@ -322,3 +322,26 @@ html:not([data-theme="light"]) .ti-moon {
 html {
   scroll-behavior: smooth;
 }
+
+/* ---------- Celulares: evitar el zoom automático ---------- */
+
+/* iOS hace zoom al enfocar un campo con letra menor a 16px */
+@media (max-width: 767px) {
+  input,
+  select,
+  textarea {
+    font-size: 16px;
+  }
+}
+
+/* Quita el zoom por doble toque en botones, enlaces y campos (el pellizco para hacer zoom sigue funcionando) */
+a,
+button,
+summary,
+input,
+select,
+textarea,
+label,
+[role="button"] {
+  touch-action: manipulation;
+}
