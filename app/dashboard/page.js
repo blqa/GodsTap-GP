@@ -15,6 +15,7 @@ import {
 import { auth, db } from "@/lib/firebaseConfig";
 import TagEditor from "@/components/dashboard/TagEditor";
 import ScansPanel from "@/components/dashboard/ScansPanel";
+import { PLANS, SUPPORT_EMAIL, isPaid, planOf } from "@/lib/plans";
 
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
@@ -572,7 +573,23 @@ export default function DashboardPage() {
       )}
       
       {/* Estadísticas */}
-      {user && !loading && tags.length > 0 && <ScansPanel uid={user.uid} tags={tags} />}
+      {user && !loading && tags.length > 0 &&
+        (tags.some((t) => isPaid(t.plan)) ? (
+          <ScansPanel uid={user.uid} tags={tags.filter((t) => isPaid(t.plan))} />
+        ) : (
+          <section className="mb-8 rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-center">
+            <h2 className="text-base font-semibold text-white">🔒 Escaneos</h2>
+            <p className="mt-2 text-sm text-slate-400">
+              Las estadísticas de escaneos están disponibles en el plan Pro.
+            </p>
+            <a
+              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Quiero el plan Pro")}`}
+              className="mt-3 inline-block text-sm text-indigo-400 hover:underline"
+            >
+              Pedir el plan Pro
+            </a>
+          </section>
+        ))}
       {/* Tarjetas */}
       {!loading && tags.length > 0 && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
@@ -599,9 +616,20 @@ export default function DashboardPage() {
                   )}
                 </div>
 
-                <h3 className="truncate text-base font-semibold text-white">
-                  {tag.business_name || "Sin nombre de negocio"}
-                </h3>
+                <div className="flex items-center justify-between gap-3">
+                  <h3 className="truncate text-base font-semibold text-white">
+                    {tag.business_name || "Sin nombre de negocio"}
+                  </h3>
+                  <span
+                    className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${
+                      isPaid(tag.plan)
+                        ? "bg-indigo-500/10 text-indigo-300 ring-indigo-500/30"
+                        : "bg-slate-500/10 text-slate-400 ring-slate-500/30"
+                    }`}
+                  >
+                    {PLANS[planOf(tag.plan)].label}
+                  </span>
+                </div>
 
                 <div className="mt-4 border-t border-slate-800 pt-4">
                   <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">URL destino</p>

@@ -11,6 +11,7 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
+import { PLANS, planOf } from "@/lib/plans";
 
 const ADMIN_UID = "XpdTgI0PrEP05Ilabz32KxpWba42";
 const BASE_URL = "https://godstap.godsplan.site";
@@ -114,6 +115,7 @@ export default function AdminPage() {
         const code = randomString(10, ID_CHARS.toUpperCase());
         batch.set(doc(db, "tags", id), {
           tag_id: id,
+          plan: "basic",
           status: "unclaimed",
           business_name: label.trim() || DEFAULT_NAME,
           mode: "microsite",
@@ -167,6 +169,7 @@ export default function AdminPage() {
         updated_at: serverTimestamp(),
         links: deleteField(),
         theme: deleteField(),
+        plan: "basic",
       });
       // Código nuevo: el anterior deja de servir
       batch.set(doc(db, "activation_codes", target.id), { code: newCode });
@@ -194,7 +197,17 @@ export default function AdminPage() {
       setRevoking(false);
     }
   };
-
+  const handleSetPlan = async (row, plan) => {
+    try {
+      const batch = writeBatch(db);
+      batch.update(doc(db, "tags", row.id), { plan, updated_at: serverTimestamp() });
+      await batch.commit();
+      setRows((rs) => rs.map((r) => (r.id === row.id ? { ...r, plan } : r)));
+    } catch (err) {
+      console.error(err);
+      setError("No se pudo cambiar el plan.");
+    }
+  };
   const handleDelete = async (row) => {
     if (!confirm(`¿Borrar ${row.id} definitivamente? No se puede deshacer.`)) return;
     try {
@@ -414,6 +427,7 @@ export default function AdminPage() {
                   <th className="py-2 pr-4">ID</th>
                   <th className="py-2 pr-4">Negocio</th>
                   <th className="py-2 pr-4">Estado</th>
+                  <th className="py-2 pr-4">Plan</th>                  
                   <th className="py-2 pr-4">Código</th>
                   <th className="py-2">Acciones</th>
                 </tr>
@@ -434,6 +448,19 @@ export default function AdminPage() {
                         </span>
                       )}
                     </td>
+                    <td className="py-2 pr-4">
+                      <select
+                        value={planOf(r.plan)}
+                        onChange={(e) => handleSetPlan(r, e.target.value)}
+                        className="rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white"
+                      >
+                        {Object.entries(PLANS).map(([key, p]) => (
+                          <option key={key} value={key}>
+                            {p.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>                    
                     <td className="py-2 pr-4 font-mono text-xs">{r.code || "—"}</td>
                     <td className="space-x-3 whitespace-nowrap py-2 text-xs">
                       <button onClick={() => copy(`${BASE_URL}/t/${r.id}`)} className="hover:text-white hover:underline">

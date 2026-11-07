@@ -56,10 +56,10 @@ const PLANS = [
     name: "Pro",
     price: "Consulta precio",
     note: "Suscripción",
-    soon: true,
+    soon: false,
     features: [
       "Micrositio con varios botones",
-      "Logo y colores de tu marca",
+      "Colores personalizados",
       "Estadísticas de escaneos",
       "Sin la marca GodsTap",
     ],
