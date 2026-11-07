@@ -4,7 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore/lite";
 import { dbLite } from "@/lib/firebaseLite";
-import { getEmoji } from "@/lib/linkIcons";
+import Microsite from "@/components/Microsite";
 
 // Solo permite http/https (bloquea javascript:, data:, etc.)
 function getSafeUrl(url) {
@@ -193,75 +193,13 @@ function PublicTag() {
   }
 
   // Microsite
-  const businessName = tag.business_name || "Negocio";
-  const initial = businessName.trim().charAt(0).toUpperCase() || "G";
-
-  // Solo se muestran botones con texto y URL http/https válida
-  const extraLinks = (Array.isArray(tag.links) ? tag.links : [])
-    .map((l) => ({
-      label: String(l?.label || "").slice(0, 40),
-      icon: l?.icon,
-      url: getSafeUrl(l?.url),
-    }))
-    .filter((l) => l.label && l.url)
-    .slice(0, 6);
-
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-5 py-12">
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-32 -right-10 h-80 w-80 rounded-full bg-violet-600/15 blur-3xl" />
-
-      <div className="relative w-full max-w-sm text-center">
-        <div className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full bg-gradient-to-br from-indigo-500 via-indigo-600 to-violet-700 text-3xl font-bold text-white shadow-xl shadow-indigo-900/40 ring-4 ring-slate-900">
-          {initial}
-        </div>
-
-        <h1 className="text-2xl font-semibold tracking-tight text-white">{businessName}</h1>
-        <p className="mt-1.5 text-sm text-slate-400">Toca el botón para continuar</p>
-
-        {tag.safeUrl && (
-          <a
-            href={tag.safeUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-4 text-base font-semibold text-white shadow-lg shadow-indigo-900/40 transition hover:from-indigo-500 hover:to-violet-500 focus:outline-none focus:ring-2 focus:ring-indigo-400/50 active:scale-[0.98]"
-          >
-            Visitar sitio
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </a>
-        )}
-
-        {extraLinks.length > 0 && (
-          <div className={`${tag.safeUrl ? "mt-4" : "mt-8"} space-y-3`}>
-            {extraLinks.map((l, i) => (
-              <a
-                key={i}
-                href={l.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-full items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/70 px-5 py-3.5 text-left text-sm font-medium text-slate-100 transition hover:border-slate-600 hover:bg-slate-900 active:scale-[0.98]"
-              >
-                <span className="text-lg">{getEmoji(l.icon)}</span>
-                <span className="flex-1 truncate">{l.label}</span>
-                <span className="text-slate-500">→</span>
-              </a>
-            ))}
-          </div>
-        )}
-
-        {!tag.safeUrl && extraLinks.length === 0 && (
-          <p className="mt-8 rounded-xl border border-slate-800 bg-slate-900/60 px-4 py-3 text-sm text-slate-400">
-            Este enlace aún no está configurado.
-          </p>
-        )}
-
-        <p className="mt-10 text-xs text-slate-600">
-          <span className="font-medium text-slate-500">GodsTap</span> · by God’s Plan
-        </p>
-      </div>
-    </main>
+    <Microsite
+      name={tag.business_name}
+      mainUrl={tag.target_url}
+      links={tag.links}
+      theme={tag.theme}
+    />
   );
 }
 

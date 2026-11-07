@@ -4,6 +4,8 @@ import { useState } from "react";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { ICONS } from "@/lib/linkIcons";
+import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
+import Microsite from "@/components/Microsite";
 
 const MAX_LINKS = 6;
 
@@ -22,6 +24,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
   const [name, setName] = useState(tag.business_name || "");
   const [mode, setMode] = useState(tag.mode === "redirect" ? "redirect" : "microsite");
   const [url, setUrl] = useState(tag.target_url || "");
+  const [theme, setTheme] = useState(normalizeTheme(tag.theme));
   const [links, setLinks] = useState(
     Array.isArray(tag.links)
       ? tag.links.map((l) => ({
@@ -33,6 +36,8 @@ export default function TagEditor({ tag, onClose, onSaved }) {
   );
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+
+  const lowContrast = Math.abs(brightness(theme.bg) - brightness(theme.accent)) < 45;
 
   const updateLink = (i, patch) =>
     setLinks(links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
@@ -91,6 +96,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
         mode,
         target_url: cleanUrl,
         links: cleanLinks,
+        theme: { bg: theme.bg, accent: theme.accent },
         updated_at: serverTimestamp(),
       });
       await onSaved();
@@ -103,12 +109,12 @@ export default function TagEditor({ tag, onClose, onSaved }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 backdrop-blur-sm sm:items-center">
+    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
       <form
         onSubmit={handleSave}
-        className="my-6 w-full max-w-xl space-y-5 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+        className="mx-auto my-6 w-full max-w-5xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
       >
-        <div className="flex items-start justify-between gap-4">
+        <div className="mb-5 flex items-start justify-between gap-4">
           <h2 className="text-lg font-semibold text-white">
             Editar GT <span className="font-mono text-sm text-slate-400">{tag.id}</span>
           </h2>
@@ -117,115 +123,201 @@ export default function TagEditor({ tag, onClose, onSaved }) {
           </button>
         </div>
 
-        {error && (
-          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-            {error}
-          </div>
-        )}
+        <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
+          {/* Columna izquierda: formulario */}
+          <div className="space-y-5">
+            {error && (
+              <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                {error}
+              </div>
+            )}
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre del negocio</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={inputClass} />
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre del negocio</label>
+                <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={inputClass} />
+              </div>
+              <div>
+                <label className="mb-1.5 block text-sm font-medium text-slate-300">Modo</label>
+                <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputClass}>
+                  <option value="microsite">Micrositio</option>
+                  <option value="redirect">Redirección directa</option>
+                </select>
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                  {mode === "microsite" ? "Enlace principal (botón destacado)" : "Enlace de destino"}
+                </label>
+                <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." className={inputClass} />
+              </div>
+            </div>
+
+            {mode === "microsite" ? (
+              <>
+                {/* Colores */}
+                <div className="border-t border-slate-800 pt-5">
+                  <h3 className="text-sm font-semibold text-white">Colores</h3>
+                  <p className="mb-3 text-xs text-slate-500">Elige una paleta o ajusta los colores a tu gusto.</p>
+
+                  <div className="flex flex-wrap gap-2">
+                    {PRESETS.map((p) => {
+                      const selected = p.bg === theme.bg && p.accent === theme.accent;
+                      return (
+                        <button
+                          key={p.name}
+                          type="button"
+                          onClick={() => setTheme({ bg: p.bg, accent: p.accent })}
+                          className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition ${
+                            selected
+                              ? "border-indigo-500 bg-indigo-500/10 text-white"
+                              : "border-slate-700 text-slate-300 hover:bg-slate-800"
+                          }`}
+                        >
+                          <span
+                            className="flex h-5 w-5 items-center justify-center rounded-full ring-1 ring-slate-600"
+                            style={{ backgroundColor: p.bg }}
+                          >
+                            <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: p.accent }} />
+                          </span>
+                          {p.name}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-6">
+                    <label className="flex items-center gap-2 text-sm text-slate-300">
+                      <input
+                        type="color"
+                        value={theme.bg}
+                        onChange={(e) => setTheme({ ...theme, bg: e.target.value })}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-700 bg-transparent p-0.5"
+                      />
+                      Fondo
+                    </label>
+                    <label className="flex items-center gap-2 text-sm text-slate-300">
+                      <input
+                        type="color"
+                        value={theme.accent}
+                        onChange={(e) => setTheme({ ...theme, accent: e.target.value })}
+                        className="h-9 w-12 cursor-pointer rounded border border-slate-700 bg-transparent p-0.5"
+                      />
+                      Color de botones
+                    </label>
+                  </div>
+
+                  {lowContrast && (
+                    <p className="mt-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-300">
+                      Los dos colores son muy parecidos y el botón principal casi no se va a notar. Prueba con
+                      colores más distintos.
+                    </p>
+                  )}
+                </div>
+
+                {/* Botones adicionales */}
+                <div className="border-t border-slate-800 pt-5">
+                  <div className="mb-3 flex items-center justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-white">Botones adicionales</h3>
+                      <p className="text-xs text-slate-500">
+                        {links.length} de {MAX_LINKS}. Salen debajo del botón principal.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={addLink}
+                      disabled={links.length >= MAX_LINKS}
+                      className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
+                    >
+                      + Agregar
+                    </button>
+                  </div>
+
+                  {links.length === 0 && (
+                    <p className="rounded-lg border border-dashed border-slate-700 px-4 py-5 text-center text-sm text-slate-500">
+                      Aún no tienes botones adicionales.
+                    </p>
+                  )}
+
+                  <div className="space-y-3">
+                    {links.map((l, i) => (
+                      <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+                        <div className="grid gap-2 sm:grid-cols-[9rem_1fr]">
+                          <select value={l.icon} onChange={(e) => updateLink(i, { icon: e.target.value })} className={inputClass}>
+                            {ICONS.map((ic) => (
+                              <option key={ic.value} value={ic.value}>
+                                {ic.emoji} {ic.label}
+                              </option>
+                            ))}
+                          </select>
+                          <input
+                            value={l.label}
+                            onChange={(e) => updateLink(i, { label: e.target.value })}
+                            maxLength={30}
+                            placeholder="Texto del botón (ej. Escríbenos)"
+                            className={inputClass}
+                          />
+                        </div>
+                        <input
+                          value={l.url}
+                          onChange={(e) => updateLink(i, { url: e.target.value })}
+                          placeholder="https://..."
+                          className={`${inputClass} mt-2`}
+                        />
+                        <div className="mt-2 flex gap-4 text-xs text-slate-400">
+                          <button type="button" onClick={() => moveLink(i, -1)} disabled={i === 0} className="hover:text-white disabled:opacity-30">
+                            ↑ Subir
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moveLink(i, 1)}
+                            disabled={i === links.length - 1}
+                            className="hover:text-white disabled:opacity-30"
+                          >
+                            ↓ Bajar
+                          </button>
+                          <button type="button" onClick={() => removeLink(i)} className="ml-auto text-red-400 hover:text-red-300">
+                            Quitar
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <p className="mt-3 text-xs text-slate-500">
+                    Para WhatsApp usa <span className="font-mono">https://wa.me/52</span> seguido de tu número a 10
+                    dígitos. Prueba siempre el enlace después de guardar.
+                  </p>
+                </div>
+              </>
+            ) : (
+              <p className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-xs text-slate-500">
+                En modo redirección no se muestra ninguna página: el cliente va directo al enlace. Tus botones
+                y colores se conservan por si vuelves a Micrositio.
+              </p>
+            )}
           </div>
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Modo</label>
-            <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputClass}>
-              <option value="microsite">Micrositio</option>
-              <option value="redirect">Redirección directa</option>
-            </select>
-          </div>
-          <div className="sm:col-span-2">
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">
-              {mode === "microsite" ? "Enlace principal (botón destacado)" : "Enlace de destino"}
-            </label>
-            <input value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." className={inputClass} />
+
+          {/* Columna derecha: vista previa */}
+          <div className="lg:sticky lg:top-6 lg:self-start">
+            <p className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500">
+              Vista previa
+            </p>
+            {mode === "microsite" ? (
+              <div className="mx-auto w-[300px] rounded-[2.5rem] border-4 border-slate-700 bg-slate-800 p-2 shadow-xl">
+                <div className="h-[560px] overflow-y-auto rounded-[2rem]">
+                  <Microsite preview name={name} mainUrl={url} links={links} theme={theme} />
+                </div>
+              </div>
+            ) : (
+              <div className="mx-auto w-[300px] rounded-2xl border border-dashed border-slate-700 px-5 py-10 text-center text-sm text-slate-500">
+                En modo redirección no hay página que mostrar. El cliente irá directo a tu enlace.
+              </div>
+            )}
           </div>
         </div>
 
-        {mode === "microsite" ? (
-          <div className="border-t border-slate-800 pt-5">
-            <div className="mb-3 flex items-center justify-between">
-              <div>
-                <h3 className="text-sm font-semibold text-white">Botones adicionales</h3>
-                <p className="text-xs text-slate-500">
-                  {links.length} de {MAX_LINKS}. Salen debajo del botón principal.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={addLink}
-                disabled={links.length >= MAX_LINKS}
-                className="rounded-lg border border-slate-700 px-3 py-1.5 text-sm text-slate-200 transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:opacity-40"
-              >
-                + Agregar
-              </button>
-            </div>
-
-            {links.length === 0 && (
-              <p className="rounded-lg border border-dashed border-slate-700 px-4 py-5 text-center text-sm text-slate-500">
-                Aún no tienes botones adicionales.
-              </p>
-            )}
-
-            <div className="space-y-3">
-              {links.map((l, i) => (
-                <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
-                  <div className="grid gap-2 sm:grid-cols-[9rem_1fr]">
-                    <select value={l.icon} onChange={(e) => updateLink(i, { icon: e.target.value })} className={inputClass}>
-                      {ICONS.map((ic) => (
-                        <option key={ic.value} value={ic.value}>
-                          {ic.emoji} {ic.label}
-                        </option>
-                      ))}
-                    </select>
-                    <input
-                      value={l.label}
-                      onChange={(e) => updateLink(i, { label: e.target.value })}
-                      maxLength={30}
-                      placeholder="Texto del botón (ej. Escríbenos)"
-                      className={inputClass}
-                    />
-                  </div>
-                  <input
-                    value={l.url}
-                    onChange={(e) => updateLink(i, { url: e.target.value })}
-                    placeholder="https://..."
-                    className={`${inputClass} mt-2`}
-                  />
-                  <div className="mt-2 flex gap-4 text-xs text-slate-400">
-                    <button type="button" onClick={() => moveLink(i, -1)} disabled={i === 0} className="hover:text-white disabled:opacity-30">
-                      ↑ Subir
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => moveLink(i, 1)}
-                      disabled={i === links.length - 1}
-                      className="hover:text-white disabled:opacity-30"
-                    >
-                      ↓ Bajar
-                    </button>
-                    <button type="button" onClick={() => removeLink(i)} className="ml-auto text-red-400 hover:text-red-300">
-                      Quitar
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-
-            <p className="mt-3 text-xs text-slate-500">
-              Para WhatsApp usa <span className="font-mono">https://wa.me/52</span> seguido de tu número a 10 dígitos.
-              Prueba siempre el enlace después de guardar.
-            </p>
-          </div>
-        ) : (
-          <p className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-xs text-slate-500">
-            En modo redirección no se muestra ninguna página: el cliente va directo al enlace. Tus botones
-            adicionales se conservan por si vuelves a Micrositio.
-          </p>
-        )}
-
-        <div className="flex justify-end gap-3 border-t border-slate-800 pt-5">
+        <div className="mt-6 flex justify-end gap-3 border-t border-slate-800 pt-5">
           <button
             type="button"
             onClick={onClose}
