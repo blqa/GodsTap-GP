@@ -14,7 +14,7 @@ import { auth, db } from "@/lib/firebaseConfig";
 import { PLANS, planOf } from "@/lib/plans";
 import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
 
-const ADMIN_UID = "XpdTgI0PrEP05Ilabz32KxpWba42";
+const ADMIN_UID = "FgBIf9XGbma8nNu8TH49IX28FGn1";
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
 const ID_CHARS = "abcdefghjkmnpqrstuvwxyz23456789";
