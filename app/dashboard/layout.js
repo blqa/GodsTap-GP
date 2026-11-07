@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
+import RevokedNotice from "@/components/dashboard/RevokedNotice";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
@@ -107,7 +108,7 @@ export default function DashboardLayout({ children }) {
           </div>
         </div>
       </header>
-
+    <RevokedNotice uid={user.uid} />
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {children}
       </main>

@@ -14,6 +14,9 @@ import { auth, db } from "@/lib/firebaseConfig";
 
 const ADMIN_UID = "XpdTgI0PrEP05Ilabz32KxpWba42";
 const BASE_URL = "https://godstap.godsplan.site";
+const DEFAULT_NAME = "GT sin activar";
+const SUPPORT_EMAIL = "tizorplayer@gmail.com"; // <-- CAMBIA ESTO
+const SUPPORT_PHONE = "+52 55 1059 0927"; // <-- CAMBIA ESTO
 const ID_CHARS = "abcdefghjkmnpqrstuvwxyz23456789"; // sin letras que se confunden (i, l, o, 0, 1)
 
 const inputClass =
@@ -50,9 +53,16 @@ export default function AdminPage() {
   const [error, setError] = useState("");
 
   const [qty, setQty] = useState(5);
-  const [label, setLabel] = useState("GT sin activar");
+  const [label, setLabel] = useState(DEFAULT_NAME);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState([]);
+
+  // Revocar
+  const [revokeTarget, setRevokeTarget] = useState(null);
+  const [revokeReason, setRevokeReason] = useState("");
+  const [revoking, setRevoking] = useState(false);
+  const [revokeError, setRevokeError] = useState("");
+  const [revokeResult, setRevokeResult] = useState(null);
 
   const loadAll = async () => {
     setLoading(true);
@@ -105,7 +115,7 @@ export default function AdminPage() {
         batch.set(doc(db, "tags", id), {
           tag_id: id,
           status: "unclaimed",
-          business_name: label.trim() || "GT sin activar",
+          business_name: label.trim() || DEFAULT_NAME,
           mode: "microsite",
           target_url: BASE_URL,
           created_at: serverTimestamp(),
@@ -124,21 +134,62 @@ export default function AdminPage() {
     }
   };
 
-  const handleReset = async (row) => {
-    if (!confirm(`¿Resetear ${row.id}? Quedará sin dueño y con el mismo código.`)) return;
+  const openRevoke = (row) => {
+    setRevokeTarget(row);
+    setRevokeReason("");
+    setRevokeError("");
+  };
+
+  const handleRevoke = async (e) => {
+    e.preventDefault();
+    setRevokeError("");
+
+    const reason = revokeReason.trim();
+    if (reason.length < 5) {
+      setRevokeError("Escribe el motivo (mínimo 5 caracteres).");
+      return;
+    }
+
+    setRevoking(true);
     try {
+      const target = revokeTarget;
+      const newCode = randomString(10, ID_CHARS.toUpperCase());
+
       const batch = writeBatch(db);
-      batch.update(doc(db, "tags", row.id), {
+      // El GT queda sin dueño y con la configuración en blanco
+      batch.update(doc(db, "tags", target.id), {
         owner_uid: deleteField(),
-        status: "unclaimed",
         claimed_at: deleteField(),
+        status: "unclaimed",
+        business_name: DEFAULT_NAME,
+        mode: "microsite",
+        target_url: BASE_URL,
+        updated_at: serverTimestamp(),
       });
-      batch.delete(doc(db, "claims", row.id));
+      // Código nuevo: el anterior deja de servir
+      batch.set(doc(db, "activation_codes", target.id), { code: newCode });
+      batch.delete(doc(db, "claims", target.id));
+      // Aviso para quien lo tenía vinculado
+      batch.set(doc(collection(db, "notices")), {
+        owner_uid: target.owner_uid,
+        tag_id: target.id,
+        business_name: target.business_name || "",
+        reason,
+        contact_email: SUPPORT_EMAIL,
+        contact_phone: SUPPORT_PHONE,
+        read: false,
+        created_at: serverTimestamp(),
+      });
       await batch.commit();
+
+      setRevokeResult({ id: target.id, code: newCode });
+      setRevokeTarget(null);
       await loadAll();
     } catch (err) {
       console.error(err);
-      setError("No se pudo resetear.");
+      setRevokeError("No se pudo revocar. Revisa que las reglas nuevas estén publicadas.");
+    } finally {
+      setRevoking(false);
     }
   };
 
@@ -170,6 +221,66 @@ export default function AdminPage() {
 
   return (
     <div>
+      {/* Ventana: revocar */}
+      {revokeTarget && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+          <form
+            onSubmit={handleRevoke}
+            className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+          >
+            <div>
+              <h2 className="text-lg font-semibold text-white">
+                Revocar <span className="font-mono text-base text-slate-300">{revokeTarget.id}</span>
+              </h2>
+              <p className="mt-1 text-sm text-slate-400">
+                El cliente que lo tiene vinculado perderá el acceso, se generará un código de activación
+                nuevo y se borrará la configuración del GT. Al entrar a su panel verá un aviso con el
+                motivo.
+              </p>
+            </div>
+
+            {revokeError && (
+              <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+                {revokeError}
+              </div>
+            )}
+
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-300">
+                Motivo (lo verá el cliente)
+              </label>
+              <textarea
+                autoFocus
+                value={revokeReason}
+                onChange={(e) => setRevokeReason(e.target.value)}
+                rows={4}
+                maxLength={300}
+                placeholder="Ej. Pago pendiente de la suscripción."
+                className={inputClass}
+              />
+              <p className="mt-1 text-right text-xs text-slate-500">{revokeReason.length}/300</p>
+            </div>
+
+            <div className="flex justify-end gap-3">
+              <button
+                type="button"
+                onClick={() => setRevokeTarget(null)}
+                className="rounded-lg border border-slate-700 px-4 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
+              >
+                Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={revoking}
+                className="rounded-lg bg-red-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-red-500 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {revoking ? "Revocando..." : "Revocar acceso"}
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
       <div className="mb-8">
         <h1 className="text-2xl font-semibold tracking-tight text-white">Administración de GT</h1>
         <p className="mt-1 text-sm text-slate-400">
@@ -180,6 +291,30 @@ export default function AdminPage() {
       {error && (
         <div role="alert" className="mb-6 rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
           {error}
+        </div>
+      )}
+
+      {/* Resultado de la revocación */}
+      {revokeResult && (
+        <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h2 className="text-base font-semibold text-white">
+              Acceso revocado: <span className="font-mono">{revokeResult.id}</span>
+            </h2>
+            <p className="mt-1 text-sm text-slate-400">
+              Código de activación nuevo:{" "}
+              <span className="font-mono text-amber-300">{revokeResult.code}</span>. El anterior ya no
+              funciona.
+            </p>
+          </div>
+          <div className="flex gap-3 text-sm">
+            <button onClick={() => copy(revokeResult.code)} className="text-slate-300 hover:text-white hover:underline">
+              Copiar código
+            </button>
+            <button onClick={() => setRevokeResult(null)} className="text-slate-500 hover:text-white">
+              Cerrar
+            </button>
+          </div>
         </div>
       )}
 
@@ -303,8 +438,8 @@ export default function AdminPage() {
                         Copiar URL
                       </button>
                       {r.owner_uid && (
-                        <button onClick={() => handleReset(r)} className="text-amber-300 hover:underline">
-                          Resetear
+                        <button onClick={() => openRevoke(r)} className="text-amber-300 hover:underline">
+                          Revocar
                         </button>
                       )}
                       <button onClick={() => handleDelete(r)} className="text-red-400 hover:underline">
