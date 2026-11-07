@@ -152,7 +152,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
     <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
       <form
         onSubmit={handleSave}
-        className="mx-auto my-6 w-full max-w-5xl rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+        className="mx-auto my-4 w-full max-w-5xl rounded-2xl border border-slate-800 bg-slate-900 p-4 shadow-2xl sm:my-6 sm:p-6"
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
@@ -379,7 +379,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
               Vista previa
             </p>
             {mode === "microsite" ? (
-              <div className="mx-auto w-[300px] rounded-[2.5rem] border-4 border-slate-700 bg-slate-800 p-2 shadow-xl">
+              <div className="mx-auto w-full max-w-[300px] rounded-[2.5rem] border-4 border-slate-700 bg-slate-800 p-2 shadow-xl">
                 <div className="h-[560px] overflow-y-auto rounded-[2rem]">
                   <Microsite
                     preview
@@ -392,7 +392,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                 </div>
               </div>
             ) : (
-              <div className="mx-auto w-[300px] rounded-2xl border border-dashed border-slate-700 px-5 py-10 text-center text-sm text-slate-500">
+              <div className="mx-auto w-full max-w-[300px] rounded-2xl border border-dashed border-slate-700 px-5 py-10 text-center text-sm text-slate-500">
                 En modo redirección no hay página que mostrar. El cliente irá directo a tu enlace.
               </div>
             )}

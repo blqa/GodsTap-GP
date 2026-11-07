@@ -159,6 +159,15 @@ html:not([data-theme="light"]) .ti-moon {
   width: min(100%, 26rem);
   aspect-ratio: 1 / 1.14;
   margin-inline: auto;
+  pointer-events: none;
+  container-type: inline-size;
+}
+
+/* Si el escenario es angosto (celulares chicos), se muestran menos botones en el celular de ejemplo */
+@container (max-width: 340px) {
+  .tap-hide-sm {
+    display: none;
+  }
 }
 
 .tap-ring {
@@ -189,7 +198,7 @@ html:not([data-theme="light"]) .ti-moon {
     opacity: 0.75;
   }
   100% {
-    scale: 4.4;
+    scale: 3.2;
     opacity: 0;
   }
 }
@@ -235,6 +244,7 @@ html:not([data-theme="light"]) .ti-moon {
   z-index: 2;
   padding: 0.5rem;
   border-radius: 2.1rem;
+  overflow: hidden;
   background: var(--color-slate-900);
   border: 1px solid var(--color-slate-700);
   box-shadow: 0 2rem 4rem -1.2rem rgb(0 0 0 / 0.55);
@@ -290,11 +300,11 @@ html:not([data-theme="light"]) .ti-moon {
   }
   .tap-ring:nth-child(1) {
     opacity: 0.45;
-    scale: 2.2;
+    scale: 1.9;
   }
   .tap-ring:nth-child(2) {
     opacity: 0.25;
-    scale: 3.3;
+    scale: 2.8;
   }
   .tap-tag,
   .tap-reveal {

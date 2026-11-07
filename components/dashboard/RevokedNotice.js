@@ -51,11 +51,11 @@ export default function RevokedNotice({ uid }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 p-4 backdrop-blur-sm">
+    <div className="fixed inset-0 z-[60] flex overflow-y-auto bg-black/80 p-4 backdrop-blur-sm">
       <div
         role="alertdialog"
         aria-modal="true"
-        className="w-full max-w-md rounded-2xl border border-red-500/30 bg-slate-900 p-6 shadow-2xl"
+        className="m-auto w-full max-w-md rounded-2xl border border-red-500/30 bg-slate-900 p-6 shadow-2xl"
       >
         <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-red-500/10 text-2xl ring-1 ring-red-500/30">
           ⚠️

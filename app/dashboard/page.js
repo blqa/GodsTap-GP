@@ -103,8 +103,8 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
   const showProgress = step >= 1 && step <= 3;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <div className="relative w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+      <div className="relative m-auto w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
         <button
           onClick={onClose}
           aria-label="Cerrar"

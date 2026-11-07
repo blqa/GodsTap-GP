@@ -72,8 +72,8 @@ export default function CompleteProfile({ uid }) {
   };
 
   return (
-    <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
-      <form onSubmit={handleSave} className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
+    <div className="fixed inset-0 z-[55] flex overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+      <form onSubmit={handleSave} className="m-auto w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
         <div>
           <h2 className="text-lg font-semibold text-slate-50">Completa tu perfil</h2>
           <p className="mt-1 text-sm text-slate-400">Solo te lo pedimos una vez.</p>

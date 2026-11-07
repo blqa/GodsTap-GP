@@ -106,7 +106,7 @@ const DEMO_LINKS = [
   { label: "Ver el menú", main: true },
   { label: "Pedir por WhatsApp" },
   { label: "Dejar una reseña" },
-  { label: "Instagram" },
+  { label: "Instagram", extra: true },
 ];
 
 function NfcArcs({ className = "" }) {
@@ -140,13 +140,13 @@ function TapDemo() {
           <p className="tap-reveal mt-3 font-display text-lg font-bold leading-tight" style={{ animationDelay: "1.25s" }}>
             Taquería La Esquina
           </p>
-          <p className="tap-reveal mt-0.5 text-[0.7rem] text-[#f6efe0]/70" style={{ animationDelay: "1.35s" }}>
+          <p className="tap-reveal tap-hide-sm mt-0.5 text-[0.7rem] text-[#f6efe0]/70" style={{ animationDelay: "1.35s" }}>
             Abierto hasta las 11 pm
           </p>
           {DEMO_LINKS.map((l, i) => (
             <div
               key={l.label}
-              className={`tap-reveal w-full rounded-xl py-2.5 text-xs ${i === 0 ? "mt-5" : "mt-2"} ${
+              className={`tap-reveal w-full rounded-xl py-2.5 text-xs ${l.extra ? "tap-hide-sm" : ""} ${i === 0 ? "mt-5" : "mt-2"} ${
                 l.main
                   ? "bg-[#f2c14e] font-semibold text-[#082f33]"
                   : "border border-white/20 font-medium text-[#f6efe0]"
@@ -156,7 +156,7 @@ function TapDemo() {
               {l.label}
             </div>
           ))}
-          <p className="tap-reveal mt-auto text-[0.6rem] text-[#f6efe0]/40" style={{ animationDelay: "2.3s" }}>
+          <p className="tap-reveal tap-hide-sm mt-auto text-[0.6rem] text-[#f6efe0]/40" style={{ animationDelay: "2.3s" }}>
             GodsTap · by God’s Plan
           </p>
         </div>
@@ -186,11 +186,12 @@ export default function HomePage() {
               Planes
             </a>
             <Link href="/login" className="px-3 py-2 text-sm font-medium text-slate-200 transition hover:text-slate-50">
-              Iniciar sesión
+              <span className="sm:hidden">Entrar</span>
+              <span className="hidden sm:inline">Iniciar sesión</span>
             </Link>
             <Link
               href="/register"
-              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
+              className="hidden rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 sm:block"
             >
               Crear cuenta
             </Link>

@@ -53,7 +53,7 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
           {initial}
         </div>
 
-        <h1 className="text-2xl font-semibold tracking-tight">{businessName}</h1>
+        <h1 className="break-words text-2xl font-semibold tracking-tight">{businessName}</h1>
         <p className="mt-1.5 text-sm" style={{ color: alpha(fg, 0.65) }}>
           Toca el botón para continuar
         </p>

@@ -279,10 +279,10 @@ export default function AdminPage() {
     <div>
       {/* Ventana: revocar */}
       {revokeTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
+        <div className="fixed inset-0 z-50 flex overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
           <form
             onSubmit={handleRevoke}
-            className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+            className="m-auto w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
           >
             <div>
               <h2 className="text-lg font-semibold text-slate-50">
