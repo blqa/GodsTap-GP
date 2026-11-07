@@ -92,7 +92,7 @@ function UnclaimedState({ tagId }) {
         </div>
 
         <p className="mt-10 text-xs text-slate-600">
-          Powered by <span className="font-medium text-slate-500">GodsTap</span>
+          <span className="font-medium text-slate-500">GodsTap</span> · by God’s Plan
         </p>
       </div>
     </main>
@@ -227,7 +227,7 @@ function PublicTag() {
         )}
 
         <p className="mt-10 text-xs text-slate-600">
-          Powered by <span className="font-medium text-slate-500">GodsTap</span>
+          <span className="font-medium text-slate-500">GodsTap</span> · by God’s Plan
         </p>
       </div>
     </main>

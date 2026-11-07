@@ -151,7 +151,7 @@ export default function LoginPage() {
   </Link>
 </p>
         <p className="mt-6 text-center text-xs text-slate-500">
-          © 2026 GodsTap-GP. Todos los derechos reservados.
+          © {new Date().getFullYear()} GodsTap · by God’s Plan. Todos los derechos reservados.
         </p>
       </div>
     </main>

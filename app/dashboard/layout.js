@@ -83,8 +83,9 @@ export default function DashboardLayout({ children }) {
               </svg>
             </div>
             <span className="text-lg font-semibold tracking-tight text-white">
-              GodsTap
-            </span>
+  GodsTap
+  <span className="hidden text-sm font-normal text-slate-500 sm:inline"> · by God’s Plan</span>
+</span>
           </div>
 
           {/* Usuario + logout */}

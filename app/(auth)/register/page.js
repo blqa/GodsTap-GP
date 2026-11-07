@@ -148,6 +148,9 @@ export default function RegisterPage() {
             </Link>
           </p>
         </form>
+        <p className="mt-6 text-center text-xs text-slate-500">
+  © {new Date().getFullYear()} GodsTap · by God’s Plan
+</p>
       </div>
     </main>
   );

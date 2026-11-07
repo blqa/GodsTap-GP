@@ -104,6 +104,7 @@ export default function RevokedNotice({ uid }) {
         >
           Entendido
         </button>
+        <p className="mt-4 text-center text-xs text-slate-600">GodsTap · by God’s Plan</p>
       </div>
     </div>
   );
