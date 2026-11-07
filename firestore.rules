@@ -1,5 +1,7 @@
 rules_version = '2';
 
+// GodsTap · reglas de Firestore.
+// Pégalas completas en Firebase Console → Firestore Database → Reglas → Publicar.
 service cloud.firestore {
   match /databases/{database}/documents {
 
@@ -7,35 +9,127 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isOwner() {
-      return isSignedIn() && resource.data.owner_uid == request.auth.uid;
+    function isAdmin() {
+      return isSignedIn() && request.auth.uid == 'FgBIf9XGbma8nNu8TH49IX28FGn1';
     }
 
-    // Usuarios: cada quien solo accede a su propio documento
+    function isOwner() {
+      return isSignedIn() && resource.data.get('owner_uid', null) == request.auth.uid;
+    }
+
+    // Plan de pago vigente: Pro/Negocio y, si tiene fecha de vencimiento, que no haya pasado
+    function isPaid() {
+      return resource.data.get('plan', 'basic') in ['pro', 'business']
+        && (resource.data.get('plan_until', null) == null
+            || resource.data.plan_until > request.time);
+    }
+
+    function validTheme(t) {
+      return t == null || (
+        t is map
+        && t.keys().hasOnly(['bg', 'accent'])
+        && t.bg is string
+        && t.bg.matches('^#[0-9a-fA-F]{6}$')
+        && t.accent is string
+        && t.accent.matches('^#[0-9a-fA-F]{6}$')
+      );
+    }
+
     match /users/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
+      // El administrador ve y edita todas las cuentas (crear, editar, suspender, eliminar)
+      allow read, write: if isAdmin();
     }
 
-    // Tags
-    match /tags/{tagId} {
-      // Lectura pública de UN documento (necesaria para /t/[tag_id] con Firestore Lite sin auth).
-      // No permite listar la colección. No guardes datos sensibles en estos documentos.
-      allow get: if true;
-
-      // Listados: solo del dueño (la query debe incluir where("owner_uid", "==", uid))
-      allow list: if isOwner();
-
+    // Registro de movimientos: quien tenga sesión puede escribir los suyos (con su propio UID);
+    // solo el administrador los lee. Nadie los edita ni los borra.
+    match /audit_logs/{logId} {
       allow create: if isSignedIn()
-                    && request.resource.data.owner_uid == request.auth.uid;
-
-      // El dueño edita, pero no puede reasignar owner_uid
-      allow update: if isOwner()
-                    && request.resource.data.owner_uid == resource.data.owner_uid;
-
-      allow delete: if isOwner();
+        && request.resource.data.actor_uid == request.auth.uid
+        && request.resource.data.summary is string
+        && request.resource.data.summary.size() <= 400;
+      allow read: if isAdmin();
+      allow update, delete: if false;
     }
 
-    // Todo lo demás, denegado
+    match /tags/{tagId} {
+      allow get: if true;
+      allow list: if isOwner() || isAdmin();
+      allow create, update, delete: if isAdmin();
+
+      // El dueño solo puede editar estos campos (el plan NO está en la lista)
+      allow update: if isOwner()
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'updated_at'])
+        && request.resource.data.mode in ['redirect', 'microsite']
+        && request.resource.data.target_url is string
+        && request.resource.data.target_url.matches('^https?://.+')
+        && request.resource.data.business_name is string
+        && request.resource.data.business_name.size() <= 80
+        && request.resource.data.get('nickname', '') is string
+        && request.resource.data.get('nickname', '').size() <= 40
+        && request.resource.data.get('links', []) is list
+        && request.resource.data.get('links', []).size() <= 6
+        && validTheme(request.resource.data.get('theme', null))
+        && (isPaid() || request.resource.data.get('links', []) == resource.data.get('links', []))
+        && (isPaid() || request.resource.data.get('theme', null) == resource.data.get('theme', null));
+
+      // Vincular
+      allow update: if isSignedIn()
+        && resource.data.get('owner_uid', null) == null
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.status == 'active'
+        && request.resource.data.diff(resource.data).affectedKeys()
+             .hasOnly(['owner_uid', 'status', 'claimed_at'])
+        && existsAfter(/databases/$(database)/documents/claims/$(tagId))
+        && getAfter(/databases/$(database)/documents/claims/$(tagId)).data.owner_uid == request.auth.uid;
+    }
+
+    match /activation_codes/{tagId} {
+      allow read, write: if isAdmin();
+    }
+
+    match /claims/{tagId} {
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly(['owner_uid', 'code'])
+        && request.resource.data.owner_uid == request.auth.uid
+        && request.resource.data.code is string
+        && get(/databases/$(database)/documents/tags/$(tagId)).data.get('owner_uid', null) == null
+        && request.resource.data.code == get(/databases/$(database)/documents/activation_codes/$(tagId)).data.code;
+      allow read, delete: if isAdmin();
+    }
+
+    match /notices/{noticeId} {
+      allow create, delete: if isAdmin();
+      allow read: if isAdmin()
+        || (isSignedIn() && resource.data.owner_uid == request.auth.uid);
+      allow update: if isSignedIn()
+        && resource.data.owner_uid == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read'])
+        && request.resource.data.read == true;
+    }
+
+    match /scan_days/{docId} {
+      allow create: if request.resource.data.keys().hasOnly(['tag_id', 'owner_uid', 'day', 'count'])
+        && request.resource.data.tag_id is string
+        && request.resource.data.owner_uid is string
+        && request.resource.data.day is string
+        && request.resource.data.day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
+        && docId == request.resource.data.tag_id + '_' + request.resource.data.day
+        && request.resource.data.count == 1
+        && get(/databases/$(database)/documents/tags/$(request.resource.data.tag_id)).data.get('owner_uid', null)
+             == request.resource.data.owner_uid;
+
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count'])
+        && request.resource.data.count is int
+        && request.resource.data.count == resource.data.count + 1;
+
+      allow get, list: if isSignedIn()
+        && (resource.data.owner_uid == request.auth.uid || isAdmin());
+
+      allow delete: if isAdmin();
+    }
+
     match /{document=**} {
       allow read, write: if false;
     }

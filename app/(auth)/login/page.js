@@ -6,6 +6,7 @@ import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import Link from "next/link";
 import AuthShell from "@/components/AuthShell";
+import { isAdminUid } from "@/lib/admin";
 
 const ERRORES = {
   "auth/invalid-credential": "Correo o contraseña incorrectos.",
@@ -33,8 +34,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await signInWithEmailAndPassword(auth, email.trim(), password);
-      router.push("/dashboard");
+      const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
+      // La cuenta de administrador entra directo al modo administrador
+      router.push(isAdminUid(cred.user.uid) ? "/dashboard/admin" : "/dashboard");
     } catch (err) {
       setError(ERRORES[err.code] || "No se pudo iniciar sesión. Inténtalo de nuevo.");
       setLoading(false);

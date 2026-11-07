@@ -19,6 +19,7 @@ import TagEditor from "@/components/dashboard/TagEditor";
 import ScansPanel from "@/components/dashboard/ScansPanel";
 import { PLANS, formatDate, planStatus, tagIsPaid } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
+import { logEvent } from "@/lib/audit";
 
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
@@ -136,6 +137,13 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
         mode,
         target_url: link,
         updated_at: serverTimestamp(),
+      });
+      await logEvent({
+        action: "tag_updated",
+        owner_uid: tag.owner_uid || "",
+        tag_id: tag.id,
+        business_name: name.trim(),
+        summary: "Terminó la configuración rápida.",
       });
       await onSaved();
       setStep(4);
@@ -453,6 +461,13 @@ export default function DashboardPage() {
           console.error("No se pudo guardar el alias:", err);
         }
       }
+      await logEvent({
+        action: "tag_claimed",
+        owner_uid: user.uid,
+        tag_id: tagId,
+        business_name: profile?.business_name || "",
+        summary: `Vinculó el GT ${tagId}${alias ? ` con el alias «${alias}»` : ""}.`,
+      });
       setClaimForm({ tag_id: "", code: "" });
       setShowClaim(false);
 

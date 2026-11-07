@@ -3,86 +3,20 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import {
-  collection,
-  deleteField,
-  doc,
-  getDocs,
-  serverTimestamp,
-  Timestamp,
-  writeBatch,
-} from "firebase/firestore";
+import { collection, doc, getDocs, serverTimestamp, writeBatch } from "firebase/firestore";
+import Link from "next/link";
 import { auth, db } from "@/lib/firebaseConfig";
-import { PLANS, addMonths, formatDate, planOf, planStatus } from "@/lib/plans";
-import { SUPPORT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
-
-const ADMIN_UID = "FgBIf9XGbma8nNu8TH49IX28FGn1";
-const BASE_URL = "https://godstap.godsplan.site";
-const DEFAULT_NAME = "GT sin activar";
+import { PLANS, planOf, planStatus } from "@/lib/plans";
+import { ADMIN_UID } from "@/lib/admin";
+import { addLogToBatch } from "@/lib/audit";
+import { BASE_URL, DEFAULT_NAME, applyPlan, revokeTag } from "@/lib/adminOps";
+import { PlanBadge, PlanPicker } from "@/components/admin/PlanControls";
+import TagEditor from "@/components/dashboard/TagEditor";
 const ID_CHARS = "abcdefghjkmnpqrstuvwxyz23456789";
 const NO_OWNER = "__sin_vincular__";
 
 const inputClass =
   "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
-
-const selectClass = "rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-50";
-
-const DURATIONS = [
-  { value: 1, label: "1 mes" },
-  { value: 3, label: "3 meses" },
-  { value: 6, label: "6 meses" },
-  { value: 12, label: "12 meses" },
-  { value: 0, label: "Sin vencimiento" },
-];
-
-// Etiqueta con el estado del plan de un GT
-function PlanBadge({ r }) {
-  const st = planStatus(r);
-  let cls = "bg-slate-500/10 text-slate-400 ring-slate-500/30";
-  let text = PLANS[st.plan].label;
-  if (st.paid) cls = "bg-brand-500/10 text-brand-300 ring-brand-500/30";
-  if (st.paid && st.until) text += ` · vence ${formatDate(st.until)}`;
-  if (st.paid && !st.until) text += " · sin vencimiento";
-  if (st.expiringSoon) cls = "bg-amber-500/10 text-amber-300 ring-amber-500/30";
-  if (st.expired) {
-    cls = "bg-red-500/10 text-red-300 ring-red-500/30";
-    text = `${PLANS[st.plan].label} · venció ${formatDate(st.until)}`;
-  }
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${cls}`}>{text}</span>;
-}
-
-// Elegir plan + duración y aplicarlo
-function PlanPicker({ initialPlan, onApply, confirmText }) {
-  const [plan, setPlan] = useState(initialPlan);
-  const [months, setMonths] = useState(1);
-  const paid = PLANS[plan].paid;
-  return (
-    <div className="flex flex-wrap items-center gap-2">
-      <select value={plan} onChange={(e) => setPlan(e.target.value)} className={selectClass} aria-label="Plan">
-        {Object.entries(PLANS).map(([key, p]) => (
-          <option key={key} value={key}>{p.label}</option>
-        ))}
-      </select>
-      {paid && (
-        <select value={months} onChange={(e) => setMonths(Number(e.target.value))} className={selectClass} aria-label="Duración">
-          {DURATIONS.map((d) => (
-            <option key={d.value} value={d.value}>{d.label}</option>
-          ))}
-        </select>
-      )}
-      <button
-        type="button"
-        onClick={() => {
-          if (confirmText && !confirm(confirmText(plan, paid ? months : 0))) return;
-          onApply(plan, paid ? months : 0);
-        }}
-        className="rounded-md bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white transition hover:bg-brand-500"
-      >
-        Aplicar
-      </button>
-    </div>
-  );
-}
 
 function randomString(length, chars) {
   let out = "";
@@ -126,6 +60,7 @@ export default function AdminPage() {
   const [revoking, setRevoking] = useState(false);
   const [revokeError, setRevokeError] = useState("");
   const [revokeResult, setRevokeResult] = useState(null);
+  const [editing, setEditing] = useState(null);
 
   const loadAll = async () => {
     setLoading(true);
@@ -201,6 +136,11 @@ export default function AdminPage() {
         batch.set(doc(db, "activation_codes", id), { code });
         items.push({ id, url: `${BASE_URL}/t/${id}`, code });
       }
+      addLogToBatch(batch, {
+        action: "tag_batch_created",
+        business_name: label.trim() || DEFAULT_NAME,
+        summary: `Creó ${n} GT (${items[0].id}${n > 1 ? ` … ${items[n - 1].id}` : ""}).`,
+      });
       await batch.commit();
       setCreated(items);
       await loadAll();
@@ -212,29 +152,13 @@ export default function AdminPage() {
     }
   };
 
-  // months > 0: el plan vence en esa cantidad de meses. Si el GT ya tiene ese plan vigente, se suma a su fecha actual (renovación).
-  // months = 0 o plan Básico: sin vencimiento.
   const setPlanFor = async (items, plan, months = 0) => {
     try {
-      const now = Date.now();
-      const batch = writeBatch(db);
-      const newUntil = {};
-      items.forEach((r) => {
-        const data = { plan, updated_at: serverTimestamp() };
-        if (PLANS[plan].paid && months > 0) {
-          const st = planStatus(r);
-          const base = st.paid && st.plan === plan && st.until && st.until > now ? st.until : now;
-          newUntil[r.id] = Timestamp.fromDate(addMonths(base, months));
-          data.plan_until = newUntil[r.id];
-        } else {
-          data.plan_until = deleteField();
-        }
-        batch.update(doc(db, "tags", r.id), data);
-      });
-      await batch.commit();
+      const newUntil = await applyPlan(items, plan, months);
+      const ids = new Set(items.map((r) => r.id));
       setRows((rs) =>
         rs.map((r) => {
-          if (!newUntil[r.id] && !items.some((i) => i.id === r.id)) return r;
+          if (!ids.has(r.id)) return r;
           const next = { ...r, plan };
           if (newUntil[r.id]) next.plan_until = newUntil[r.id];
           else delete next.plan_until;
@@ -258,35 +182,7 @@ export default function AdminPage() {
     setRevoking(true);
     try {
       const target = revokeTarget;
-      const newCode = randomString(10, ID_CHARS.toUpperCase());
-      const batch = writeBatch(db);
-      batch.update(doc(db, "tags", target.id), {
-        owner_uid: deleteField(),
-        claimed_at: deleteField(),
-        links: deleteField(),
-        theme: deleteField(),
-        nickname: deleteField(),
-        plan_until: deleteField(),
-        plan: "basic",
-        status: "unclaimed",
-        business_name: DEFAULT_NAME,
-        mode: "microsite",
-        target_url: BASE_URL,
-        updated_at: serverTimestamp(),
-      });
-      batch.set(doc(db, "activation_codes", target.id), { code: newCode });
-      batch.delete(doc(db, "claims", target.id));
-      batch.set(doc(collection(db, "notices")), {
-        owner_uid: target.owner_uid,
-        tag_id: target.id,
-        business_name: target.business_name || "",
-        reason,
-        contact_email: SUPPORT_EMAIL,
-        contact_phone: CONTACT_PHONE,
-        read: false,
-        created_at: serverTimestamp(),
-      });
-      await batch.commit();
+      const newCode = await revokeTag(target, reason);
       setRevokeResult({ id: target.id, code: newCode });
       setRevokeTarget(null);
       await loadAll();
@@ -305,6 +201,13 @@ export default function AdminPage() {
       batch.delete(doc(db, "tags", row.id));
       batch.delete(doc(db, "activation_codes", row.id));
       batch.delete(doc(db, "claims", row.id));
+      addLogToBatch(batch, {
+        action: "tag_deleted",
+        owner_uid: row.owner_uid || "",
+        tag_id: row.id,
+        business_name: row.business_name || "",
+        summary: `Borró el GT ${row.id}.`,
+      });
       await batch.commit();
       await loadAll();
     } catch (err) {
@@ -416,6 +319,10 @@ export default function AdminPage() {
             </div>
           </form>
         </div>
+      )}
+
+      {editing && (
+        <TagEditor admin tag={editing} onClose={() => setEditing(null)} onSaved={loadAll} />
       )}
 
       <div className="mb-8">
@@ -579,6 +486,15 @@ export default function AdminPage() {
                 </span>
                 <span className="text-xs text-slate-400">
                   {g.items.length} GT{linked ? ` · ${proCount} de pago` : ""}
+                  {linked && (
+                    <Link
+                      href={`/dashboard/admin/cuenta/${g.key}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="ml-3 font-medium text-brand-400 hover:underline"
+                    >
+                      Ver cuenta
+                    </Link>
+                  )}
                 </span>
               </summary>
 
@@ -623,6 +539,9 @@ export default function AdminPage() {
                           </td>
                           <td className="py-2 pr-4 font-mono text-xs">{r.code || "—"}</td>
                           <td className="space-x-3 whitespace-nowrap py-2 text-xs">
+                            <button onClick={() => setEditing(r)} className="font-medium text-brand-400 hover:underline">
+                              Editar
+                            </button>
                             <button onClick={() => copy(`${BASE_URL}/t/${r.id}`)} className="hover:text-slate-50 hover:underline">
                               Copiar URL
                             </button>

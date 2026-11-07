@@ -7,6 +7,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import AuthShell from "@/components/AuthShell";
+import { logEvent } from "@/lib/audit";
 
 const ERRORES = {
   "auth/email-already-in-use": "Ya existe una cuenta con ese correo.",
@@ -63,6 +64,13 @@ export default function RegisterPage() {
       } catch (err) {
         console.error("No se pudo crear el perfil:", err);
       }
+
+      await logEvent({
+        action: "account_created",
+        owner_uid: cred.user.uid,
+        business_name: business.trim(),
+        summary: `Se registró ${cred.user.email}.`,
+      });
 
       router.push("/dashboard");
     } catch (err) {

@@ -7,6 +7,7 @@ import { ICONS } from "@/lib/linkIcons";
 import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
 import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
+import { logEvent } from "@/lib/audit";
 import Microsite from "@/components/Microsite";
 
 const MAX_LINKS = 6;
@@ -45,8 +46,9 @@ function Locked({ title, tagId, children }) {
   );
 }
 
-export default function TagEditor({ tag, onClose, onSaved }) {
-  const paid = tagIsPaid(tag);
+// admin: el administrador puede editar todo, aunque el plan del GT no lo incluya
+export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
+  const paid = admin || tagIsPaid(tag);
   const status = planStatus(tag);
 
   const [name, setName] = useState(tag.business_name || "");
@@ -137,9 +139,25 @@ export default function TagEditor({ tag, onClose, onSaved }) {
       payload.theme = { bg: theme.bg, accent: theme.accent };
     }
 
+    // Qué cambió (para el registro de movimientos)
+    const changed = [];
+    if (cleanName !== (tag.business_name || "")) changed.push("nombre del negocio");
+    if (cleanNick !== (tag.nickname || "")) changed.push("alias");
+    if (mode !== (tag.mode === "redirect" ? "redirect" : "microsite")) changed.push("modo");
+    if (cleanUrl !== (tag.target_url || "")) changed.push("enlace principal");
+    if (payload.links && JSON.stringify(payload.links) !== JSON.stringify(tag.links || [])) changed.push("botones");
+    if (payload.theme && JSON.stringify(payload.theme) !== JSON.stringify(normalizeTheme(tag.theme))) changed.push("colores");
+
     setSaving(true);
     try {
       await updateDoc(doc(db, "tags", tag.id), payload);
+      await logEvent({
+        action: admin ? "tag_updated_by_admin" : "tag_updated",
+        owner_uid: tag.owner_uid || "",
+        tag_id: tag.id,
+        business_name: cleanName,
+        summary: changed.length ? `Cambió: ${changed.join(", ")}.` : "Guardó sin cambios.",
+      });
       await onSaved();
       onClose();
     } catch (err) {
@@ -176,6 +194,12 @@ export default function TagEditor({ tag, onClose, onSaved }) {
             ✕
           </button>
         </div>
+
+        {admin && (
+          <p className="mb-5 rounded-lg border border-brand-500/30 bg-brand-500/10 px-4 py-3 text-sm text-brand-300">
+            Modo administrador: puedes editar todo. Los botones y colores solo se muestran al público si el GT tiene un plan de pago vigente.
+          </p>
+        )}
 
         <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
           {/* Columna izquierda: formulario */}
