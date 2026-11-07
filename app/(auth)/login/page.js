@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
+import Link from "next/link";
 
 const ERRORES = {
   "auth/invalid-credential": "Correo o contraseña incorrectos.",
@@ -143,7 +144,12 @@ export default function LoginPage() {
             {loading ? "Ingresando..." : "Iniciar sesión"}
           </button>
         </form>
-
+        <p className="mt-5 text-center text-sm text-slate-400">
+  ¿Aún no tienes cuenta?{" "}
+  <Link href="/register" className="font-medium text-indigo-400 hover:text-indigo-300">
+    Crear cuenta
+  </Link>
+</p>
         <p className="mt-6 text-center text-xs text-slate-500">
           © 2026 GodsTap-GP. Todos los derechos reservados.
         </p>
