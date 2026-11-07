@@ -50,11 +50,61 @@ function ErrorState({ title, message, detail }) {
   );
 }
 
+function UnclaimedState({ tagId }) {
+  return (
+    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-5 py-12">
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl" />
+
+      <div className="relative w-full max-w-sm text-center">
+        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-slate-900 ring-1 ring-slate-700">
+          <svg className="h-9 w-9 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
+            />
+          </svg>
+        </div>
+
+        <h1 className="text-2xl font-semibold tracking-tight text-white">Este GT aún no está activado</h1>
+        <p className="mt-2 text-sm text-slate-400">
+          Si acabas de recibirlo, crea tu cuenta o inicia sesión y vincúlalo con el código de
+          activación que viene en tu empaque.
+        </p>
+
+        <p className="mt-5 inline-block rounded-md bg-slate-900 px-3 py-1.5 font-mono text-xs text-slate-300 ring-1 ring-slate-700">
+          ID: {tagId}
+        </p>
+
+        <div className="mt-8 space-y-3">
+          <a
+            href="/register"
+            className="block w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/40 transition hover:from-indigo-500 hover:to-violet-500"
+          >
+            Crear cuenta
+          </a>
+          <a
+            href="/login"
+            className="block w-full rounded-xl border border-slate-700 px-6 py-3.5 text-sm font-medium text-slate-200 transition hover:bg-slate-900"
+          >
+            Ya tengo cuenta
+          </a>
+        </div>
+
+        <p className="mt-10 text-xs text-slate-600">
+          Powered by <span className="font-medium text-slate-500">GodsTap</span>
+        </p>
+      </div>
+    </main>
+  );
+}
+
 function PublicTag() {
   const params = useParams();
   const rawId = Array.isArray(params?.tag_id) ? params.tag_id[0] : params?.tag_id;
 
-  const [status, setStatus] = useState("loading"); // loading | redirecting | microsite | notfound | error
+  // loading | redirecting | microsite | unclaimed | notfound | error
+  const [status, setStatus] = useState("loading");
   const [tag, setTag] = useState(null);
   const [detail, setDetail] = useState("");
 
@@ -76,6 +126,13 @@ function PublicTag() {
         }
 
         const data = snap.data();
+
+        // Sin dueño: nunca redirige ni muestra el enlace
+        if (!data.owner_uid) {
+          setStatus("unclaimed");
+          return;
+        }
+
         const safeUrl = getSafeUrl(data.target_url);
         setTag({ ...data, safeUrl });
 
@@ -113,6 +170,7 @@ function PublicTag() {
 
   if (status === "loading") return <Spinner />;
   if (status === "redirecting") return <Spinner label="Redirigiendo..." />;
+  if (status === "unclaimed") return <UnclaimedState tagId={decodeURIComponent(rawId)} />;
 
   if (status === "notfound") {
     return (
