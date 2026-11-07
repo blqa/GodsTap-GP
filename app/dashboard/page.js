@@ -14,6 +14,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import TagEditor from "@/components/dashboard/TagEditor";
+import ScansPanel from "@/components/dashboard/ScansPanel";
 
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
@@ -569,7 +570,9 @@ export default function DashboardPage() {
           </p>
         </div>
       )}
-
+      
+      {/* Estadísticas */}
+      {user && !loading && tags.length > 0 && <ScansPanel uid={user.uid} tags={tags} />}
       {/* Tarjetas */}
       {!loading && tags.length > 0 && (
         <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

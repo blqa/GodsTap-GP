@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore/lite";
 import { dbLite } from "@/lib/firebaseLite";
 import Microsite from "@/components/Microsite";
+import { countScan } from "@/lib/scans";
 
 // Solo permite http/https (bloquea javascript:, data:, etc.)
 function getSafeUrl(url) {
@@ -133,7 +134,8 @@ function PublicTag() {
           setStatus("unclaimed");
           return;
         }
-
+        // Cuenta el escaneo (solo GT con dueño). No bloquea el micrositio.
+        const counted = countScan(tagId, data.owner_uid);
         const safeUrl = getSafeUrl(data.target_url);
         setTag({ ...data, safeUrl });
 
@@ -143,6 +145,7 @@ function PublicTag() {
             return;
           }
           setStatus("redirecting");
+          await counted;          
           window.location.replace(safeUrl);
           return;
         }
