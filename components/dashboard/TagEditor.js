@@ -5,7 +5,8 @@ import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { ICONS } from "@/lib/linkIcons";
 import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
-import { PLANS, SUPPORT_EMAIL, isPaid, planOf, showBrand } from "@/lib/plans";
+import { PLANS, isPaid, planOf, showBrand } from "@/lib/plans";
+import { whatsappLink } from "@/lib/contact";
 import Microsite from "@/components/Microsite";
 
 const MAX_LINKS = 6;
@@ -33,7 +34,9 @@ function Locked({ title, tagId, children }) {
       </div>
       <p className="mt-2 text-xs text-slate-400">{children}</p>
       <a
-        href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Quiero el plan Pro para " + tagId)}`}
+        href={whatsappLink("Hola, quiero el plan Pro de GodsTap para mi GT " + tagId)}
+        target="_blank"
+        rel="noopener noreferrer"
         className="mt-3 inline-block text-sm text-brand-400 hover:underline"
       >
         Pedir el plan Pro

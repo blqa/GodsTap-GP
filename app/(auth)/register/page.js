@@ -123,6 +123,18 @@ export default function RegisterPage() {
         >
           {loading ? "Creando cuenta..." : "Crear cuenta"}
         </button>
+
+        <p className="text-center text-xs text-slate-500">
+          Al crear tu cuenta aceptas los{" "}
+          <Link href="/terminos" className="text-slate-300 underline hover:text-slate-50">
+            Términos y condiciones
+          </Link>{" "}
+          y el{" "}
+          <Link href="/privacidad" className="text-slate-300 underline hover:text-slate-50">
+            Aviso de privacidad
+          </Link>
+          .
+        </p>
       </form>
     </AuthShell>
   );

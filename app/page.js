@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
-
-const CONTACT_EMAIL = "godstap@godsplan.com"; // <-- CAMBIA ESTO
+import { CONTACT_EMAIL, whatsappLink } from "@/lib/contact";
 
 const STEPS = [
   {
@@ -327,7 +326,9 @@ export default function HomePage() {
                 ))}
               </ul>
               <a
-                href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Información plan " + p.name)}`}
+                href={whatsappLink(p.soon ? `Hola, quiero que me avisen cuando esté listo el plan ${p.name} de GodsTap` : `Hola, quiero información del plan ${p.name} de GodsTap`)}
+                target="_blank"
+                rel="noopener noreferrer"
                 className={`mt-9 block rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition ${
                   p.featured
                     ? "bg-white text-brand-700 hover:bg-brand-50"
@@ -399,11 +400,33 @@ export default function HomePage() {
       <footer className="border-t border-slate-800/80 px-5 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
           <p>© 2026 GodsTap · by God’s Plan</p>
-          <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-slate-300">
-            {CONTACT_EMAIL}
-          </a>
+          <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
+            <Link href="/privacidad" className="transition hover:text-slate-300">
+              Aviso de privacidad
+            </Link>
+            <Link href="/terminos" className="transition hover:text-slate-300">
+              Términos y condiciones
+            </Link>
+            <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-slate-300">
+              {CONTACT_EMAIL}
+            </a>
+          </nav>
         </div>
       </footer>
+
+      {/* Botón flotante de WhatsApp */}
+      <a
+        href={whatsappLink("Hola, quiero información de GodsTap")}
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Escríbenos por WhatsApp"
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-xl shadow-black/30 transition hover:scale-105"
+      >
+        <svg className="h-7 w-7" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+          <path d="M7.5 19.5 3 21l1.5-4.3A8.5 8.5 0 1 1 7.5 19.5z" />
+          <path d="M9 9.5c.3 2 1.8 3.7 3.8 4.5l1.2-1.2 1.8.9c-.3 1-1.2 1.6-2.2 1.5C10.7 14.9 8.6 12.5 8.5 10c0-.9.6-1.7 1.5-1.8z" fill="currentColor" stroke="none" />
+        </svg>
+      </a>
     </div>
   );
 }

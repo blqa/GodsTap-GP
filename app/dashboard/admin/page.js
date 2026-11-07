@@ -11,12 +11,12 @@ import {
   writeBatch,
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
-import { PLANS, SUPPORT_EMAIL, planOf } from "@/lib/plans";
+import { PLANS, planOf } from "@/lib/plans";
+import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
 
 const ADMIN_UID = "XpdTgI0PrEP05Ilabz32KxpWba42";
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
-const SUPPORT_PHONE = "+52 55 1059 0927"; // <-- PON AQUÍ TU NÚMERO
 const ID_CHARS = "abcdefghjkmnpqrstuvwxyz23456789";
 const NO_OWNER = "__sin_vincular__";
 
@@ -196,8 +196,8 @@ export default function AdminPage() {
         tag_id: target.id,
         business_name: target.business_name || "",
         reason,
-        contact_email: SUPPORT_EMAIL,
-        contact_phone: SUPPORT_PHONE,
+        contact_email: CONTACT_EMAIL,
+        contact_phone: CONTACT_PHONE,
         read: false,
         created_at: serverTimestamp(),
       });

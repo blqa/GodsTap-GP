@@ -17,7 +17,8 @@ import {
 import { auth, db } from "@/lib/firebaseConfig";
 import TagEditor from "@/components/dashboard/TagEditor";
 import ScansPanel from "@/components/dashboard/ScansPanel";
-import { PLANS, SUPPORT_EMAIL, isPaid, planOf } from "@/lib/plans";
+import { PLANS, isPaid, planOf } from "@/lib/plans";
+import { whatsappLink } from "@/lib/contact";
 
 const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
@@ -613,7 +614,9 @@ export default function DashboardPage() {
               Las estadísticas de escaneos están disponibles en el plan Pro.
             </p>
             <a
-              href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Quiero el plan Pro")}`}
+              href={whatsappLink("Hola, quiero el plan Pro de GodsTap")}
+              target="_blank"
+              rel="noopener noreferrer"
               className="mt-3 inline-block text-sm text-brand-400 hover:underline"
             >
               Pedir el plan Pro
