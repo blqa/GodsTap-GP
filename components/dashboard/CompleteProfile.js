@@ -5,7 +5,7 @@ import { doc, onSnapshot, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
+  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
 function hasText(v) {
   return typeof v === "string" && v.trim().length > 0;
@@ -75,7 +75,7 @@ export default function CompleteProfile({ uid }) {
     <div className="fixed inset-0 z-[55] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <form onSubmit={handleSave} className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl">
         <div>
-          <h2 className="text-lg font-semibold text-white">Completa tu perfil</h2>
+          <h2 className="text-lg font-semibold text-slate-50">Completa tu perfil</h2>
           <p className="mt-1 text-sm text-slate-400">Solo te lo pedimos una vez.</p>
         </div>
 
@@ -97,7 +97,7 @@ export default function CompleteProfile({ uid }) {
         <button
           type="submit"
           disabled={saving}
-          className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-60"
+          className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:opacity-60"
         >
           {saving ? "Guardando..." : "Guardar"}
         </button>

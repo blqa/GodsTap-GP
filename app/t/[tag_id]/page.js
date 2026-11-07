@@ -7,6 +7,7 @@ import { dbLite } from "@/lib/firebaseLite";
 import Microsite from "@/components/Microsite";
 import { countScan } from "@/lib/scans";
 import { isPaid, showBrand } from "@/lib/plans";
+import { LogoMark } from "@/components/Logo";
 
 // Solo permite http/https (bloquea javascript:, data:, etc.)
 function getSafeUrl(url) {
@@ -22,7 +23,7 @@ function Spinner({ label }) {
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-950">
       <div className="flex flex-col items-center gap-4">
-        <svg className="h-9 w-9 animate-spin text-indigo-500" viewBox="0 0 24 24" fill="none">
+        <svg className="h-9 w-9 animate-spin text-brand-500" viewBox="0 0 24 24" fill="none">
           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z" />
         </svg>
@@ -45,7 +46,7 @@ function ErrorState({ title, message, detail }) {
             />
           </svg>
         </div>
-        <h1 className="text-lg font-semibold text-white">{title}</h1>
+        <h1 className="text-lg font-semibold text-slate-50">{title}</h1>
         <p className="mt-2 text-sm text-slate-400">{message}</p>
         {detail && <p className="mt-4 break-all font-mono text-xs text-slate-600">{detail}</p>}
       </div>
@@ -56,20 +57,12 @@ function ErrorState({ title, message, detail }) {
 function UnclaimedState({ tagId }) {
   return (
     <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-5 py-12">
-      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl" />
+      <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" />
 
       <div className="relative w-full max-w-sm text-center">
-        <div className="mx-auto mb-5 flex h-20 w-20 items-center justify-center rounded-full bg-slate-900 ring-1 ring-slate-700">
-          <svg className="h-9 w-9 text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-            />
-          </svg>
-        </div>
+        <LogoMark className="mx-auto mb-6 h-16 w-16" />
 
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Este GT aún no está activado</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-50">Este GT aún no está activado</h1>
         <p className="mt-2 text-sm text-slate-400">
           Si acabas de recibirlo, crea tu cuenta o inicia sesión y vincúlalo con el código de
           activación que viene en tu empaque.
@@ -82,7 +75,7 @@ function UnclaimedState({ tagId }) {
         <div className="mt-8 space-y-3">
           <a
             href="/register"
-            className="block w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/40 transition hover:from-indigo-500 hover:to-violet-500"
+            className="block w-full rounded-xl bg-brand-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-900/40 transition hover:bg-brand-500"
           >
             Crear cuenta
           </a>

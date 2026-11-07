@@ -11,7 +11,7 @@ import Microsite from "@/components/Microsite";
 const MAX_LINKS = 6;
 
 const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
+  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
 function isValidUrl(url) {
   try {
@@ -25,16 +25,16 @@ function Locked({ title, tagId, children }) {
   return (
     <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4">
       <div className="flex items-center gap-2">
-        <span>🔒</span>
-        <h3 className="text-sm font-semibold text-white">{title}</h3>
-        <span className="rounded-full bg-indigo-500/10 px-2 py-0.5 text-xs text-indigo-300 ring-1 ring-indigo-500/30">
+        <svg className="h-3.5 w-3.5" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a1 1 0 00-1 1v7a2 2 0 002 2h8a2 2 0 002-2V9a1 1 0 00-1-1h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" /></svg>
+        <h3 className="text-sm font-semibold text-slate-50">{title}</h3>
+        <span className="rounded-full bg-brand-500/10 px-2 py-0.5 text-xs text-brand-300 ring-1 ring-brand-500/30">
           Pro
         </span>
       </div>
       <p className="mt-2 text-xs text-slate-400">{children}</p>
       <a
         href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Quiero el plan Pro para " + tagId)}`}
-        className="mt-3 inline-block text-sm text-indigo-400 hover:underline"
+        className="mt-3 inline-block text-sm text-brand-400 hover:underline"
       >
         Pedir el plan Pro
       </a>
@@ -153,20 +153,20 @@ export default function TagEditor({ tag, onClose, onSaved }) {
       >
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-slate-50">
               Editar GT <span className="font-mono text-sm text-slate-400">{tag.id}</span>
             </h2>
             <span
               className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
                 paid
-                  ? "bg-indigo-500/10 text-indigo-300 ring-indigo-500/30"
+                  ? "bg-brand-500/10 text-brand-300 ring-brand-500/30"
                   : "bg-slate-500/10 text-slate-400 ring-slate-500/30"
               }`}
             >
               Plan {PLANS[planOf(tag.plan)].label}
             </span>
           </div>
-          <button type="button" onClick={onClose} aria-label="Cerrar" className="text-slate-500 hover:text-white">
+          <button type="button" onClick={onClose} aria-label="Cerrar" className="text-slate-500 hover:text-slate-50">
             ✕
           </button>
         </div>
@@ -227,7 +227,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
               <>
                 {/* Colores */}
                 <div className="border-t border-slate-800 pt-5">
-                  <h3 className="text-sm font-semibold text-white">Colores</h3>
+                  <h3 className="text-sm font-semibold text-slate-50">Colores</h3>
                   <p className="mb-3 text-xs text-slate-500">Elige una paleta o ajusta los colores a tu gusto.</p>
 
                   <div className="flex flex-wrap gap-2">
@@ -240,7 +240,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                           onClick={() => setTheme({ bg: p.bg, accent: p.accent })}
                           className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition ${
                             selected
-                              ? "border-indigo-500 bg-indigo-500/10 text-white"
+                              ? "border-brand-500 bg-brand-500/10 text-white"
                               : "border-slate-700 text-slate-300 hover:bg-slate-800"
                           }`}
                         >
@@ -289,7 +289,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                 <div className="border-t border-slate-800 pt-5">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
-                      <h3 className="text-sm font-semibold text-white">Botones adicionales</h3>
+                      <h3 className="text-sm font-semibold text-slate-50">Botones adicionales</h3>
                       <p className="text-xs text-slate-500">
                         {links.length} de {MAX_LINKS}. Salen debajo del botón principal.
                       </p>
@@ -336,14 +336,14 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                           className={`${inputClass} mt-2`}
                         />
                         <div className="mt-2 flex gap-4 text-xs text-slate-400">
-                          <button type="button" onClick={() => moveLink(i, -1)} disabled={i === 0} className="hover:text-white disabled:opacity-30">
+                          <button type="button" onClick={() => moveLink(i, -1)} disabled={i === 0} className="hover:text-slate-50 disabled:opacity-30">
                             ↑ Subir
                           </button>
                           <button
                             type="button"
                             onClick={() => moveLink(i, 1)}
                             disabled={i === links.length - 1}
-                            className="hover:text-white disabled:opacity-30"
+                            className="hover:text-slate-50 disabled:opacity-30"
                           >
                             ↓ Bajar
                           </button>
@@ -372,7 +372,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
 
           {/* Columna derecha: vista previa */}
           <div className="lg:sticky lg:top-6 lg:self-start">
-            <p className="mb-3 text-center text-xs font-medium uppercase tracking-wider text-slate-500">
+            <p className="mb-3 text-center text-xs font-medium text-slate-500">
               Vista previa
             </p>
             {mode === "microsite" ? (
@@ -407,7 +407,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
           <button
             type="submit"
             disabled={saving}
-            className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {saving ? "Guardando..." : "Guardar cambios"}
           </button>

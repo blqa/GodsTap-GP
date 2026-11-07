@@ -61,19 +61,19 @@ export default function RevokedNotice({ uid }) {
           ⚠️
         </div>
 
-        <h2 className="text-center text-xl font-semibold text-white">Acceso revocado</h2>
+        <h2 className="text-center text-xl font-semibold text-slate-50">Acceso revocado</h2>
         {notices.length > 1 && (
           <p className="mt-1 text-center text-xs text-slate-500">1 de {notices.length} avisos</p>
         )}
 
         <p className="mt-3 text-center text-sm text-slate-300">
           Se revocó tu acceso al GT{" "}
-          <span className="font-mono text-white">{current.tag_id}</span>
+          <span className="font-mono text-slate-50">{current.tag_id}</span>
           {current.business_name ? ` (${current.business_name})` : ""}.
         </p>
 
         <div className="mt-5 rounded-lg border border-slate-800 bg-slate-950 p-4">
-          <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">Motivo</p>
+          <p className="mb-1 text-xs font-medium text-slate-500">Motivo</p>
           <p className="whitespace-pre-wrap break-words text-sm text-slate-200">{current.reason}</p>
         </div>
 
@@ -82,14 +82,14 @@ export default function RevokedNotice({ uid }) {
             <p>Para más información, contáctanos:</p>
             {current.contact_email && (
               <p className="mt-1">
-                <a href={`mailto:${current.contact_email}`} className="text-indigo-400 hover:underline">
+                <a href={`mailto:${current.contact_email}`} className="text-brand-400 hover:underline">
                   {current.contact_email}
                 </a>
               </p>
             )}
             {current.contact_phone && (
               <p className="mt-0.5">
-                <a href={`tel:${current.contact_phone}`} className="text-indigo-400 hover:underline">
+                <a href={`tel:${current.contact_phone}`} className="text-brand-400 hover:underline">
                   {current.contact_phone}
                 </a>
               </p>
@@ -100,7 +100,7 @@ export default function RevokedNotice({ uid }) {
         <button
           onClick={dismiss}
           disabled={busy}
-          className="mt-6 w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-60"
+          className="mt-6 w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:opacity-60"
         >
           Entendido
         </button>

@@ -16,7 +16,7 @@ function Spark({ values }) {
       {values.map((v, i) => (
         <div
           key={i}
-          className={`w-1.5 rounded-sm ${v > 0 ? "bg-indigo-400" : "bg-slate-800"}`}
+          className={`w-1.5 rounded-sm ${v > 0 ? "bg-brand-400" : "bg-slate-800"}`}
           style={{ height: `${Math.max(2, (v / max) * 32)}px` }}
         />
       ))}
@@ -84,12 +84,12 @@ export default function ScansPanel({ uid, tags }) {
     <section className="mb-8 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
       <div className="mb-4 flex items-start justify-between gap-4">
         <div>
-          <h2 className="text-base font-semibold text-white">Escaneos</h2>
+          <h2 className="text-base font-semibold text-slate-50">Escaneos</h2>
           <p className="text-xs text-slate-500">
             {stats ? `${totalWeek} en los últimos 7 días. ` : ""}Hora de Ciudad de México.
           </p>
         </div>
-        <button onClick={load} className="text-sm text-slate-300 hover:text-white hover:underline">
+        <button onClick={load} className="text-sm text-slate-300 hover:text-slate-50 hover:underline">
           Actualizar
         </button>
       </div>
@@ -105,7 +105,7 @@ export default function ScansPanel({ uid, tags }) {
       {stats && (
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm">
-            <thead className="text-xs uppercase tracking-wider text-slate-500">
+            <thead className="text-xs text-slate-500">
               <tr>
                 <th className="py-2 pr-4">GT</th>
                 <th className="py-2 pr-4 text-right">Hoy</th>
@@ -119,7 +119,7 @@ export default function ScansPanel({ uid, tags }) {
               {rows.map((r) => (
                 <tr key={r.tag.id} className="border-t border-slate-800">
                   <td className="max-w-[200px] py-3 pr-4">
-                    <p className="truncate font-medium text-white">{r.tag.business_name || "Sin nombre"}</p>
+                    <p className="truncate font-medium text-slate-50">{r.tag.business_name || "Sin nombre"}</p>
                     <p className="font-mono text-xs text-slate-500">{r.tag.id}</p>
                   </td>
                   <td className="py-3 pr-4 text-right tabular-nums">{r.today}</td>

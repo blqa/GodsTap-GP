@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
+import AuthShell from "@/components/AuthShell";
 
 const ERRORES = {
   "auth/email-already-in-use": "Ya existe una cuenta con ese correo.",
@@ -15,7 +16,7 @@ const ERRORES = {
 };
 
 const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-4 py-2.5 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
+  "w-full rounded-lg border border-slate-700 bg-slate-900 px-4 py-3 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -71,68 +72,58 @@ export default function RegisterPage() {
   };
 
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-4 py-10">
-      <div className="pointer-events-none absolute -top-40 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-indigo-600/20 blur-3xl" />
+    <AuthShell
+      title="Crea tu cuenta"
+      subtitle="Regístrate para vincular y administrar tus GT."
+      footer={
+        <>
+          ¿Ya tienes cuenta?{" "}
+          <Link href="/login" className="font-medium text-brand-400 hover:text-brand-300">
+            Inicia sesión
+          </Link>
+        </>
+      }
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        {error && (
+          <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
+            {error}
+          </div>
+        )}
 
-      <div className="relative w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Crea tu cuenta</h1>
-          <p className="mt-1 text-sm text-slate-400">Regístrate para vincular y administrar tus GT</p>
+        <div>
+          <label htmlFor="name" className="mb-1.5 block text-sm font-medium text-slate-300">Tu nombre</label>
+          <input id="name" value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder="Ej. Juan Pérez" autoComplete="name" className={inputClass} />
         </div>
 
-        <form
-          onSubmit={handleSubmit}
-          className="space-y-5 rounded-2xl border border-slate-800 bg-slate-900/70 p-8 shadow-2xl backdrop-blur"
+        <div>
+          <label htmlFor="business" className="mb-1.5 block text-sm font-medium text-slate-300">Nombre de tu negocio</label>
+          <input id="business" value={business} onChange={(e) => setBusiness(e.target.value)} maxLength={80} required placeholder="Ej. Tacos El Güero" autoComplete="organization" className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="email" className="mb-1.5 block text-sm font-medium text-slate-300">Correo electrónico</label>
+          <input id="email" type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@negocio.com" className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-slate-300">Contraseña</label>
+          <input id="password" type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" className={inputClass} />
+        </div>
+
+        <div>
+          <label htmlFor="confirm" className="mb-1.5 block text-sm font-medium text-slate-300">Confirmar contraseña</label>
+          <input id="confirm" type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repite tu contraseña" className={inputClass} />
+        </div>
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full rounded-lg bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
         >
-          {error && (
-            <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 text-sm text-red-300">
-              {error}
-            </div>
-          )}
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Tu nombre</label>
-            <input value={name} onChange={(e) => setName(e.target.value)} maxLength={60} required placeholder="Ej. Juan Pérez" className={inputClass} />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre de tu negocio</label>
-            <input value={business} onChange={(e) => setBusiness(e.target.value)} maxLength={80} required placeholder="Ej. Tacos El Güero" className={inputClass} />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Correo electrónico</label>
-            <input type="email" autoComplete="email" required value={email} onChange={(e) => setEmail(e.target.value)} placeholder="tu@negocio.com" className={inputClass} />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Contraseña</label>
-            <input type="password" autoComplete="new-password" required value={password} onChange={(e) => setPassword(e.target.value)} placeholder="Mínimo 8 caracteres" className={inputClass} />
-          </div>
-
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-slate-300">Confirmar contraseña</label>
-            <input type="password" autoComplete="new-password" required value={confirm} onChange={(e) => setConfirm(e.target.value)} placeholder="Repite tu contraseña" className={inputClass} />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {loading ? "Creando cuenta..." : "Crear cuenta"}
-          </button>
-
-          <p className="text-center text-sm text-slate-400">
-            ¿Ya tienes cuenta?{" "}
-            <Link href="/login" className="font-medium text-indigo-400 hover:text-indigo-300">
-              Inicia sesión
-            </Link>
-          </p>
-        </form>
-
-        <p className="mt-6 text-center text-xs text-slate-500">© 2026 GodsTap · by God’s Plan</p>
-      </div>
-    </main>
+          {loading ? "Creando cuenta..." : "Crear cuenta"}
+        </button>
+      </form>
+    </AuthShell>
   );
 }

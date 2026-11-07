@@ -1,4 +1,6 @@
 import Link from "next/link";
+import Logo from "@/components/Logo";
+import ThemeToggle from "@/components/ThemeToggle";
 
 const CONTACT_EMAIL = "godstap@godsplan.com"; // <-- CAMBIA ESTO
 
@@ -27,8 +29,8 @@ const FEATURES = [
     desc: "Lleva al cliente de inmediato a tu menú, tu WhatsApp, tu Instagram o tus reseñas de Google.",
   },
   {
-    title: "Micrositio",
-    desc: "Una página limpia con el nombre de tu negocio y un botón destacado hacia lo que más te importa.",
+    title: "Micrositio con tu estilo",
+    desc: "Una página limpia con el nombre de tu negocio, tus colores y un botón destacado hacia lo que más te importa.",
   },
   {
     title: "Cámbialo cuando quieras",
@@ -36,7 +38,7 @@ const FEATURES = [
   },
   {
     title: "Sin app para tus clientes",
-    desc: "La mayoría de los celulares modernos leen NFC directamente, solo hay que acercarlos.",
+    desc: "La mayoría de los celulares modernos leen NFC directamente. Solo hay que acercarlos.",
   },
 ];
 
@@ -46,6 +48,7 @@ const PLANS = [
     price: "Consulta precio",
     note: "Incluido con tu GT",
     soon: false,
+    featured: false,
     features: [
       "1 enlace de redirección o micrositio simple",
       "Cambios ilimitados desde tu panel",
@@ -57,6 +60,7 @@ const PLANS = [
     price: "Consulta precio",
     note: "Suscripción",
     soon: false,
+    featured: true,
     features: [
       "Micrositio con varios botones",
       "Colores personalizados",
@@ -69,6 +73,7 @@ const PLANS = [
     price: "Consulta precio",
     note: "Para varias sucursales",
     soon: true,
+    featured: false,
     features: [
       "Varios GT y sucursales",
       "Usuarios de equipo",
@@ -97,19 +102,70 @@ const FAQ = [
   },
 ];
 
-function Logo() {
+// Botones del micrositio de ejemplo que se ve en el celular del hero
+const DEMO_LINKS = [
+  { label: "Ver el menú", main: true },
+  { label: "Pedir por WhatsApp" },
+  { label: "Dejar una reseña" },
+  { label: "Instagram" },
+];
+
+function NfcArcs({ className = "" }) {
   return (
-    <div className="flex items-center gap-3">
-      <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-gradient-to-br from-indigo-500 to-indigo-700 shadow-md shadow-indigo-900/40">
-        <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0"
-          />
-        </svg>
+    <svg className={className} viewBox="0 0 28 28" fill="none" aria-hidden="true">
+      <circle cx="9.5" cy="14" r="1.9" fill="white" />
+      <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
+        <path d="M12.56 11.43A4 4 0 0 1 12.56 16.57" />
+        <path d="M15.25 9.18A7.5 7.5 0 0 1 15.25 18.82" strokeOpacity="0.8" />
+        <path d="M17.93 6.93A11 11 0 0 1 17.93 21.07" strokeOpacity="0.55" />
+      </g>
+    </svg>
+  );
+}
+
+function TapDemo() {
+  return (
+    <div className="tap-stage" aria-hidden="true">
+      <span className="tap-ring" />
+      <span className="tap-ring" />
+      <span className="tap-ring" />
+
+      <div className="tap-phone">
+        <div className="tap-screen">
+          <div
+            className="tap-reveal flex h-14 w-14 items-center justify-center rounded-full bg-[#f2c14e] font-display text-lg font-bold text-[#082f33]"
+            style={{ animationDelay: "1.1s" }}
+          >
+            LE
+          </div>
+          <p className="tap-reveal mt-3 font-display text-lg font-bold leading-tight" style={{ animationDelay: "1.25s" }}>
+            Taquería La Esquina
+          </p>
+          <p className="tap-reveal mt-0.5 text-[0.7rem] text-[#f6efe0]/70" style={{ animationDelay: "1.35s" }}>
+            Abierto hasta las 11 pm
+          </p>
+          {DEMO_LINKS.map((l, i) => (
+            <div
+              key={l.label}
+              className={`tap-reveal w-full rounded-xl py-2.5 text-xs ${i === 0 ? "mt-5" : "mt-2"} ${
+                l.main
+                  ? "bg-[#f2c14e] font-semibold text-[#082f33]"
+                  : "border border-white/20 font-medium text-[#f6efe0]"
+              }`}
+              style={{ animationDelay: `${1.5 + i * 0.15}s` }}
+            >
+              {l.label}
+            </div>
+          ))}
+          <p className="tap-reveal mt-auto text-[0.6rem] text-[#f6efe0]/40" style={{ animationDelay: "2.3s" }}>
+            GodsTap · by God’s Plan
+          </p>
+        </div>
       </div>
-      <span className="text-lg font-semibold tracking-tight text-white">GodsTap</span>
+
+      <div className="tap-tag">
+        <NfcArcs className="w-[58%]" />
+      </div>
     </div>
   );
 }
@@ -117,138 +173,165 @@ function Logo() {
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
-      {/* Navbar */}
+      {/* Barra superior */}
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Logo />
-          <nav className="flex items-center gap-2 sm:gap-3">
-            <a href="#planes" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-white sm:block">
+          <Link href="/" aria-label="GodsTap · by God’s Plan, inicio">
+            <Logo showBy />
+          </Link>
+          <nav className="flex items-center gap-1 sm:gap-2">
+            <a href="#como-funciona" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 md:block">
+              Cómo funciona
+            </a>
+            <a href="#planes" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 sm:block">
               Planes
             </a>
-            <Link href="/login" className="px-3 py-2 text-sm font-medium text-slate-200 transition hover:text-white">
+            <Link href="/login" className="px-3 py-2 text-sm font-medium text-slate-200 transition hover:text-slate-50">
               Iniciar sesión
             </Link>
             <Link
               href="/register"
-              className="rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:bg-indigo-500"
+              className="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
             >
               Crear cuenta
             </Link>
+            <ThemeToggle className="ml-1" />
           </nav>
         </div>
       </header>
 
       {/* Hero */}
-      <section className="relative overflow-hidden px-5 pb-24 pt-20 text-center sm:pt-28">
-        <div className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full bg-indigo-600/25 blur-3xl" />
-        <div className="pointer-events-none absolute -bottom-40 right-0 h-96 w-96 rounded-full bg-violet-600/15 blur-3xl" />
-
-        <div className="relative mx-auto max-w-3xl">
-          <span className="inline-block rounded-full bg-slate-900 px-3 py-1 text-xs font-medium text-slate-300 ring-1 ring-slate-700">
-            Smart Tags NFC para negocios locales
-          </span>
-          <h1 className="mt-6 text-4xl font-semibold tracking-tight text-white sm:text-6xl">
-            Un toque y tu negocio{" "}
-            <span className="bg-gradient-to-r from-indigo-400 to-violet-400 bg-clip-text text-transparent">
-              aparece en su celular
-            </span>
-          </h1>
-          <p className="mx-auto mt-6 max-w-xl text-base text-slate-400 sm:text-lg">
-            Pon un GT en tu mostrador y deja que tus clientes vean tu menú, te escriban por WhatsApp o
-            te dejen una reseña con solo acercar su teléfono. Tú cambias el destino cuando quieras.
-          </p>
-          <div className="mt-10 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/register"
-              className="w-full rounded-xl bg-gradient-to-r from-indigo-600 to-violet-600 px-7 py-3.5 text-sm font-semibold text-white shadow-lg shadow-indigo-900/40 transition hover:from-indigo-500 hover:to-violet-500 sm:w-auto"
-            >
-              Crear mi cuenta
-            </Link>
-            <a
-              href="#como-funciona"
-              className="w-full rounded-xl border border-slate-700 px-7 py-3.5 text-sm font-medium text-slate-200 transition hover:bg-slate-900 sm:w-auto"
-            >
-              Ver cómo funciona
-            </a>
+      <section className="relative overflow-hidden">
+        <div className="pointer-events-none absolute -right-32 top-0 h-[34rem] w-[34rem] rounded-full bg-brand-600/20 blur-3xl" />
+        <div className="relative mx-auto grid max-w-6xl items-center gap-14 px-5 pb-24 pt-14 sm:pt-20 lg:grid-cols-[1.1fr_0.9fr]">
+          <div>
+            <h1 className="text-5xl font-bold leading-[0.98] tracking-tight text-slate-50 sm:text-7xl">
+              Acerca el celular.
+              <br />
+              Aparece tu negocio.
+            </h1>
+            <p className="mt-7 max-w-lg text-base leading-relaxed text-slate-400 sm:text-lg">
+              El GT es un adhesivo con chip NFC que pegas en tu mostrador. Tus clientes lo tocan con el celular
+              y ven tu menú, tu WhatsApp o tus reseñas. Tú cambias el destino desde tu panel cuando quieras.
+            </p>
+            <div className="mt-9 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/register"
+                className="rounded-xl bg-brand-600 px-7 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-brand-900/40 transition hover:bg-brand-500"
+              >
+                Crear mi cuenta
+              </Link>
+              <a
+                href="#como-funciona"
+                className="rounded-xl border border-slate-700 px-7 py-3.5 text-center text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-900"
+              >
+                Ver cómo funciona
+              </a>
+            </div>
+            <p className="mt-6 text-sm text-slate-500">
+              Sin app para tus clientes. Sin cambiar el chip nunca.
+            </p>
           </div>
+
+          <TapDemo />
         </div>
       </section>
 
-      {/* Cómo funciona */}
+      {/* Cómo funciona: una secuencia, por eso va numerada */}
       <section id="como-funciona" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20">
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-white">Cómo funciona</h2>
-          <p className="mt-3 text-slate-400">De la caja a tu primer escaneo en cuatro pasos.</p>
+        <div className="mb-14 max-w-xl">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
+            De la caja a tu primer escaneo en cuatro pasos
+          </h2>
         </div>
-        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+        <ol className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
           {STEPS.map((s, i) => (
-            <div key={s.title} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-              <span className="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-500/10 text-sm font-semibold text-indigo-300 ring-1 ring-indigo-500/30">
+            <li key={s.title} className="relative border-t border-slate-700 pt-8">
+              <span className="absolute -top-4 left-0 flex h-8 w-8 items-center justify-center rounded-full bg-brand-600 font-display text-sm font-bold text-white ring-4 ring-slate-950">
                 {i + 1}
               </span>
-              <h3 className="mt-4 text-base font-semibold text-white">{s.title}</h3>
-              <p className="mt-2 text-sm text-slate-400">{s.desc}</p>
-            </div>
+              <h3 className="text-lg font-semibold text-slate-50">{s.title}</h3>
+              <p className="mt-2 text-sm leading-relaxed text-slate-400">{s.desc}</p>
+            </li>
           ))}
-        </div>
+        </ol>
       </section>
 
       {/* Qué puedes hacer */}
-      <section className="border-y border-slate-800/80 bg-slate-900/30 px-5 py-20">
-        <div className="mx-auto max-w-6xl">
-          <div className="mb-12 text-center">
-            <h2 className="text-3xl font-semibold tracking-tight text-white">Qué puedes hacer con tu GT</h2>
-            <p className="mt-3 text-slate-400">Menú, WhatsApp, Instagram, reseñas de Google, tu sitio web...</p>
+      <section className="border-y border-slate-800/80 bg-slate-900/40 px-5 py-24">
+        <div className="mx-auto grid max-w-6xl gap-12 lg:grid-cols-12">
+          <div className="lg:col-span-5">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">
+              Un solo chip. El destino lo eliges tú.
+            </h2>
+            <p className="mt-4 max-w-sm text-slate-400">
+              Menú, WhatsApp, Instagram, reseñas de Google, tu sitio web. El enlace del GT nunca cambia; lo que ve tu cliente, sí.
+            </p>
           </div>
-          <div className="grid gap-5 sm:grid-cols-2">
+          <dl className="lg:col-span-7">
             {FEATURES.map((f) => (
-              <div key={f.title} className="rounded-2xl border border-slate-800 bg-slate-950/60 p-6">
-                <h3 className="text-base font-semibold text-white">{f.title}</h3>
-                <p className="mt-2 text-sm text-slate-400">{f.desc}</p>
+              <div key={f.title} className="grid gap-1 border-t border-slate-700 py-6 sm:grid-cols-[14rem_1fr] sm:gap-8">
+                <dt className="font-display text-xl font-semibold text-slate-50">{f.title}</dt>
+                <dd className="text-sm leading-relaxed text-slate-400">{f.desc}</dd>
               </div>
             ))}
-          </div>
+          </dl>
         </div>
       </section>
 
       {/* Planes */}
-      <section id="planes" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-20">
-        <div className="mb-12 text-center">
-          <h2 className="text-3xl font-semibold tracking-tight text-white">Planes</h2>
+      <section id="planes" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-24">
+        <div className="mb-12 max-w-xl">
+          <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">Planes</h2>
           <p className="mt-3 text-slate-400">Empieza con el básico y crece cuando tu negocio lo pida.</p>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {PLANS.map((p) => (
             <div
               key={p.name}
-              className={`flex flex-col rounded-2xl border p-6 ${
-                p.soon ? "border-slate-800 bg-slate-900/40" : "border-indigo-500/40 bg-slate-900/70"
+              className={`flex flex-col rounded-2xl p-7 ${
+                p.featured
+                  ? "bg-brand-600 text-white shadow-2xl shadow-brand-900/40"
+                  : "border border-slate-700 bg-slate-900/60"
               }`}
             >
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-white">{p.name}</h3>
+                <h3 className={`text-xl font-bold ${p.featured ? "text-white" : "text-slate-50"}`}>{p.name}</h3>
                 {p.soon && (
                   <span className="rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 ring-1 ring-amber-500/30">
                     Próximamente
                   </span>
                 )}
               </div>
-              <p className="mt-4 text-2xl font-semibold text-white">{p.price}</p>
-              <p className="mt-1 text-sm text-slate-500">{p.note}</p>
-              <ul className="mt-6 flex-1 space-y-3 text-sm text-slate-300">
+              <p className={`mt-5 font-display text-2xl font-bold ${p.featured ? "text-white" : "text-slate-50"}`}>
+                {p.price}
+              </p>
+              <p className={`mt-1 text-sm ${p.featured ? "text-brand-100" : "text-slate-500"}`}>{p.note}</p>
+              <ul className={`mt-7 flex-1 space-y-3 text-sm ${p.featured ? "text-brand-50" : "text-slate-300"}`}>
                 {p.features.map((feat) => (
-                  <li key={feat} className="flex gap-2">
-                    <span className="text-indigo-400">✓</span>
+                  <li key={feat} className="flex gap-2.5">
+                    <svg
+                      className={`mt-0.5 h-4 w-4 shrink-0 ${p.featured ? "text-white" : "text-brand-400"}`}
+                      viewBox="0 0 20 20"
+                      fill="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M16.7 5.3a1 1 0 010 1.4l-7.5 7.5a1 1 0 01-1.4 0L3.3 9.7a1 1 0 111.4-1.4l3.8 3.8 6.8-6.8a1 1 0 011.4 0z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
                     <span>{feat}</span>
                   </li>
                 ))}
               </ul>
               <a
                 href={`mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent("Información plan " + p.name)}`}
-                className={`mt-8 block rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition ${
-                  p.soon
-                    ? "border border-slate-700 text-slate-200 hover:bg-slate-800"
-                    : "bg-indigo-600 text-white hover:bg-indigo-500"
+                className={`mt-9 block rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition ${
+                  p.featured
+                    ? "bg-white text-brand-700 hover:bg-brand-50"
+                    : "border border-slate-700 text-slate-200 hover:bg-slate-800"
                 }`}
               >
                 {p.soon ? "Avísame cuando esté listo" : "Pedir información"}
@@ -259,50 +342,62 @@ export default function HomePage() {
       </section>
 
       {/* Preguntas frecuentes */}
-      <section className="mx-auto max-w-3xl px-5 pb-20">
-        <h2 className="mb-8 text-center text-3xl font-semibold tracking-tight text-white">
-          Preguntas frecuentes
-        </h2>
-        <div className="space-y-3">
+      <section className="mx-auto max-w-3xl px-5 pb-24">
+        <h2 className="mb-8 text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">Preguntas frecuentes</h2>
+        <div className="border-b border-slate-700">
           {FAQ.map((item) => (
-            <details key={item.q} className="group rounded-xl border border-slate-800 bg-slate-900/60 p-5">
-              <summary className="flex cursor-pointer list-none items-center justify-between text-sm font-medium text-white">
+            <details key={item.q} className="group border-t border-slate-700 py-5">
+              <summary className="flex list-none items-center justify-between gap-4 text-base font-medium text-slate-50">
                 {item.q}
-                <span className="ml-4 text-slate-500 transition group-open:rotate-45">+</span>
+                <span className="text-xl leading-none text-brand-400 transition group-open:rotate-45" aria-hidden="true">
+                  +
+                </span>
               </summary>
-              <p className="mt-3 text-sm text-slate-400">{item.a}</p>
+              <p className="mt-3 max-w-xl text-sm leading-relaxed text-slate-400">{item.a}</p>
             </details>
           ))}
         </div>
       </section>
 
-      {/* CTA final */}
+      {/* Cierre */}
       <section className="px-5 pb-24">
-        <div className="mx-auto max-w-3xl rounded-3xl border border-slate-800 bg-gradient-to-br from-indigo-600/20 via-slate-900 to-violet-600/10 p-10 text-center">
-          <h2 className="text-2xl font-semibold tracking-tight text-white sm:text-3xl">
-            ¿Ya tienes tu GT?
-          </h2>
-          <p className="mt-3 text-slate-400">Crea tu cuenta y vincúlalo con el código de tu empaque.</p>
-          <div className="mt-8 flex flex-col items-center justify-center gap-3 sm:flex-row">
-            <Link
-              href="/register"
-              className="w-full rounded-xl bg-indigo-600 px-7 py-3 text-sm font-semibold text-white transition hover:bg-indigo-500 sm:w-auto"
-            >
-              Crear cuenta
-            </Link>
-            <Link
-              href="/login"
-              className="w-full rounded-xl border border-slate-700 px-7 py-3 text-sm font-medium text-slate-200 transition hover:bg-slate-900 sm:w-auto"
-            >
-              Iniciar sesión
-            </Link>
+        <div className="relative mx-auto max-w-6xl overflow-hidden rounded-3xl bg-gradient-to-br from-brand-600 to-brand-900 px-8 py-14 sm:px-14 sm:py-16">
+          <svg
+            className="pointer-events-none absolute -right-24 top-1/2 h-[28rem] w-[28rem] -translate-y-1/2 text-white"
+            viewBox="0 0 400 400"
+            fill="none"
+            stroke="currentColor"
+            aria-hidden="true"
+          >
+            <circle cx="200" cy="200" r="60" strokeOpacity="0.22" strokeWidth="1.5" />
+            <circle cx="200" cy="200" r="110" strokeOpacity="0.16" strokeWidth="1.5" />
+            <circle cx="200" cy="200" r="160" strokeOpacity="0.1" strokeWidth="1.5" />
+            <circle cx="200" cy="200" r="198" strokeOpacity="0.06" strokeWidth="1.5" />
+          </svg>
+          <div className="relative max-w-xl">
+            <h2 className="text-3xl font-bold tracking-tight text-white sm:text-5xl">¿Ya tienes tu GT?</h2>
+            <p className="mt-4 text-brand-100">Crea tu cuenta y vincúlalo con el código de tu empaque.</p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                href="/register"
+                className="rounded-xl bg-white px-7 py-3 text-center text-sm font-semibold text-brand-700 transition hover:bg-brand-50"
+              >
+                Crear cuenta
+              </Link>
+              <Link
+                href="/login"
+                className="rounded-xl border border-white/40 px-7 py-3 text-center text-sm font-medium text-white transition hover:bg-white/10"
+              >
+                Iniciar sesión
+              </Link>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
+      {/* Pie */}
       <footer className="border-t border-slate-800/80 px-5 py-8">
-        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-xs text-slate-500 sm:flex-row">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
           <p>© 2026 GodsTap · by God’s Plan</p>
           <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-slate-300">
             {CONTACT_EMAIL}

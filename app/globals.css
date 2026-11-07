@@ -1,26 +1,314 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ==========================================================================
+   GodsTap · sistema de diseño
+   - Marca: rojo sangre (brand-*)
+   - Neutros: grises con un fondo vino (slate-* se reasigna aquí)
+   - Dos temas: oscuro (por defecto) y claro, con <html data-theme="light">
+   Los componentes siguen usando las clases de Tailwind de siempre; el cambio
+   de tema ocurre cambiando los valores de estas variables.
+   ========================================================================== */
+
+@theme {
+  /* Rojo sangre */
+  --color-brand-50: #fff1f2;
+  --color-brand-100: #ffe0e3;
+  --color-brand-200: #ffc4cb;
+  --color-brand-300: #ff97a3;
+  --color-brand-400: #f4606f;
+  --color-brand-500: #d92d3f;
+  --color-brand-600: #b3162b;
+  --color-brand-700: #8f1023;
+  --color-brand-800: #6e0d1d;
+  --color-brand-900: #4a0914;
+  --color-brand-950: #2b050c;
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ---------- Tema oscuro (por defecto) ---------- */
+html {
+  color-scheme: dark;
+
+  --color-slate-50: #faf6f6;
+  --color-slate-100: #f2eaea;
+  --color-slate-200: #e5d9da;
+  --color-slate-300: #cfbcbe;
+  --color-slate-400: #b49a9d;
+  --color-slate-500: #9a7b7f;
+  --color-slate-600: #5a3d41;
+  --color-slate-700: #3a2528;
+  --color-slate-800: #261819;
+  --color-slate-900: #170d0f;
+  --color-slate-950: #0e0708;
+}
+
+/* ---------- Tema claro ---------- */
+html[data-theme="light"] {
+  color-scheme: light;
+
+  --color-slate-50: #160b0d;
+  --color-slate-100: #231416;
+  --color-slate-200: #321f22;
+  --color-slate-300: #4a3437;
+  --color-slate-400: #5f474b;
+  --color-slate-500: #7a5f63;
+  --color-slate-600: #b8a5a7;
+  --color-slate-700: #dccfce;
+  --color-slate-800: #ece3e2;
+  --color-slate-900: #ffffff;
+  --color-slate-950: #f8f4f3;
+
+  /* El rojo de marca como texto necesita ser más profundo sobre fondo claro */
+  --color-brand-300: #9f1226;
+  --color-brand-400: #b3162b;
+
+  /* Colores de estado como texto: más oscuros para que se lean */
+  --color-red-200: #7f1d1d;
+  --color-red-300: #b91c1c;
+  --color-red-400: #dc2626;
+  --color-amber-200: #78350f;
+  --color-amber-300: #92400e;
+  --color-amber-400: #b45309;
+  --color-emerald-200: #064e3b;
+  --color-emerald-300: #047857;
+  --color-emerald-400: #059669;
+  --color-sky-200: #0c4a6e;
+  --color-sky-300: #0369a1;
+  --color-sky-400: #0284c7;
+}
+
+@layer base {
+  body {
+    background-color: var(--color-slate-950);
+    color: var(--color-slate-100);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  ::selection {
+    background: var(--color-brand-600);
+    color: #fff;
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brand-400);
+    outline-offset: 2px;
+  }
+
+  /* Los inputs ya traen su propio anillo de enfoque */
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible {
+    outline: none;
+  }
+
+  button:not(:disabled),
+  summary,
+  [role="button"] {
+    cursor: pointer;
+  }
+
+  summary::-webkit-details-marker {
+    display: none;
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* ---------- Cambio de tema con transición suave (solo al hacer clic) ---------- */
+html.theme-anim,
+html.theme-anim *,
+html.theme-anim *::before,
+html.theme-anim *::after {
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    color 0.3s ease,
+    fill 0.3s ease !important;
+}
+
+/* Ícono del botón de tema: sol en oscuro, luna en claro */
+html[data-theme="light"] .ti-sun {
+  display: none;
+}
+html:not([data-theme="light"]) .ti-moon {
+  display: none;
+}
+
+/* ==========================================================================
+   Hero: el momento del toque
+   Un GT, ondas que salen de él y un celular que revela el micrositio.
+   ========================================================================== */
+
+.tap-stage {
+  position: relative;
+  width: min(100%, 26rem);
+  aspect-ratio: 1 / 1.14;
+  margin-inline: auto;
+}
+
+.tap-ring {
+  position: absolute;
+  left: 27%;
+  top: 76%;
+  width: 30%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  border-radius: 9999px;
+  border: 1.5px solid var(--color-brand-500);
+  opacity: 0;
+  animation: tap-ring 5.2s cubic-bezier(0.2, 0.6, 0.2, 1) 0.4s infinite;
+}
+.tap-ring:nth-child(2) {
+  animation-delay: 1.6s;
+}
+.tap-ring:nth-child(3) {
+  animation-delay: 2.8s;
+}
+
+@keyframes tap-ring {
+  0% {
+    scale: 0.9;
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.75;
+  }
+  100% {
+    scale: 4.4;
+    opacity: 0;
+  }
+}
+
+.tap-tag {
+  position: absolute;
+  left: 27%;
+  top: 76%;
+  width: 30%;
+  aspect-ratio: 1;
+  translate: -50% -50%;
+  z-index: 3;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 32% 28%, var(--color-brand-400), transparent 55%),
+    radial-gradient(circle at 50% 50%, var(--color-brand-600), var(--color-brand-800) 100%);
+  box-shadow:
+    0 0 0 0.45rem color-mix(in oklab, var(--color-brand-600) 22%, transparent),
+    0 1.2rem 2.6rem -0.6rem color-mix(in oklab, var(--color-brand-600) 70%, transparent),
+    inset 0 0 0 1px rgb(255 255 255 / 0.18);
+  display: grid;
+  place-items: center;
+  animation: tap-tag-in 0.7s cubic-bezier(0.2, 0.9, 0.3, 1.2) both;
+}
+
+@keyframes tap-tag-in {
+  from {
+    scale: 0.4;
+    opacity: 0;
+  }
+  to {
+    scale: 1;
+    opacity: 1;
+  }
+}
+
+.tap-phone {
+  position: absolute;
+  left: 40%;
+  top: 0;
+  width: 54%;
+  aspect-ratio: 9 / 18.2;
+  z-index: 2;
+  padding: 0.5rem;
+  border-radius: 2.1rem;
+  background: var(--color-slate-900);
+  border: 1px solid var(--color-slate-700);
+  box-shadow: 0 2rem 4rem -1.2rem rgb(0 0 0 / 0.55);
+  rotate: 3deg;
+}
+
+.tap-screen {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 1.65rem;
+  /* Este micrositio es de un cliente de ejemplo, con sus propios colores */
+  background: linear-gradient(170deg, #0d4a46 0%, #082f33 100%);
+  color: #f6efe0;
+  padding: 2.4rem 0.9rem 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.tap-screen::before {
+  content: "";
+  position: absolute;
+  top: 0.55rem;
+  left: 50%;
+  translate: -50% 0;
+  width: 28%;
+  height: 0.28rem;
+  border-radius: 9999px;
+  background: rgb(255 255 255 / 0.18);
+}
+
+.tap-reveal {
+  animation: tap-reveal 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes tap-reveal {
+  from {
+    opacity: 0;
+    translate: 0 0.7rem;
+  }
+  to {
+    opacity: 1;
+    translate: 0 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tap-ring {
+    animation: none;
+    opacity: 0;
+  }
+  .tap-ring:nth-child(1) {
+    opacity: 0.45;
+    scale: 2.2;
+  }
+  .tap-ring:nth-child(2) {
+    opacity: 0.25;
+    scale: 3.3;
+  }
+  .tap-tag,
+  .tap-reveal {
+    animation: none;
+  }
+  html.theme-anim,
+  html.theme-anim * {
+    transition: none !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
 }

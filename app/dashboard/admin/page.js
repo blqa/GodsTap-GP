@@ -21,9 +21,9 @@ const ID_CHARS = "abcdefghjkmnpqrstuvwxyz23456789";
 const NO_OWNER = "__sin_vincular__";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
+  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
-const selectClass = "rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-white";
+const selectClass = "rounded-md border border-slate-700 bg-slate-950 px-2 py-1 text-xs text-slate-50";
 
 function randomString(length, chars) {
   let out = "";
@@ -233,7 +233,7 @@ export default function AdminPage() {
   if (user && user.uid !== ADMIN_UID) {
     return (
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center">
-        <h1 className="text-lg font-semibold text-white">Sin acceso</h1>
+        <h1 className="text-lg font-semibold text-slate-50">Sin acceso</h1>
         <p className="mt-2 text-sm text-slate-400">Esta sección es solo para administradores.</p>
       </div>
     );
@@ -285,7 +285,7 @@ export default function AdminPage() {
             className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
           >
             <div>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-slate-50">
                 Revocar <span className="font-mono text-base text-slate-300">{revokeTarget.id}</span>
               </h2>
               <p className="mt-1 text-sm text-slate-400">
@@ -332,7 +332,7 @@ export default function AdminPage() {
       )}
 
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-white">Administración de GT</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-slate-50">Administración de GT</h1>
         <p className="mt-1 text-sm text-slate-400">
           {rows.length} GT · {accountCount} cuentas con GT vinculados
         </p>
@@ -347,7 +347,7 @@ export default function AdminPage() {
       {revokeResult && (
         <div className="mb-8 flex flex-col gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/5 p-6 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h2 className="text-base font-semibold text-white">
+            <h2 className="text-base font-semibold text-slate-50">
               Acceso revocado: <span className="font-mono">{revokeResult.id}</span>
             </h2>
             <p className="mt-1 text-sm text-slate-400">
@@ -355,10 +355,10 @@ export default function AdminPage() {
             </p>
           </div>
           <div className="flex gap-3 text-sm">
-            <button onClick={() => copy(revokeResult.code)} className="text-slate-300 hover:text-white hover:underline">
+            <button onClick={() => copy(revokeResult.code)} className="text-slate-300 hover:text-slate-50 hover:underline">
               Copiar código
             </button>
-            <button onClick={() => setRevokeResult(null)} className="text-slate-500 hover:text-white">
+            <button onClick={() => setRevokeResult(null)} className="text-slate-500 hover:text-slate-50">
               Cerrar
             </button>
           </div>
@@ -367,7 +367,7 @@ export default function AdminPage() {
 
       {/* Crear lote */}
       <form onSubmit={handleCreate} className="mb-8 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
-        <h2 className="text-base font-semibold text-white">Crear lote</h2>
+        <h2 className="text-base font-semibold text-slate-50">Crear lote</h2>
         <div className="grid gap-4 sm:grid-cols-3">
           <div>
             <label className="mb-1.5 block text-sm font-medium text-slate-300">Cantidad (1 a 50)</label>
@@ -381,7 +381,7 @@ export default function AdminPage() {
         <button
           type="submit"
           disabled={creating}
-          className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:opacity-60"
+          className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:opacity-60"
         >
           {creating ? "Creando..." : "Crear GT"}
         </button>
@@ -391,7 +391,7 @@ export default function AdminPage() {
         <div className="mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-6">
           <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-base font-semibold text-white">Lote creado: {created.length} GT</h2>
+              <h2 className="text-base font-semibold text-slate-50">Lote creado: {created.length} GT</h2>
               <p className="text-sm text-slate-400">Descarga el CSV para grabar los chips e imprimir los códigos.</p>
             </div>
             <button
@@ -403,7 +403,7 @@ export default function AdminPage() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
-              <thead className="text-xs uppercase tracking-wider text-slate-500">
+              <thead className="text-xs text-slate-500">
                 <tr>
                   <th className="py-2 pr-4">ID</th>
                   <th className="py-2 pr-4">URL para el chip</th>
@@ -432,7 +432,7 @@ export default function AdminPage() {
           placeholder="Buscar por correo, nombre del GT, negocio, ID o código..."
           className={inputClass}
         />
-        <button onClick={loadAll} className="shrink-0 text-sm text-slate-300 hover:text-white hover:underline">
+        <button onClick={loadAll} className="shrink-0 text-sm text-slate-300 hover:text-slate-50 hover:underline">
           Actualizar
         </button>
       </div>
@@ -449,7 +449,7 @@ export default function AdminPage() {
             <details key={g.key} open={!!q || g.items.length <= 5} className="rounded-2xl border border-slate-800 bg-slate-900/60">
               <summary className="flex cursor-pointer list-none flex-wrap items-center justify-between gap-2 px-5 py-4">
                 <span>
-                  <span className="font-semibold text-white">{linked ? "🏪 " : "📦 "}{g.title}</span>
+                  <span className="inline-flex items-center gap-2 font-semibold text-slate-50"><span className={`h-2 w-2 rounded-full ${linked ? "bg-emerald-500" : "bg-slate-500"}`} aria-hidden="true" />{g.title}</span>
                   {g.subtitle && <span className="block text-xs text-slate-500">{g.subtitle}</span>}
                 </span>
                 <span className="text-xs text-slate-400">
@@ -482,7 +482,7 @@ export default function AdminPage() {
 
                 <div className="overflow-x-auto">
                   <table className="w-full text-left text-sm">
-                    <thead className="text-xs uppercase tracking-wider text-slate-500">
+                    <thead className="text-xs text-slate-500">
                       <tr>
                         <th className="py-2 pr-4">GT</th>
                         <th className="py-2 pr-4">Negocio</th>
@@ -495,7 +495,7 @@ export default function AdminPage() {
                       {g.items.map((r) => (
                         <tr key={r.id} className="border-t border-slate-800">
                           <td className="py-2 pr-4">
-                            <p className="font-medium text-white">{r.nickname || "—"}</p>
+                            <p className="font-medium text-slate-50">{r.nickname || "—"}</p>
                             <p className="font-mono text-xs text-slate-500">{r.id}</p>
                           </td>
                           <td className="max-w-[180px] truncate py-2 pr-4">{r.business_name || "—"}</td>
@@ -508,7 +508,7 @@ export default function AdminPage() {
                           </td>
                           <td className="py-2 pr-4 font-mono text-xs">{r.code || "—"}</td>
                           <td className="space-x-3 whitespace-nowrap py-2 text-xs">
-                            <button onClick={() => copy(`${BASE_URL}/t/${r.id}`)} className="hover:text-white hover:underline">
+                            <button onClick={() => copy(`${BASE_URL}/t/${r.id}`)} className="hover:text-slate-50 hover:underline">
                               Copiar URL
                             </button>
                             {r.owner_uid && (

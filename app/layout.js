@@ -1,14 +1,16 @@
-import { Geist, Geist_Mono } from "next/font/google";
+import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+const display = Bricolage_Grotesque({
+  variable: "--font-bricolage",
   subsets: ["latin"],
+  display: "swap",
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const body = Instrument_Sans({
+  variable: "--font-instrument",
   subsets: ["latin"],
+  display: "swap",
 });
 
 export const metadata = {
@@ -16,13 +18,21 @@ export const metadata = {
   description: "Smart Tags NFC para negocios locales.",
 };
 
+// Se ejecuta antes de pintar la página para que no haya parpadeo al cambiar de tema.
+// Oscuro por defecto; si la persona eligió claro, se respeta.
+const themeScript = `try{var t=localStorage.getItem("gt-theme");document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}`;
+
 export default function RootLayout({ children }) {
   return (
     <html
-      lang="en"
-      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      lang="es"
+      suppressHydrationWarning
+      className={`${display.variable} ${body.variable} h-full antialiased`}
     >
-      <body className="min-h-full flex flex-col">{children}</body>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="flex min-h-full flex-col">{children}</body>
     </html>
   );
 }

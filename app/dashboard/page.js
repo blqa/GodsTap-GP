@@ -1,5 +1,6 @@
 "use client";
 
+import { LogoMark } from "@/components/Logo";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import {
@@ -22,7 +23,7 @@ const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
 
 const inputClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder-slate-500 outline-none transition focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30";
+  "w-full rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-50 placeholder-slate-500 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30";
 
 function isValidUrl(url) {
   try {
@@ -44,7 +45,7 @@ function modeStyle(mode) {
   if (mode === "redirect")
     return { label: "Redirección", style: "bg-sky-500/10 text-sky-300 ring-sky-500/30" };
   if (mode === "microsite")
-    return { label: "Micrositio", style: "bg-violet-500/10 text-violet-300 ring-violet-500/30" };
+    return { label: "Micrositio", style: "bg-brand-500/10 text-brand-300 ring-brand-500/30" };
   return { label: mode || "Sin definir", style: "bg-slate-500/10 text-slate-300 ring-slate-500/30" };
 }
 
@@ -106,19 +107,19 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
         <button
           onClick={onClose}
           aria-label="Cerrar"
-          className="absolute right-4 top-4 text-slate-500 transition hover:text-white"
+          className="absolute right-4 top-4 text-slate-500 transition hover:text-slate-50"
         >
           ✕
         </button>
 
         {showProgress && (
           <div className="mb-5">
-            <p className="mb-2 text-xs font-medium uppercase tracking-wider text-slate-500">
+            <p className="mb-2 text-xs font-medium text-slate-500">
               Paso {step} de 3
             </p>
             <div className="h-1.5 w-full overflow-hidden rounded-full bg-slate-800">
               <div
-                className="h-full rounded-full bg-indigo-500 transition-all"
+                className="h-full rounded-full bg-brand-500 transition-all"
                 style={{ width: `${(step / 3) * 100}%` }}
               />
             </div>
@@ -137,7 +138,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-2xl ring-1 ring-emerald-500/30">
               ✓
             </div>
-            <h2 className="text-xl font-semibold text-white">¡GT vinculado!</h2>
+            <h2 className="text-xl font-semibold text-slate-50">¡GT vinculado!</h2>
             <p className="mt-2 text-sm text-slate-400">
               <span className="font-mono text-slate-300">{tag.id}</span> ya es tuyo. Configúralo en
               menos de un minuto o hazlo después desde tu panel.
@@ -145,7 +146,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
             <div className="mt-6 space-y-3">
               <button
                 onClick={() => setStep(1)}
-                className="w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
+                className="w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-500"
               >
                 Configurar ahora
               </button>
@@ -157,7 +158,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
               </button>
               <button
                 onClick={onClose}
-                className="w-full px-4 py-2 text-sm text-slate-400 transition hover:text-white"
+                className="w-full px-4 py-2 text-sm text-slate-400 transition hover:text-slate-50"
               >
                 Hacerlo más tarde
               </button>
@@ -168,7 +169,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
         {/* 1. Nombre */}
         {step === 1 && (
           <div>
-            <h2 className="text-lg font-semibold text-white">¿Cómo se llama tu negocio?</h2>
+            <h2 className="text-lg font-semibold text-slate-50">¿Cómo se llama tu negocio?</h2>
             <p className="mt-1 text-sm text-slate-400">Es el nombre que verán tus clientes al escanear.</p>
             <input
               autoFocus
@@ -185,7 +186,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
         {/* 2. Modo */}
         {step === 2 && (
           <div>
-            <h2 className="text-lg font-semibold text-white">¿Qué pasa al escanear?</h2>
+            <h2 className="text-lg font-semibold text-slate-50">¿Qué pasa al escanear?</h2>
             <p className="mt-1 text-sm text-slate-400">Puedes cambiarlo cuando quieras.</p>
             <div className="mt-5 space-y-3">
               {[
@@ -206,11 +207,11 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
                   onClick={() => setMode(opt.value)}
                   className={`w-full rounded-xl border p-4 text-left transition ${
                     mode === opt.value
-                      ? "border-indigo-500 bg-indigo-500/10"
+                      ? "border-brand-500 bg-brand-500/10"
                       : "border-slate-700 bg-slate-950 hover:border-slate-600"
                   }`}
                 >
-                  <p className="text-sm font-semibold text-white">{opt.title}</p>
+                  <p className="text-sm font-semibold text-slate-50">{opt.title}</p>
                   <p className="mt-0.5 text-xs text-slate-400">{opt.desc}</p>
                 </button>
               ))}
@@ -221,7 +222,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
         {/* 3. Enlace */}
         {step === 3 && (
           <div>
-            <h2 className="text-lg font-semibold text-white">
+            <h2 className="text-lg font-semibold text-slate-50">
               {mode === "redirect" ? "¿A qué enlace quieres llevar a tus clientes?" : "¿A dónde lleva tu botón principal?"}
             </h2>
             <p className="mt-1 text-sm text-slate-400">
@@ -244,7 +245,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
             <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-full bg-emerald-500/10 text-2xl ring-1 ring-emerald-500/30">
               🎉
             </div>
-            <h2 className="text-xl font-semibold text-white">¡Listo, {name.trim()}!</h2>
+            <h2 className="text-xl font-semibold text-slate-50">¡Listo, {name.trim()}!</h2>
             <p className="mt-2 text-sm text-slate-400">
               Tu GT ya está configurado. Acércale tu celular para probarlo.
             </p>
@@ -253,7 +254,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
                 href={`/t/${tag.id}`}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="block w-full rounded-lg bg-indigo-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-indigo-500"
+                className="block w-full rounded-lg bg-brand-600 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-brand-500"
               >
                 Probar mi enlace
               </a>
@@ -265,7 +266,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
               </button>
               <button
                 onClick={onClose}
-                className="w-full px-4 py-2 text-sm text-slate-400 transition hover:text-white"
+                className="w-full px-4 py-2 text-sm text-slate-400 transition hover:text-slate-50"
               >
                 Ir a mis GT
               </button>
@@ -278,7 +279,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
           <div className="mt-6 flex items-center justify-between">
             <button
               onClick={onClose}
-              className="text-sm text-slate-400 transition hover:text-white"
+              className="text-sm text-slate-400 transition hover:text-slate-50"
             >
               Hacerlo más tarde
             </button>
@@ -297,7 +298,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
               {step < 3 ? (
                 <button
                   onClick={goNext}
-                  className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500"
+                  className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
                 >
                   Siguiente
                 </button>
@@ -305,7 +306,7 @@ function SetupWizard({ tag, startStep = 0, onClose, onClaimAnother, onSaved, def
                 <button
                   onClick={handleSave}
                   disabled={saving}
-                  className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {saving ? "Guardando..." : "Guardar y terminar"}
                 </button>
@@ -491,7 +492,7 @@ export default function DashboardPage() {
       {/* Encabezado */}
       <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-white">Mis GT</h1>
+          <h1 className="text-3xl font-bold tracking-tight text-slate-50">Mis GT</h1>
           <p className="mt-1 text-sm text-slate-400">Administra tus dispositivos NFC vinculados.</p>
         </div>
         <button
@@ -499,7 +500,7 @@ export default function DashboardPage() {
             setShowClaim(!showClaim);
             setClaimError("");
           }}
-          className="w-fit rounded-lg bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-indigo-900/30 transition hover:bg-indigo-500"
+          className="w-fit rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-brand-900/30 transition hover:bg-brand-500"
         >
           {showClaim ? "Cerrar" : "+ Vincular nuevo GT"}
         </button>
@@ -512,7 +513,7 @@ export default function DashboardPage() {
           className="mb-8 space-y-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
         >
           <div>
-            <h2 className="text-base font-semibold text-white">Vincular un GT</h2>
+            <h2 className="text-base font-semibold text-slate-50">Vincular un GT</h2>
             <p className="mt-1 text-sm text-slate-400">
               Escribe el ID y el código de activación que vienen con tu producto.
             </p>
@@ -561,7 +562,7 @@ export default function DashboardPage() {
           <button
             type="submit"
             disabled={claiming}
-            className="rounded-lg bg-indigo-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-indigo-500 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg bg-brand-600 px-5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {claiming ? "Vinculando..." : "Vincular"}
           </button>
@@ -588,9 +589,10 @@ export default function DashboardPage() {
       {/* Estado vacío */}
       {!loading && !error && tags.length === 0 && (
         <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 px-6 py-20 text-center">
-          <h2 className="text-lg font-semibold text-white">Aún no tienes GT vinculados</h2>
+          <LogoMark className="mb-5 h-14 w-14" />
+          <h2 className="text-lg font-semibold text-slate-50">Aún no tienes GT vinculados</h2>
           <p className="mt-2 max-w-sm text-sm text-slate-400">
-            Presiona "Vincular nuevo GT" e ingresa el ID y el código de activación que vienen con tu producto.
+            Presiona «Vincular nuevo GT» e ingresa el ID y el código de activación que vienen con tu producto.
           </p>
         </div>
       )}
@@ -601,13 +603,18 @@ export default function DashboardPage() {
           <ScansPanel uid={user.uid} tags={tags.filter((t) => isPaid(t.plan))} />
         ) : (
           <section className="mb-8 rounded-2xl border border-dashed border-slate-700 bg-slate-900/40 p-6 text-center">
-            <h2 className="text-base font-semibold text-white">🔒 Escaneos</h2>
+            <h2 className="inline-flex items-center gap-2 text-base font-semibold text-slate-50">
+              <svg className="h-4 w-4 text-slate-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                <path fillRule="evenodd" d="M10 2a4 4 0 00-4 4v2H5a1 1 0 00-1 1v7a2 2 0 002 2h8a2 2 0 002-2V9a1 1 0 00-1-1h-1V6a4 4 0 00-4-4zm2 6V6a2 2 0 10-4 0v2h4z" clipRule="evenodd" />
+              </svg>
+              Escaneos
+            </h2>
             <p className="mt-2 text-sm text-slate-400">
               Las estadísticas de escaneos están disponibles en el plan Pro.
             </p>
             <a
               href={`mailto:${SUPPORT_EMAIL}?subject=${encodeURIComponent("Quiero el plan Pro")}`}
-              className="mt-3 inline-block text-sm text-indigo-400 hover:underline"
+              className="mt-3 inline-block text-sm text-brand-400 hover:underline"
             >
               Pedir el plan Pro
             </a>
@@ -622,11 +629,11 @@ export default function DashboardPage() {
             return (
               <article
                 key={tag.id}
-                className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-slate-700 hover:bg-slate-900"
+                className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 shadow-sm shadow-black/5 transition hover:border-brand-500/40 hover:bg-slate-900"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-white">{tag.nickname || "GT sin nombre"}</p>
+                    <p className="truncate text-sm font-semibold text-slate-50">{tag.nickname || "GT sin nombre"}</p>
                     <p className="truncate font-mono text-xs text-slate-500">{tag.id}</p>
                   </div>
                   {pending ? (
@@ -641,13 +648,13 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="flex items-center justify-between gap-3">
-                  <h3 className="truncate text-base font-semibold text-white">
+                  <h3 className="truncate text-base font-semibold text-slate-50">
                     {tag.business_name || "Sin nombre de negocio"}
                   </h3>
                   <span
                     className={`shrink-0 rounded-full px-2 py-0.5 text-xs font-medium ring-1 ${
                       isPaid(tag.plan)
-                        ? "bg-indigo-500/10 text-indigo-300 ring-indigo-500/30"
+                        ? "bg-brand-500/10 text-brand-300 ring-brand-500/30"
                         : "bg-slate-500/10 text-slate-400 ring-slate-500/30"
                     }`}
                   >
@@ -656,8 +663,8 @@ export default function DashboardPage() {
                 </div>
 
                 <div className="mt-4 border-t border-slate-800 pt-4">
-                  <p className="mb-1 text-xs font-medium uppercase tracking-wider text-slate-500">URL destino</p>
-                  <p className="truncate text-sm text-indigo-400" title={tag.target_url}>
+                  <p className="mb-1 text-xs font-medium text-slate-500">URL destino</p>
+                  <p className="truncate text-sm text-brand-400" title={tag.target_url}>
                     {tag.target_url || "No configurada"}
                   </p>
                 </div>
@@ -675,11 +682,11 @@ export default function DashboardPage() {
                     href={`/t/${tag.id}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="text-slate-300 hover:text-white hover:underline"
+                    className="text-slate-300 hover:text-slate-50 hover:underline"
                   >
                     Probar enlace
                   </a>
-                  <button onClick={() => startEdit(tag)} className="text-slate-300 hover:text-white hover:underline">
+                  <button onClick={() => startEdit(tag)} className="text-slate-300 hover:text-slate-50 hover:underline">
                     Editar
                   </button>
                 </div>
