@@ -149,7 +149,7 @@ export default function RegisterPage() {
           </p>
         </form>
         <p className="mt-6 text-center text-xs text-slate-500">
-  © {new Date().getFullYear()} GodsTap · by God’s Plan
+  © 2026 GodsTap · by God’s Plan
 </p>
       </div>
     </main>
