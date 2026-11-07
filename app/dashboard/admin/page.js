@@ -57,6 +57,7 @@ export default function AdminPage() {
   const [label, setLabel] = useState(DEFAULT_NAME);
   const [creating, setCreating] = useState(false);
   const [created, setCreated] = useState([]);
+  const [search, setSearch] = useState("");  
 
   // Revocar
   const [revokeTarget, setRevokeTarget] = useState(null);
@@ -224,7 +225,14 @@ export default function AdminPage() {
   };
 
   const copy = (text) => navigator.clipboard?.writeText(text);
-
+  const q = search.trim().toLowerCase();
+  const visible = q
+    ? rows.filter((r) =>
+        [r.id, r.business_name, r.owner_uid, r.code].some((v) =>
+          String(v || "").toLowerCase().includes(q)
+        )
+      )
+    : rows;
   if (user && user.uid !== ADMIN_UID) {
     return (
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center">
@@ -408,12 +416,23 @@ export default function AdminPage() {
       {/* Todos los GT */}
       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-6">
         <div className="mb-4 flex items-center justify-between">
-          <h2 className="text-base font-semibold text-white">Todos los GT ({rows.length})</h2>
+          <h2 className="text-base font-semibold text-white">
+            Todos los GT ({visible.length}
+            {q ? ` de ${rows.length}` : ""})
+          </h2>
           <button onClick={loadAll} className="text-sm text-slate-300 hover:text-white hover:underline">
             Actualizar
           </button>
         </div>
-
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por negocio, ID, código o cuenta..."
+          className={`${inputClass} mb-4`}
+        />
+        {!loading && rows.length > 0 && visible.length === 0 && (
+          <p className="mb-4 text-sm text-slate-400">Sin resultados.</p>
+        )}
         {loading && <p className="text-sm text-slate-400">Cargando...</p>}
         {!loading && rows.length === 0 && (
           <p className="text-sm text-slate-400">Aún no hay GT. Crea un lote arriba.</p>
@@ -433,7 +452,7 @@ export default function AdminPage() {
                 </tr>
               </thead>
               <tbody className="text-slate-300">
-                {rows.map((r) => (
+                {visible.map((r) => (
                   <tr key={r.id} className="border-t border-slate-800">
                     <td className="py-2 pr-4 font-mono text-xs">{r.id}</td>
                     <td className="max-w-[180px] truncate py-2 pr-4">{r.business_name || "—"}</td>
