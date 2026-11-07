@@ -602,9 +602,10 @@ export default function DashboardPage() {
                 className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5 transition hover:border-slate-700 hover:bg-slate-900"
               >
                 <div className="mb-4 flex items-center justify-between gap-3">
-                  <span className="truncate rounded-md bg-slate-800 px-2 py-1 font-mono text-xs text-slate-300 ring-1 ring-slate-700">
-                    {tag.id}
-                  </span>
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-white">{tag.nickname || "GT sin nombre"}</p>
+                    <p className="truncate font-mono text-xs text-slate-500">{tag.id}</p>
+                  </div>
                   {pending ? (
                     <span className="inline-flex shrink-0 items-center rounded-full bg-amber-500/10 px-2.5 py-1 text-xs font-medium text-amber-300 ring-1 ring-amber-500/30">
                       Falta configurar

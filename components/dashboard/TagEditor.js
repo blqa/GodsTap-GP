@@ -48,6 +48,7 @@ export default function TagEditor({ tag, onClose, onSaved }) {
   const [name, setName] = useState(tag.business_name || "");
   const [mode, setMode] = useState(tag.mode === "redirect" ? "redirect" : "microsite");
   const [url, setUrl] = useState(tag.target_url || "");
+  const [nickname, setNickname] = useState(tag.nickname || "");  
   const [theme, setTheme] = useState(normalizeTheme(tag.theme));
   const [links, setLinks] = useState(
     Array.isArray(tag.links)
@@ -97,7 +98,14 @@ export default function TagEditor({ tag, onClose, onSaved }) {
       return;
     }
 
+    const cleanNick = nickname.trim();
+    if (cleanNick.length > 40) {
+      setError("El nombre de tu GT puede tener máximo 40 caracteres.");
+      return;
+    }
+
     const payload = {
+      nickname: cleanNick,
       business_name: cleanName,
       mode,
       target_url: cleanUrl,
@@ -171,7 +179,19 @@ export default function TagEditor({ tag, onClose, onSaved }) {
                 {error}
               </div>
             )}
-
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre de este GT</label>
+              <input
+                value={nickname}
+                onChange={(e) => setNickname(e.target.value)}
+                maxLength={40}
+                placeholder="Ej. Mostrador, Mesa 3, Sucursal Centro"
+                className={inputClass}
+              />
+              <p className="mt-1 text-xs text-slate-500">
+                Es para que tú los distingas. No aparece en tu micrositio y no cambia el link del chip ({tag.id}).
+              </p>
+            </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
                 <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre del negocio</label>

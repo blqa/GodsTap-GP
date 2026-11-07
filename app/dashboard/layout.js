@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
-import { auth } from "@/lib/firebaseConfig";
+import { auth, db } from "@/lib/firebaseConfig";
+import { doc, setDoc } from "firebase/firestore";
 import RevokedNotice from "@/components/dashboard/RevokedNotice";
 
 export default function DashboardLayout({ children }) {
@@ -16,6 +17,7 @@ export default function DashboardLayout({ children }) {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+        setDoc(doc(db, "users", currentUser.uid), { email: currentUser.email }, { merge: true }).catch(() => {});        
         setChecking(false);
       } else {
         setUser(null);
