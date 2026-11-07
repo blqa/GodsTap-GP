@@ -303,7 +303,7 @@ export default function HomePage() {
       {/* Footer */}
       <footer className="border-t border-slate-800/80 px-5 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 text-xs text-slate-500 sm:flex-row">
-          <p>© {new Date().getFullYear()} GodsTap · by God’s Plan</p>
+          <p>© 2026 GodsTap · by God’s Plan</p>
           <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-slate-300">
             {CONTACT_EMAIL}
           </a>
