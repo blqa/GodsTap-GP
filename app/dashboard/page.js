@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import { doc, setDoc } from 'firebase/firestore'; 
 // Si usas dbLite, cambia la importación a: import { doc, setDoc } from 'firebase/firestore/lite';
-import { db } from '@/lib/firebase'; // Ajusta la ruta a tu archivo de configuración de Firebase
+import { db } from '@/lib/firebaseConfig'; // Ajusta la ruta a tu archivo de configuración de Firebase
 
 export default function DashboardPage() {
   const [formData, setFormData] = useState({
