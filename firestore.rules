@@ -1,0 +1,43 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner() {
+      return isSignedIn() && resource.data.owner_uid == request.auth.uid;
+    }
+
+    // Usuarios: cada quien solo accede a su propio documento
+    match /users/{uid} {
+      allow read, write: if isSignedIn() && request.auth.uid == uid;
+    }
+
+    // Tags
+    match /tags/{tagId} {
+      // Lectura pública de UN documento (necesaria para /t/[tag_id] con Firestore Lite sin auth).
+      // No permite listar la colección. No guardes datos sensibles en estos documentos.
+      allow get: if true;
+
+      // Listados: solo del dueño (la query debe incluir where("owner_uid", "==", uid))
+      allow list: if isOwner();
+
+      allow create: if isSignedIn()
+                    && request.resource.data.owner_uid == request.auth.uid;
+
+      // El dueño edita, pero no puede reasignar owner_uid
+      allow update: if isOwner()
+                    && request.resource.data.owner_uid == resource.data.owner_uid;
+
+      allow delete: if isOwner();
+    }
+
+    // Todo lo demás, denegado
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
