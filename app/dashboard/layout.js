@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { onAuthStateChanged, signOut } from "firebase/auth";
 import { auth, db } from "@/lib/firebaseConfig";
 import { doc, setDoc } from "firebase/firestore";
@@ -13,6 +13,7 @@ import Link from "next/link";
 
 export default function DashboardLayout({ children }) {
   const router = useRouter();
+  const pathname = usePathname();
   const [user, setUser] = useState(null);
   const [checking, setChecking] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
@@ -25,12 +26,13 @@ export default function DashboardLayout({ children }) {
         setChecking(false);
       } else {
         setUser(null);
-        router.replace("/login");
+        // Quien no ha iniciado sesión y trata de entrar al admin va a la página principal
+        router.replace(pathname?.startsWith("/dashboard/admin") ? "/" : "/login");
       }
     });
 
     return () => unsubscribe();
-  }, [router]);
+  }, [router, pathname]);
 
   const handleSignOut = async () => {
     setSigningOut(true);

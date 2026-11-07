@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
 import {
   collection,
@@ -12,7 +13,7 @@ import {
 } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import { PLANS, planOf } from "@/lib/plans";
-import { CONTACT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
+import { SUPPORT_EMAIL, CONTACT_PHONE } from "@/lib/contact";
 
 const ADMIN_UID = "FgBIf9XGbma8nNu8TH49IX28FGn1";
 const BASE_URL = "https://godstap.godsplan.site";
@@ -49,6 +50,7 @@ function downloadCsv(items) {
 }
 
 export default function AdminPage() {
+  const router = useRouter();
   const [user, setUser] = useState(null);
   const [rows, setRows] = useState([]);
   const [emails, setEmails] = useState({});
@@ -107,12 +109,16 @@ export default function AdminPage() {
   useEffect(() => {
     const unsub = onAuthStateChanged(auth, (u) => {
       if (!u) return;
+      // Quien no es administrador nunca ve esta pantalla: va directo a la página principal
+      if (u.uid !== ADMIN_UID) {
+        router.replace("/");
+        return;
+      }
       setUser(u);
-      if (u.uid === ADMIN_UID) loadAll();
-      else setLoading(false);
+      loadAll();
     });
     return () => unsub();
-  }, []);
+  }, [router]);
 
   const handleCreate = async (e) => {
     e.preventDefault();
@@ -196,7 +202,7 @@ export default function AdminPage() {
         tag_id: target.id,
         business_name: target.business_name || "",
         reason,
-        contact_email: CONTACT_EMAIL,
+        contact_email: SUPPORT_EMAIL,
         contact_phone: CONTACT_PHONE,
         read: false,
         created_at: serverTimestamp(),
@@ -230,14 +236,8 @@ export default function AdminPage() {
 
   const copy = (text) => navigator.clipboard?.writeText(text);
 
-  if (user && user.uid !== ADMIN_UID) {
-    return (
-      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center">
-        <h1 className="text-lg font-semibold text-slate-50">Sin acceso</h1>
-        <p className="mt-2 text-sm text-slate-400">Esta sección es solo para administradores.</p>
-      </div>
-    );
-  }
+  // Mientras se confirma la sesión (o se redirige a quien no es admin) no se muestra nada
+  if (!user || user.uid !== ADMIN_UID) return null;
 
   // Búsqueda y agrupación por cuenta
   const q = search.trim().toLowerCase();
