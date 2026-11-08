@@ -1,17 +1,10 @@
-// Marca de GodsTap: un GT (disco rojo) con las ondas del NFC.
+// Marca de GodsTap: el GT con las ondas del NFC.
 
-export function LogoMark({ className = "h-8 w-8", onRed = false }) {
+export function LogoMark({ className = "h-8 w-8" }) {
+  // Imagen real del GT (con sus esquinas redondeadas). Se ve bien sobre fondos claros, oscuros y rojos.
   return (
-    <svg className={className} viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="14" cy="14" r="14" className={onRed ? "fill-brand-950/55" : "fill-brand-600"} />
-      <circle cx="14" cy="14" r="13.25" stroke="white" strokeOpacity="0.18" strokeWidth="1.5" />
-      <circle cx="9.5" cy="14" r="1.9" fill="white" />
-      <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M12.56 11.43A4 4 0 0 1 12.56 16.57" />
-        <path d="M15.25 9.18A7.5 7.5 0 0 1 15.25 18.82" strokeOpacity="0.8" />
-        <path d="M17.93 6.93A11 11 0 0 1 17.93 21.07" strokeOpacity="0.55" />
-      </g>
-    </svg>
+    // eslint-disable-next-line @next/next/no-img-element
+    <img src="/brand/godstap-mark.png" alt="" width={128} height={128} className={`${className} shrink-0 object-contain`} aria-hidden="true" />
   );
 }
 
@@ -22,7 +15,7 @@ export default function Logo({ showBy = false, light = false, size = "md", class
   const text = size === "lg" ? "text-2xl" : "text-xl";
   return (
     <span className={`inline-flex items-center gap-2.5 ${className}`}>
-      <LogoMark className={mark} onRed={light} />
+      <LogoMark className={mark} />
       <span className={`font-display ${text} font-bold leading-none tracking-tight ${light ? "text-white" : "text-slate-50"}`}>
         GodsTap
         {showBy && (
