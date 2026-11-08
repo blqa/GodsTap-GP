@@ -54,40 +54,83 @@ function ErrorState({ title, message, detail }) {
   );
 }
 
+const SETUP_STEPS = [
+  { title: "Crea tu cuenta", desc: "Toma un minuto. Si ya tienes cuenta, solo inicia sesión." },
+  { title: "Vincula este GT", desc: "En tu panel toca «+ Vincular nuevo GT» y escribe el ID de abajo y el código de activación de tu empaque." },
+  { title: "Configúralo", desc: "Pon el nombre de tu negocio y elige qué ven tus clientes: tu menú, tu WhatsApp, tus reseñas…" },
+  { title: "¡Listo para usarse!", desc: "Acerca tu celular a este GT y tu página aparece al instante." },
+];
+
 function UnclaimedState({ tagId }) {
+  const [copied, setCopied] = useState(false);
+
+  const copyId = async () => {
+    try {
+      await navigator.clipboard.writeText(tagId);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1800);
+    } catch {
+      /* si el navegador no deja copiar, el ID sigue visible para escribirlo */
+    }
+  };
+
   return (
-    <main className="relative flex min-h-screen items-center justify-center overflow-hidden bg-slate-950 px-5 py-12">
+    <main className="relative min-h-screen overflow-hidden bg-slate-950 px-5 py-12">
       <div className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full bg-brand-600/20 blur-3xl" />
 
-      <div className="relative w-full max-w-sm text-center">
-        <LogoMark className="mx-auto mb-6 h-16 w-16" />
+      <div className="relative mx-auto w-full max-w-md">
+        <div className="text-center">
+          <LogoMark className="mx-auto mb-5 h-14 w-14" />
+          <h1 className="text-3xl font-bold tracking-tight text-slate-50">¡Bienvenido a GodsTap!</h1>
+          <p className="mt-2 text-sm text-slate-400">
+            Este GT todavía no está activado. Sigue estos pasos y en menos de un minuto estará funcionando.
+          </p>
+        </div>
 
-        <h1 className="text-3xl font-bold tracking-tight text-slate-50">Este GT aún no está activado</h1>
-        <p className="mt-2 text-sm text-slate-400">
-          Si acabas de recibirlo, crea tu cuenta o inicia sesión y vincúlalo con el código de
-          activación que viene en tu empaque.
-        </p>
+        <ol className="mt-8 space-y-3">
+          {SETUP_STEPS.map((st, i) => (
+            <li key={st.title} className="flex gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
+              <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-brand-600 font-display text-sm font-bold text-white">
+                {i + 1}
+              </span>
+              <div className="min-w-0">
+                <h2 className="text-sm font-semibold text-slate-50">{st.title}</h2>
+                <p className="mt-1 text-sm leading-relaxed text-slate-400">{st.desc}</p>
+                {i === 1 && (
+                  <div className="mt-3 flex items-center gap-2">
+                    <span className="min-w-0 truncate rounded-md bg-slate-950 px-3 py-1.5 font-mono text-xs text-slate-200 ring-1 ring-slate-700">
+                      {tagId}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={copyId}
+                      className="shrink-0 rounded-md border border-slate-700 px-3 py-1.5 text-xs font-medium text-slate-200 transition hover:bg-slate-800"
+                    >
+                      {copied ? "¡Copiado!" : "Copiar ID"}
+                    </button>
+                  </div>
+                )}
+              </div>
+            </li>
+          ))}
+        </ol>
 
-        <p className="mt-5 inline-block rounded-md bg-slate-900 px-3 py-1.5 font-mono text-xs text-slate-300 ring-1 ring-slate-700">
-          ID: {tagId}
-        </p>
-
-        <div className="mt-8 space-y-3">
+        <div className="mt-6 space-y-3">
           <a
             href="/register"
-            className="block w-full rounded-xl bg-brand-600 px-6 py-3.5 text-sm font-semibold text-white shadow-lg shadow-brand-900/40 transition hover:bg-brand-500"
+            className="block w-full rounded-xl bg-brand-600 px-6 py-3.5 text-center text-sm font-semibold text-white shadow-lg shadow-brand-900/40 transition hover:bg-brand-500"
           >
-            Crear cuenta
+            Crear mi cuenta
           </a>
           <a
             href="/login"
-            className="block w-full rounded-xl border border-slate-700 px-6 py-3.5 text-sm font-medium text-slate-200 transition hover:bg-slate-900"
+            className="block w-full rounded-xl border border-slate-700 px-6 py-3.5 text-center text-sm font-medium text-slate-200 transition hover:bg-slate-900"
           >
             Ya tengo cuenta
           </a>
         </div>
 
-        <p className="mt-10 text-xs text-slate-600">
+        <p className="mt-8 text-center text-xs text-slate-600">
           <span className="font-medium text-slate-500">GodsTap</span> · by God’s Plan
         </p>
       </div>
