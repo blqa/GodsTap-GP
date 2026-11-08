@@ -27,8 +27,10 @@ service cloud.firestore {
     function validTheme(t) {
       return t == null || (
         t is map
-        && t.keys().hasOnly(['bg', 'accent', 'fx'])
+        && t.keys().hasOnly(['bg', 'accent', 'fx', 'font', 'shape'])
         && t.get('fx', 'particles') in ['particles', 'bubbles', 'sparkles', 'none']
+        && t.get('font', 'sans') in ['sans', 'serif', 'rounded', 'mono']
+        && t.get('shape', 'round') in ['round', 'pill', 'square']
         && t.bg is string
         && t.bg.matches('^#[0-9a-fA-F]{6}$')
         && t.accent is string
@@ -46,6 +48,11 @@ service cloud.firestore {
         && m.get('note', '') is string
         && m.get('note', '').size() <= 200
       );
+    }
+
+    // Imágenes del micrositio guardadas como texto (data URL), ya comprimidas por la app
+    function validImage(v, maxSize) {
+      return v == null || (v is string && v.size() <= maxSize && (v.size() == 0 || v.matches('data:image/.*')));
     }
 
     match /users/{uid} {
@@ -73,7 +80,7 @@ service cloud.firestore {
       // El dueño solo puede editar estos campos (el plan NO está en la lista)
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'updated_at'])
+             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'logo', 'cover', 'updated_at'])
         && request.resource.data.mode in ['redirect', 'microsite']
         && request.resource.data.target_url is string
         && request.resource.data.target_url.matches('^https?://.+')
@@ -87,9 +94,13 @@ service cloud.firestore {
         && request.resource.data.get('tagline', '').size() <= 90
         && validTheme(request.resource.data.get('theme', null))
         && validMenu(request.resource.data.get('menu', null))
+        && validImage(request.resource.data.get('logo', null), 70000)
+        && validImage(request.resource.data.get('cover', null), 210000)
         && (isPaid() || request.resource.data.get('links', []) == resource.data.get('links', []))
         && (isPaid() || request.resource.data.get('theme', null) == resource.data.get('theme', null))
-        && (isPaid() || request.resource.data.get('menu', null) == resource.data.get('menu', null));
+        && (isPaid() || request.resource.data.get('menu', null) == resource.data.get('menu', null))
+        && (isPaid() || request.resource.data.get('logo', null) == resource.data.get('logo', null))
+        && (isPaid() || request.resource.data.get('cover', null) == resource.data.get('cover', null));
 
       // Vincular
       allow update: if isSignedIn()

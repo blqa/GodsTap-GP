@@ -199,6 +199,8 @@ function PublicTag() {
       links={paid ? tag.links : []}
       menu={paid ? tag.menu : undefined}
       theme={paid ? tag.theme : undefined}
+      logo={paid ? tag.logo : undefined}
+      cover={paid ? tag.cover : undefined}
       hideBrand={!tagShowBrand(tag)}
     />
   );

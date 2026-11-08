@@ -6,9 +6,10 @@ import MicrositeFx from "@/components/MicrositeFx";
 import { kindOf } from "@/lib/linkIcons";
 import { buildVCard, cleanDigits, formatCard, formatClabe, linkHref } from "@/lib/linkActions";
 import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
-import { alpha, getSafeUrl, normalizeTheme, textOn } from "@/lib/microsite";
+import { alpha, fontStack, getSafeUrl, normalizeTheme, shapeRadius, textOn } from "@/lib/microsite";
+import { isStoredImage } from "@/lib/images";
 
-function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false, hideBrand = false }) {
+function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, preview = false, hideBrand = false }) {
   const t = normalizeTheme(theme);
   const fg = textOn(t.bg);
   const onAccent = textOn(t.accent);
@@ -18,6 +19,12 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
   const main = getSafeUrl(mainUrl);
   const slogan = String(tagline || "").trim().slice(0, 90);
   const cleanedMenu = cleanMenu(menu);
+  const logoSrc = isStoredImage(logo, "logo") ? logo : null;
+  const coverSrc = isStoredImage(cover, "cover") ? cover : null;
+  const rad = shapeRadius(t.shape);
+  const panelRad = rad > 100 ? 24 : rad;
+  const chipRad = t.shape === "square" ? 6 : t.shape === "pill" ? 999 : 12;
+  const avatarRad = t.shape === "square" ? "28%" : "50%";
 
   // En el celular, al jalar la página hacia arriba o abajo se ve el fondo de atrás del navegador.
   // Se pinta con el color de este micrositio (y la barra de Safari también) para que no se note.
@@ -130,15 +137,16 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
     backgroundColor: alpha(fg, 0.07),
     border: `1px solid ${alpha(fg, 0.16)}`,
     color: fg,
+    borderRadius: rad,
   };
   const rowClass =
-    "ms-in group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 text-left text-[15px] font-medium transition active:scale-[0.98] hover:brightness-110";
+    "ms-in group flex w-full items-center gap-3.5 px-4 py-3 text-left text-[15px] font-medium transition active:scale-[0.98] hover:brightness-110";
   const chip = { backgroundColor: alpha(t.accent, 0.22), color: t.accent };
   const chipOnLight = brightnessLight(t.bg) ? { backgroundColor: alpha(t.accent, 0.16), color: t.accent } : chip;
 
   const rowInner = (icon, label, end) => (
     <>
-      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={chipOnLight}>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center" style={{ ...chipOnLight, borderRadius: chipRad }}>
         <LinkIcon name={icon} className="h-5 w-5" />
       </span>
       <span className="min-w-0 flex-1 truncate">{label}</span>
@@ -151,15 +159,17 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
 
   return (
     <main
-      className={`relative flex justify-center px-5 ${preview ? "min-h-full py-10" : "min-h-dvh py-12"}`}
-      style={{ backgroundColor: t.bg, color: fg }}
+      className={`relative flex justify-center px-5 ${preview ? "min-h-full" : "min-h-dvh"} ${
+        coverSrc ? "pb-12 pt-0" : preview ? "py-10" : "py-12"
+      }`}
+      style={{ backgroundColor: t.bg, color: fg, fontFamily: fontStack(t.font) }}
     >
       {/* Los brillos de fondo van en su propia capa recortada (así la barra fija sí puede "pegarse" arriba) */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
         <MicrositeFx style={t.fx} accent={t.accent} fg={fg} preview={preview} />
         {/* Degradados radiales (sin filtro de desenfoque): evitan manchas o recuadros de otro color en iPhone */}
         <div
-          className="absolute -top-72 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2"
+          className={`absolute -top-72 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2 ${coverSrc ? "opacity-40" : ""}`}
           style={{ background: `radial-gradient(closest-side, ${alpha(t.accent, 0.3)}, ${alpha(t.accent, 0.12)} 55%, ${alpha(t.accent, 0)})` }}
         />
         <div
@@ -182,11 +192,12 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
             tabIndex={pinned ? 0 : -1}
             aria-hidden={!pinned}
             aria-label="Volver al inicio"
-            className={`absolute inset-x-0 flex items-center gap-3 rounded-2xl px-3 py-2 text-left transition duration-300 ${
+            className={`absolute inset-x-0 flex items-center gap-3 px-3 py-2 text-left transition duration-300 ${
               pinned ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
             }`}
             style={{
               top: "max(0.5rem, env(safe-area-inset-top))",
+              borderRadius: Math.min(rad, 24),
               backgroundColor: alpha(t.bg, 0.96),
               border: `1px solid ${alpha(fg, 0.14)}`,
               boxShadow: `0 10px 30px -12px ${alpha("#000000", 0.45)}`,
@@ -194,10 +205,15 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
             }}
           >
             <span
-              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-bold"
-              style={{ background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`, color: onAccent }}
+              className="flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden text-lg font-bold"
+              style={{
+                borderRadius: avatarRad,
+                ...(logoSrc
+                  ? { backgroundColor: alpha(fg, 0.1) }
+                  : { background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`, color: onAccent }),
+              }}
             >
-              {initial}
+              {logoSrc ? <img src={logoSrc} alt="" className="h-full w-full object-cover" /> : initial}
             </span>
             <span className="min-w-0">
               <span className="block truncate text-[15px] font-semibold leading-tight">{businessName}</span>
@@ -210,18 +226,32 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
           </button>
         </div>
 
-        <div className="my-auto w-full">
+        {coverSrc && (
+          <div className="ms-in relative -mx-5 overflow-hidden" style={{ aspectRatio: "1000 / 420", ...delay() }}>
+            <img src={coverSrc} alt="" className="h-full w-full object-cover" />
+            <div
+              className="absolute inset-0"
+              style={{ background: `linear-gradient(to bottom, ${alpha(t.bg, 0)} 45%, ${alpha(t.bg, 0.85)} 85%, ${t.bg})` }}
+            />
+          </div>
+        )}
+
+        <div className={`w-full ${coverSrc ? "-mt-12" : "my-auto"}`}>
           <div
             ref={heroRef}
-            className="ms-in mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full text-4xl font-bold"
+            className="ms-in relative mx-auto mb-5 flex h-24 w-24 items-center justify-center overflow-hidden text-4xl font-bold"
             style={{
               ...delay(),
-              background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`,
-              color: onAccent,
-              boxShadow: `0 0 0 3px ${alpha(t.accent, 0.4)}, 0 0 0 7px ${alpha(t.accent, 0.14)}, 0 18px 40px -14px ${alpha(t.accent, 0.6)}`,
+              borderRadius: avatarRad,
+              ...(logoSrc
+                ? { backgroundColor: coverSrc ? t.bg : alpha(fg, 0.1) }
+                : { background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`, color: onAccent }),
+              boxShadow: coverSrc
+                ? `0 0 0 4px ${t.bg}, 0 0 0 6px ${alpha(t.accent, 0.55)}, 0 18px 40px -14px ${alpha(t.accent, 0.6)}`
+                : `0 0 0 3px ${alpha(t.accent, 0.4)}, 0 0 0 7px ${alpha(t.accent, 0.14)}, 0 18px 40px -14px ${alpha(t.accent, 0.6)}`,
             }}
           >
-            {initial}
+            {logoSrc ? <img src={logoSrc} alt="" className="h-full w-full object-cover" /> : initial}
           </div>
 
           <h1 className="ms-in break-words text-[1.7rem] font-semibold leading-tight tracking-tight" style={delay()}>
@@ -236,9 +266,10 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
               <button
                 type="button"
                 onClick={() => setMenuOpen(true)}
-                className="ms-in flex w-full items-center justify-center gap-2.5 rounded-2xl px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
+                className="ms-in flex w-full items-center justify-center gap-2.5 px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
                 style={{
                   ...delay(),
+                  borderRadius: rad,
                   backgroundColor: t.accent,
                   color: onAccent,
                   boxShadow: `0 14px 30px -14px ${alpha(t.accent, 0.9)}`,
@@ -270,9 +301,10 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
                   onClick={onClick}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="ms-in flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
+                  className="ms-in flex w-full items-center justify-center gap-2 px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
                   style={{
                     ...delay(),
+                    borderRadius: rad,
                     backgroundColor: t.accent,
                     color: onAccent,
                     boxShadow: `0 14px 30px -14px ${alpha(t.accent, 0.9)}`,
@@ -320,7 +352,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false
                       {rowInner(l.icon, l.label, <LinkIcon name={open ? "minus" : "plus"} className="h-4 w-4" />)}
                     </button>
                     {open && (
-                      <div className="mt-2 space-y-3 rounded-2xl p-4 text-left text-sm" style={{ ...glass }}>
+                      <div className="mt-2 space-y-3 p-4 text-left text-sm" style={{ ...glass, borderRadius: panelRad }}>
                         {rows
                           .filter(([, shown]) => shown)
                           .map(([label2, shown, raw], k) => {
@@ -443,7 +475,7 @@ export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose
       aria-modal="true"
       aria-label={`Menú de ${name}`}
       className={`${preview ? "absolute" : "fixed"} inset-0 z-40 flex flex-col`}
-      style={{ backgroundColor: t.bg, color: fg }}
+      style={{ backgroundColor: t.bg, color: fg, fontFamily: fontStack(t.font) }}
     >
       <div className="relative shrink-0 px-5 pb-3 pt-4" style={{ borderBottom: `1px solid ${alpha(fg, 0.12)}`, backgroundColor: alpha(t.bg, 0.96) }}>
         <div className="mx-auto flex w-full max-w-sm items-center gap-3">

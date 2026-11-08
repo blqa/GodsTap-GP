@@ -13,6 +13,7 @@ function MenuEditor({ menu, onChange }) {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [pasteMsg, setPasteMsg] = useState("");
+  const [open, setOpen] = useState(null); // categoría abierta (solo una a la vez)
 
   const sections = menu.sections || [];
   const total = countItems(menu);
@@ -32,6 +33,7 @@ function MenuEditor({ menu, onChange }) {
   const addSection = () => {
     if (sections.length >= MENU_LIMITS.sections) return;
     set([...sections, { title: "", items: [{ name: "", price: "", desc: "" }] }]);
+    setOpen(sections.length);
   };
 
   const addItem = (i) => {
@@ -54,12 +56,13 @@ function MenuEditor({ menu, onChange }) {
       added.push({ title: s.title.slice(0, MENU_LIMITS.title), items });
     }
     set([...sections, ...added]);
+    setOpen(null);
     setPasteMsg(`Listo: se agregaron ${added.reduce((n, s) => n + s.items.length, 0)} platillos. Revísalos abajo.`);
     setPasteText("");
   };
 
   return (
-    <div className="border-t border-slate-800 pt-5">
+    <div>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-slate-50">Menú de platillos</h3>
         <span className="text-xs text-slate-500">
@@ -103,8 +106,26 @@ function MenuEditor({ menu, onChange }) {
       )}
 
       <div className="space-y-4">
-        {sections.map((s, i) => (
-          <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
+        {sections.map((s, i) => {
+          const isOpen = open === i;
+          return (
+          <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/60">
+            <button
+              type="button"
+              onClick={() => setOpen(isOpen ? null : i)}
+              aria-expanded={isOpen}
+              className="flex w-full items-center gap-3 px-3 py-2.5 text-left"
+            >
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-medium text-slate-100">{s.title || "Categoría sin nombre"}</span>
+                <span className="block text-xs text-slate-500">
+                  {s.items.length} {s.items.length === 1 ? "platillo" : "platillos"}
+                </span>
+              </span>
+              <span className="text-xs text-slate-500">{isOpen ? "Cerrar" : "Editar"}</span>
+            </button>
+            {isOpen && (
+            <div className="border-t border-slate-800 p-3">
             <div className="flex gap-2">
               <input
                 value={s.title}
@@ -113,8 +134,8 @@ function MenuEditor({ menu, onChange }) {
                 placeholder="Categoría (ej. Bebidas)"
                 className={`${inputClass} font-medium`}
               />
-              <button type="button" onClick={() => set(move(sections, i, -1))} disabled={i === 0} aria-label="Subir categoría" className={small}>↑</button>
-              <button type="button" onClick={() => set(move(sections, i, 1))} disabled={i === sections.length - 1} aria-label="Bajar categoría" className={small}>↓</button>
+              <button type="button" onClick={() => { set(move(sections, i, -1)); setOpen(i - 1); }} disabled={i === 0} aria-label="Subir categoría" className={small}>↑</button>
+              <button type="button" onClick={() => { set(move(sections, i, 1)); setOpen(i + 1); }} disabled={i === sections.length - 1} aria-label="Bajar categoría" className={small}>↓</button>
             </div>
 
             <div className="mt-3 space-y-3">
@@ -168,14 +189,18 @@ function MenuEditor({ menu, onChange }) {
                 onClick={() => {
                   if (s.items.length && !confirm("¿Quitar esta categoría con todos sus platillos?")) return;
                   set(sections.filter((_, k) => k !== i));
+                  setOpen(null);
                 }}
                 className="ml-auto rounded-md px-2.5 py-1.5 text-xs text-red-400 hover:text-red-300"
               >
                 Quitar categoría
               </button>
             </div>
+            </div>
+            )}
           </div>
-        ))}
+          );
+        })}
       </div>
 
       <button type="button" onClick={addSection} disabled={sections.length >= MENU_LIMITS.sections} className={`${small} mt-3`}>
