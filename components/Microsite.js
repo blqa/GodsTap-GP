@@ -48,6 +48,17 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
     };
   }, [preview, t.bg]);
 
+  // Barra fija con el logo, el nombre y la frase: aparece cuando el encabezado grande sale de la pantalla
+  const heroRef = useRef(null);
+  const [pinned, setPinned] = useState(false);
+  useEffect(() => {
+    const el = heroRef.current;
+    if (!el || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([entry]) => setPinned(!entry.isIntersecting), { rootMargin: "-56px 0px 0px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
+
   const [openWifi, setOpenWifi] = useState(null);
   const [copied, setCopied] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -140,21 +151,68 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
 
   return (
     <main
-      className={`relative flex justify-center overflow-hidden px-5 ${preview ? "min-h-full py-10" : "min-h-dvh py-12"}`}
+      className={`relative flex justify-center px-5 ${preview ? "min-h-full py-10" : "min-h-dvh py-12"}`}
       style={{ backgroundColor: t.bg, color: fg }}
     >
-      <div
-        className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full blur-3xl"
-        style={{ backgroundColor: alpha(t.accent, 0.28) }}
-      />
-      <div
-        className="pointer-events-none absolute -bottom-40 -right-16 h-96 w-96 rounded-full blur-3xl"
-        style={{ backgroundColor: alpha(t.accent, 0.14) }}
-      />
+      {/* Los brillos de fondo van en su propia capa recortada (así la barra fija sí puede "pegarse" arriba) */}
+      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <div
+          className="absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full blur-3xl"
+          style={{ backgroundColor: alpha(t.accent, 0.28) }}
+        />
+        <div
+          className="absolute -bottom-40 -right-16 h-96 w-96 rounded-full blur-3xl"
+          style={{ backgroundColor: alpha(t.accent, 0.14) }}
+        />
+      </div>
 
       <div className="relative flex w-full max-w-sm flex-col text-center">
+        {/* Barra fija: logo + nombre + frase siempre a la vista al bajar */}
+        <div className="sticky top-0 z-30 h-0">
+          <div
+            className={`pointer-events-none absolute -inset-x-5 top-0 h-20 transition-opacity duration-300 ${pinned ? "opacity-100" : "opacity-0"}`}
+            style={{ background: `linear-gradient(to bottom, ${t.bg} 55%, ${alpha(t.bg, 0)})` }}
+            aria-hidden="true"
+          />
+          <button
+            type="button"
+            onClick={() => heroRef.current?.scrollIntoView({ behavior: "smooth", block: "center" })}
+            tabIndex={pinned ? 0 : -1}
+            aria-hidden={!pinned}
+            aria-label="Volver al inicio"
+            className={`absolute inset-x-0 flex items-center gap-3 rounded-2xl px-3 py-2 text-left transition duration-300 ${
+              pinned ? "translate-y-0 opacity-100" : "pointer-events-none -translate-y-3 opacity-0"
+            }`}
+            style={{
+              top: "max(0.5rem, env(safe-area-inset-top))",
+              backgroundColor: alpha(t.bg, 0.94),
+              border: `1px solid ${alpha(fg, 0.14)}`,
+              backdropFilter: "blur(14px)",
+              WebkitBackdropFilter: "blur(14px)",
+              boxShadow: `0 10px 30px -12px ${alpha("#000000", 0.45)}`,
+              color: fg,
+            }}
+          >
+            <span
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-lg font-bold"
+              style={{ background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`, color: onAccent }}
+            >
+              {initial}
+            </span>
+            <span className="min-w-0">
+              <span className="block truncate text-[15px] font-semibold leading-tight">{businessName}</span>
+              {slogan && (
+                <span className="block truncate text-xs" style={{ color: alpha(fg, 0.65) }}>
+                  {slogan}
+                </span>
+              )}
+            </span>
+          </button>
+        </div>
+
         <div className="my-auto w-full">
           <div
+            ref={heroRef}
             className="ms-in mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full text-4xl font-bold"
             style={{
               ...delay(),
