@@ -18,6 +18,36 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
   const slogan = String(tagline || "").trim().slice(0, 90);
   const cleanedMenu = cleanMenu(menu);
 
+  // En el celular, al jalar la página hacia arriba o abajo se ve el fondo de atrás del navegador.
+  // Se pinta con el color de este micrositio (y la barra de Safari también) para que no se note.
+  useEffect(() => {
+    if (preview) return undefined;
+    const root = document.documentElement;
+    const body = document.body;
+    const before = { root: root.style.backgroundColor, body: body.style.backgroundColor, ob: root.style.overscrollBehaviorY };
+    root.style.backgroundColor = t.bg;
+    body.style.backgroundColor = t.bg;
+    root.style.overscrollBehaviorY = "none";
+
+    let meta = document.querySelector('meta[name="theme-color"]');
+    const created = !meta;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+    const beforeColor = meta.content;
+    meta.content = t.bg;
+
+    return () => {
+      root.style.backgroundColor = before.root;
+      body.style.backgroundColor = before.body;
+      root.style.overscrollBehaviorY = before.ob;
+      if (created) meta.remove();
+      else meta.content = beforeColor;
+    };
+  }, [preview, t.bg]);
+
   const [openWifi, setOpenWifi] = useState(null);
   const [copied, setCopied] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
@@ -110,7 +140,7 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
 
   return (
     <main
-      className={`relative flex justify-center overflow-hidden px-5 ${preview ? "min-h-full py-10" : "min-h-screen py-12"}`}
+      className={`relative flex justify-center overflow-hidden px-5 ${preview ? "min-h-full py-10" : "min-h-dvh py-12"}`}
       style={{ backgroundColor: t.bg, color: fg }}
     >
       <div
@@ -394,7 +424,7 @@ export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose
         )}
       </div>
 
-      <div ref={scroller} onScroll={onScroll} className="relative flex-1 overflow-y-auto px-5 pb-16 pt-5">
+      <div ref={scroller} onScroll={onScroll} className="relative flex-1 overflow-y-auto overscroll-contain px-5 pb-16 pt-5">
         <div className="mx-auto w-full max-w-sm">
           {menu.sections.map((s, i) => (
             <section key={i} data-sec={i} className="mb-8">
