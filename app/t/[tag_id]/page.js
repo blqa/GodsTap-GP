@@ -249,6 +249,7 @@ function PublicTag() {
       theme={paid ? tag.theme : undefined}
       logo={paid ? tag.logo : undefined}
       cover={paid ? tag.cover : undefined}
+      gallery={paid ? tag.gallery : undefined}
       hideBrand={!tagShowBrand(tag)}
     />
   );

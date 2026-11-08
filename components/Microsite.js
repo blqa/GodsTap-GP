@@ -9,7 +9,7 @@ import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
 import { alpha, fontStack, getSafeUrl, normalizeTheme, shapeRadius, textOn } from "@/lib/microsite";
 import { isStoredImage } from "@/lib/images";
 
-function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, preview = false, hideBrand = false }) {
+function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, gallery, preview = false, hideBrand = false }) {
   const t = normalizeTheme(theme);
   const fg = textOn(t.bg);
   const onAccent = textOn(t.accent);
@@ -19,6 +19,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
   const main = getSafeUrl(mainUrl);
   const slogan = String(tagline || "").trim().slice(0, 90);
   const cleanedMenu = cleanMenu(menu);
+  const photos = (Array.isArray(gallery) ? gallery : []).filter((g) => isStoredImage(g, "photo")).slice(0, 6);
   const logoSrc = isStoredImage(logo, "logo") ? logo : null;
   const coverSrc = isStoredImage(cover, "cover") ? cover : null;
   const rad = shapeRadius(t.shape);
@@ -75,15 +76,18 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
   // En la vista previa (editor y página principal) el menú se abre sobre lo que se ve del "celular", no sobre toda la página
   const rootRef = useRef(null);
   const [sheetBox, setSheetBox] = useState(null);
-  const openMenu = () => {
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const openSheet = (open) => {
     if (preview) {
       const sc = rootRef.current?.parentElement;
       if (sc) setSheetBox({ top: sc.scrollTop, height: sc.clientHeight });
     }
-    setMenuOpen(true);
+    open(true);
   };
+  const openMenu = () => openSheet(setMenuOpen);
+  const sheetOpen = menuOpen || galleryOpen;
   useEffect(() => {
-    if (!preview || !menuOpen) return undefined;
+    if (!preview || !sheetOpen) return undefined;
     const sc = rootRef.current?.parentElement;
     if (!sc) return undefined;
     const before = sc.style.overflowY;
@@ -91,7 +95,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
     return () => {
       sc.style.overflowY = before;
     };
-  }, [preview, menuOpen]);
+  }, [preview, sheetOpen]);
 
   // Solo se muestran botones con texto y datos válidos (enlaces http/https, teléfono, correo, contacto o WiFi)
   const extra = (Array.isArray(links) ? links : [])
@@ -306,8 +310,34 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
               </button>
             )}
 
-            {main &&
+            {photos.length > 0 &&
               (cleanedMenu ? (
+                <button type="button" onClick={() => openSheet(setGalleryOpen)} className={rowClass} style={{ ...glass, ...delay() }}>
+                  {rowInner("image", "Ver galería", <span className="text-xs">{photos.length} {photos.length === 1 ? "foto" : "fotos"}</span>)}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => openSheet(setGalleryOpen)}
+                  className="ms-in flex w-full items-center justify-center gap-2.5 px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
+                  style={{
+                    ...delay(),
+                    borderRadius: rad,
+                    backgroundColor: t.accent,
+                    color: onAccent,
+                    boxShadow: `0 14px 30px -14px ${alpha(t.accent, 0.9)}`,
+                  }}
+                >
+                  <LinkIcon name="image" className="h-5 w-5" />
+                  Ver galería
+                  <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: alpha(onAccent, 0.18) }}>
+                    {photos.length}
+                  </span>
+                </button>
+              ))}
+
+            {main &&
+              ((cleanedMenu || photos.length > 0) ? (
                 <a
                   href={main}
                   onClick={onClick}
@@ -422,7 +452,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
             })}
           </div>
 
-          {!main && extra.length === 0 && !cleanedMenu && (
+          {!main && extra.length === 0 && !cleanedMenu && photos.length === 0 && (
             <p className="mt-8 rounded-xl px-4 py-3 text-sm" style={{ border: `1px solid ${alpha(fg, 0.18)}`, color: alpha(fg, 0.65) }}>
               Este enlace aún no está configurado.
             </p>
@@ -437,6 +467,18 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
           </p>
         )}
       </div>
+
+      {galleryOpen && photos.length > 0 && (
+        <GallerySheet
+          photos={photos}
+          name={businessName}
+          theme={t}
+          fg={fg}
+          preview={preview}
+          box={sheetBox}
+          onClose={() => setGalleryOpen(false)}
+        />
+      )}
 
       {menuOpen && cleanedMenu && (
         <MenuSheet
@@ -458,6 +500,114 @@ function brightnessLight(hex) {
   const n = parseInt(hex.slice(1), 16);
   const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
   return (r * 299 + g * 587 + b * 114) / 1000 > 150;
+}
+
+// Galería: cuadrícula de fotos y visor en grande (con flechas, teclado y deslizar)
+export function GallerySheet({ photos, name, theme: t, fg, preview, box, onClose }) {
+  const [open, setOpen] = useState(null); // índice de la foto abierta
+  const touchX = useRef(null);
+
+  useEffect(() => {
+    if (preview) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => {
+      if (e.key === "Escape") (open !== null ? setOpen(null) : onClose());
+      else if (open !== null && e.key === "ArrowRight") setOpen((i) => (i + 1) % photos.length);
+      else if (open !== null && e.key === "ArrowLeft") setOpen((i) => (i - 1 + photos.length) % photos.length);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [preview, onClose, open, photos.length]);
+
+  const step = (n) => setOpen((i) => (i + n + photos.length) % photos.length);
+  const onTouchEnd = (e) => {
+    const start = touchX.current;
+    touchX.current = null;
+    if (start === null || photos.length < 2) return;
+    const dx = e.changedTouches[0].clientX - start;
+    if (Math.abs(dx) > 40) step(dx < 0 ? 1 : -1);
+  };
+  const round = "flex h-11 w-11 items-center justify-center rounded-full transition active:scale-95";
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Galería de ${name}`}
+      className={`${preview ? "absolute inset-x-0" : "fixed inset-0"} z-40 flex flex-col ${preview && !box ? "inset-y-0" : ""}`}
+      style={{
+        backgroundColor: t.bg,
+        color: fg,
+        fontFamily: fontStack(t.font),
+        ...(preview && box ? { top: box.top, height: box.height } : null),
+      }}
+    >
+      <div className="shrink-0 px-5 pb-3 pt-4" style={{ borderBottom: `1px solid ${alpha(fg, 0.12)}`, backgroundColor: alpha(t.bg, 0.96) }}>
+        <div className="mx-auto flex w-full max-w-sm items-center gap-3">
+          <button type="button" onClick={onClose} aria-label="Cerrar galería" className={round} style={{ backgroundColor: alpha(fg, 0.1) }}>
+            <LinkIcon name="back" className="h-5 w-5" strokeWidth={2} />
+          </button>
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold leading-tight">{name}</p>
+            <p className="text-xs" style={{ color: alpha(fg, 0.6) }}>Galería · {photos.length} {photos.length === 1 ? "foto" : "fotos"}</p>
+          </div>
+        </div>
+      </div>
+
+      <div className="min-h-0 flex-1 overflow-y-auto px-5 py-5">
+        <ul className="mx-auto grid w-full max-w-sm grid-cols-2 gap-2.5">
+          {photos.map((src, i) => (
+            <li key={i}>
+              <button
+                type="button"
+                onClick={() => setOpen(i)}
+                aria-label={`Ver foto ${i + 1} en grande`}
+                className="block w-full overflow-hidden transition active:scale-[0.97] hover:brightness-110"
+                style={{ borderRadius: 14, border: `1px solid ${alpha(fg, 0.14)}` }}
+              >
+                <img src={src} alt={`Foto ${i + 1} de ${name}`} loading="lazy" className="aspect-square w-full object-cover" />
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      {open !== null && (
+        <div
+          className="absolute inset-0 z-10 flex flex-col"
+          style={{ backgroundColor: "rgba(0,0,0,0.97)", color: "#fff" }}
+          onTouchStart={(e) => (touchX.current = e.touches[0].clientX)}
+          onTouchEnd={onTouchEnd}
+        >
+          <div className="flex shrink-0 items-center justify-between px-4 pb-2 pt-4">
+            <span className="text-sm text-white/70">
+              {open + 1} / {photos.length}
+            </span>
+            <button type="button" onClick={() => setOpen(null)} aria-label="Cerrar foto" className={round} style={{ backgroundColor: "rgba(255,255,255,0.14)" }}>
+              <LinkIcon name="x" className="h-5 w-5" strokeWidth={2} />
+            </button>
+          </div>
+          <div className="relative flex min-h-0 flex-1 items-center justify-center px-3 pb-6">
+            <img src={photos[open]} alt={`Foto ${open + 1} de ${name}`} className="max-h-full max-w-full rounded-lg object-contain" />
+            {photos.length > 1 && (
+              <>
+                <button type="button" onClick={() => step(-1)} aria-label="Foto anterior" className={`${round} absolute left-2 top-1/2 -translate-y-1/2`} style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                  <LinkIcon name="back" className="h-5 w-5" strokeWidth={2} />
+                </button>
+                <button type="button" onClick={() => step(1)} aria-label="Foto siguiente" className={`${round} absolute right-2 top-1/2 -translate-y-1/2`} style={{ backgroundColor: "rgba(0,0,0,0.5)" }}>
+                  <LinkIcon name="chevron" className="h-5 w-5" strokeWidth={2} />
+                </button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Hoja con el menú: categorías arriba (chips) y platillos con su precio

@@ -57,6 +57,11 @@ service cloud.firestore {
       return v == null || (v is string && v.size() <= maxSize);
     }
 
+    // Galería de fotos: hasta 6 (cada una ya viene comprimida por la app)
+    function validGallery(g) {
+      return g == null || (g is list && g.size() <= 6);
+    }
+
     match /users/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
       // El administrador ve y edita todas las cuentas (crear, editar, suspender, eliminar)
@@ -82,7 +87,7 @@ service cloud.firestore {
       // El dueño solo puede editar estos campos (el plan NO está en la lista)
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'logo', 'cover', 'updated_at'])
+             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'logo', 'cover', 'gallery', 'updated_at'])
         && request.resource.data.mode in ['redirect', 'microsite']
         && request.resource.data.target_url is string
         && request.resource.data.target_url.matches('^https?://.+')
@@ -98,11 +103,13 @@ service cloud.firestore {
         && validMenu(request.resource.data.get('menu', null))
         && validImage(request.resource.data.get('logo', null), 70000)
         && validImage(request.resource.data.get('cover', null), 210000)
+        && validGallery(request.resource.data.get('gallery', null))
         && (isPaid() || request.resource.data.get('links', []) == resource.data.get('links', []))
         && (isPaid() || request.resource.data.get('theme', null) == resource.data.get('theme', null))
         && (isPaid() || request.resource.data.get('menu', null) == resource.data.get('menu', null))
         && (isPaid() || request.resource.data.get('logo', null) == resource.data.get('logo', null))
-        && (isPaid() || request.resource.data.get('cover', null) == resource.data.get('cover', null));
+        && (isPaid() || request.resource.data.get('cover', null) == resource.data.get('cover', null))
+        && (isPaid() || request.resource.data.get('gallery', null) == resource.data.get('gallery', null));
 
       // Vincular
       allow update: if isSignedIn()

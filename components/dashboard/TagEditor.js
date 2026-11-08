@@ -6,7 +6,7 @@ import { db } from "@/lib/firebaseConfig";
 import { kindOf } from "@/lib/linkIcons";
 import { cleanDigits, isValidClabe, isValidEmail, isValidPhone, normalizePhone, stripScheme } from "@/lib/linkActions";
 import { brightness, normalizeTheme, themeForSave } from "@/lib/microsite";
-import { isStoredImage } from "@/lib/images";
+import { GALLERY_MAX, isStoredImage } from "@/lib/images";
 import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
 import SuggestButton from "@/components/SuggestButton";
@@ -15,6 +15,7 @@ import Microsite from "@/components/Microsite";
 import MenuEditor from "@/components/dashboard/MenuEditor";
 import LinksEditor, { MAX_LINKS } from "@/components/dashboard/editor/LinksEditor";
 import DesignEditor from "@/components/dashboard/editor/DesignEditor";
+import GalleryEditor from "@/components/dashboard/editor/GalleryEditor";
 import { cleanMenu } from "@/lib/menu";
 
 const EMPTY_LINKS = [];
@@ -24,6 +25,7 @@ const TABS = [
   ["design", "Diseño"],
   ["links", "Botones"],
   ["menu", "Menú"],
+  ["gallery", "Galería"],
 ];
 
 const inputClass =
@@ -95,6 +97,9 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
   });
   const [logo, setLogo] = useState(typeof tag.logo === "string" ? tag.logo : "");
   const [cover, setCover] = useState(typeof tag.cover === "string" ? tag.cover : "");
+  const [gallery, setGallery] = useState(() =>
+    Array.isArray(tag.gallery) ? tag.gallery.filter((g) => typeof g === "string").slice(0, GALLERY_MAX) : []
+  );
   const [tab, setTab] = useState("general");
   const [view, setView] = useState("edit"); // en celular: «edit» o «preview»
   const [saving, setSaving] = useState(false);
@@ -280,6 +285,13 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
       if (cover) payload.cover = cover;
       else if (tag.cover) payload.cover = deleteField();
 
+      if (gallery.some((g) => !isStoredImage(g, "photo"))) {
+        fail("Una de las fotos de la galería no es válida. Quítala y súbela de nuevo.", "gallery");
+        return;
+      }
+      if (gallery.length) payload.gallery = gallery;
+      else if (tag.gallery) payload.gallery = deleteField();
+
       const cleanedMenu = cleanMenu(menu);
       if (cleanedMenu) payload.menu = cleanedMenu;
       else if (tag.menu) payload.menu = deleteField();
@@ -296,6 +308,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     if (paid && JSON.stringify(cleanMenu(menu)) !== JSON.stringify(cleanMenu(tag.menu))) changed.push("menú");
     if (paid && logo !== (tag.logo || "")) changed.push("logo");
     if (paid && cover !== (tag.cover || "")) changed.push("portada");
+    if (paid && JSON.stringify(gallery) !== JSON.stringify(Array.isArray(tag.gallery) ? tag.gallery : [])) changed.push("galería");
     if (payload.theme && JSON.stringify(payload.theme) !== JSON.stringify(themeForSave(tag.theme))) changed.push("diseño");
 
     setSaving(true);
@@ -488,6 +501,15 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   Muestra tu menú, tus servicios con precio o tu catálogo, con categorías, al tocar un botón.
                 </Locked>
               ))}
+
+            {isMicro && tab === "gallery" &&
+              (paid ? (
+                <GalleryEditor gallery={gallery} setGallery={setGallery} />
+              ) : (
+                <Locked title="Galería de fotos" tagId={tag.id}>
+                  Sube hasta {GALLERY_MAX} fotos de tu trabajo, tu local o tus productos para que tus clientes las vean al tocar un botón.
+                </Locked>
+              ))}
           </div>
 
           {/* Columna derecha: vista previa (en celular se abre con el botón de arriba) */}
@@ -506,6 +528,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                     theme={paid ? theme : undefined}
                     logo={paid ? logo : undefined}
                     cover={paid ? cover : undefined}
+                    gallery={paid ? gallery : undefined}
                     hideBrand={!tagShowBrand(tag)}
                   />
                 </div>
