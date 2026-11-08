@@ -431,7 +431,9 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
 
         {!hideBrand && (
           <p className="ms-in mt-12 text-xs" style={{ ...delay(), color: alpha(fg, 0.42) }}>
-            <span className="font-medium">GodsTap</span> · by God’s Plan
+            <a href="/" onClick={onClick} className="inline-block px-2 py-1 transition hover:opacity-80" aria-label="GodsTap · by God’s Plan, ir a la página principal">
+              <span className="font-medium">GodsTap</span> · by God’s Plan
+            </a>
           </p>
         )}
       </div>
