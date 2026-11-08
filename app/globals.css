@@ -369,9 +369,14 @@ label,
   }
 }
 
-/* El logo GT es para fondos oscuros: en tema claro lleva su propio fondo oscuro */
-html[data-theme="light"] .gt-mark {
-  background: #0e090b;
-  border-radius: 0.65rem;
-  padding: 0.2rem 0.45rem;
+/* Logo GT: en tema oscuro se usa el PNG sin fondo; en tema claro, la versión sobre blanco (multiply hace desaparecer el blanco) */
+.gt-on-light {
+  display: none;
+}
+html[data-theme="light"] .gt-on-light {
+  display: block;
+  mix-blend-mode: multiply;
+}
+html[data-theme="light"] .gt-on-dark {
+  display: none;
 }
