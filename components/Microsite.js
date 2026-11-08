@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import LinkIcon from "@/components/LinkIcon";
 import { kindOf } from "@/lib/linkIcons";
-import { buildVCard, linkHref } from "@/lib/linkActions";
+import { buildVCard, cleanDigits, formatCard, formatClabe, linkHref } from "@/lib/linkActions";
 import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
 import { alpha, getSafeUrl, normalizeTheme, textOn } from "@/lib/microsite";
 
@@ -27,11 +27,13 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
     .map((l) => {
       const kind = kindOf(l?.icon);
       const data = l?.data && typeof l.data === "object" ? l.data : {};
+      // «Pago» puede ser un enlace (Mercado Pago, PayPal…) o datos para transferencia
+      const effKind = kind === "pay" ? (data.mode === "bank" ? "bank" : "url") : kind;
       return {
         label: String(l?.label || "").slice(0, 40),
         icon: l?.icon,
-        kind,
-        url: kind === "contact" || kind === "wifi" ? null : linkHref(l),
+        kind: effKind,
+        url: ["contact", "wifi", "bank"].includes(effKind) ? null : linkHref(l),
         data,
       };
     })
@@ -39,6 +41,7 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
       if (!l.label) return false;
       if (l.kind === "contact") return !!String(l.data.name || "").trim();
       if (l.kind === "wifi") return !!String(l.data.ssid || "").trim();
+      if (l.kind === "bank") return !!(cleanDigits(l.data.clabe) || cleanDigits(l.data.account) || cleanDigits(l.data.card));
       return !!l.url;
     })
     .slice(0, 6);
@@ -200,8 +203,23 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
                   </button>
                 );
               }
-              if (l.kind === "wifi") {
+              if (l.kind === "wifi" || l.kind === "bank") {
                 const open = openWifi === i;
+                const d = l.data;
+                const rows =
+                  l.kind === "wifi"
+                    ? [
+                        ["Red", d.ssid, d.ssid],
+                        ["Contraseña", d.password, d.password],
+                      ]
+                    : [
+                        ["Banco", d.bank, d.bank],
+                        ["A nombre de", d.holder, d.holder],
+                        ["CLABE", d.clabe && formatClabe(d.clabe), cleanDigits(d.clabe)],
+                        ["Cuenta", d.account, cleanDigits(d.account)],
+                        ["Tarjeta", d.card && formatCard(d.card), cleanDigits(d.card)],
+                        ["Concepto", d.reference, d.reference],
+                      ];
                 return (
                   <div key={i}>
                     <button
@@ -215,29 +233,31 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
                     </button>
                     {open && (
                       <div className="mt-2 space-y-3 rounded-2xl p-4 text-left text-sm" style={{ ...glass }}>
-                        {[
-                          ["Red", l.data.ssid, "ssid"],
-                          ["Contraseña", l.data.password, "pass"],
-                        ]
-                          .filter(([, v]) => v)
-                          .map(([label2, v, key]) => (
-                            <div key={key} className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-xs" style={{ color: alpha(fg, 0.55) }}>
-                                  {label2}
-                                </p>
-                                <p className="break-all font-mono text-[15px]">{v}</p>
+                        {rows
+                          .filter(([, shown]) => shown)
+                          .map(([label2, shown, raw], k) => {
+                            const copyable = !["Banco", "A nombre de"].includes(label2);
+                            return (
+                              <div key={k} className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-xs" style={{ color: alpha(fg, 0.55) }}>
+                                    {label2}
+                                  </p>
+                                  <p className={`break-all text-[15px] ${copyable ? "font-mono" : ""}`}>{shown}</p>
+                                </div>
+                                {copyable && (
+                                  <button
+                                    type="button"
+                                    onClick={() => copyText(`${i}-${k}`, raw)}
+                                    className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold"
+                                    style={{ backgroundColor: t.accent, color: onAccent }}
+                                  >
+                                    {copied === `${i}-${k}` ? "Copiado" : "Copiar"}
+                                  </button>
+                                )}
                               </div>
-                              <button
-                                type="button"
-                                onClick={() => copyText(`${i}-${key}`, v)}
-                                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold"
-                                style={{ backgroundColor: t.accent, color: onAccent }}
-                              >
-                                {copied === `${i}-${key}` ? "Copiado" : "Copiar"}
-                              </button>
-                            </div>
-                          ))}
+                            );
+                          })}
                       </div>
                     )}
                   </div>

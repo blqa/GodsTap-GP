@@ -4,7 +4,7 @@ import { useState } from "react";
 import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { ICONS, kindOf } from "@/lib/linkIcons";
-import { isValidEmail, isValidPhone, normalizePhone, stripScheme } from "@/lib/linkActions";
+import { cleanDigits, isValidClabe, isValidEmail, isValidPhone, normalizePhone, stripScheme } from "@/lib/linkActions";
 import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
 import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
@@ -158,7 +158,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
         const label = l.label.trim();
         const raw = (l.url || "").trim();
         const d = l.data || {};
-        const empty = !label && !raw && !(d.name || d.phone || d.email || d.ssid || d.password);
+        const empty = !label && !raw && !(d.name || d.phone || d.email || d.ssid || d.password || d.bank || d.holder || d.clabe || d.account || d.card || d.reference);
         if (empty) continue; // fila vacía: se ignora
         if (!label || label.length > 30) {
           setError(`Botón ${i + 1}: escribe un texto (máximo 30 caracteres).`);
@@ -205,6 +205,54 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
             return;
           }
           item.data = { name: cname, ...(cphone ? { phone: cphone } : {}), ...(cemail ? { email: cemail } : {}) };
+        } else if (kind === "pay") {
+          if (d.mode === "bank") {
+            const bank = (d.bank || "").trim();
+            const holder = (d.holder || "").trim();
+            const clabe = cleanDigits(d.clabe);
+            const account = cleanDigits(d.account);
+            const card = cleanDigits(d.card);
+            const reference = (d.reference || "").trim();
+            if (!bank || bank.length > 40) {
+              setError(`Botón ${i + 1}: escribe el banco (máximo 40 caracteres).`);
+              return;
+            }
+            if (!holder || holder.length > 60) {
+              setError(`Botón ${i + 1}: escribe a nombre de quién está la cuenta.`);
+              return;
+            }
+            if (!isValidClabe(clabe)) {
+              setError(`Botón ${i + 1}: la CLABE debe tener 18 dígitos y ser válida. Revísala.`);
+              return;
+            }
+            if (account && (account.length < 8 || account.length > 16)) {
+              setError(`Botón ${i + 1}: el número de cuenta debe tener entre 8 y 16 dígitos.`);
+              return;
+            }
+            if (card && card.length !== 16) {
+              setError(`Botón ${i + 1}: el número de tarjeta debe tener 16 dígitos.`);
+              return;
+            }
+            if (reference.length > 40) {
+              setError(`Botón ${i + 1}: el concepto es muy largo (máximo 40 caracteres).`);
+              return;
+            }
+            item.data = {
+              mode: "bank",
+              bank,
+              holder,
+              clabe,
+              ...(account ? { account } : {}),
+              ...(card ? { card } : {}),
+              ...(reference ? { reference } : {}),
+            };
+          } else {
+            if (!isValidUrl(raw)) {
+              setError(`Botón ${i + 1}: el enlace de pago debe empezar con http:// o https://`);
+              return;
+            }
+            item.url = raw;
+          }
         } else if (kind === "wifi") {
           const ssid = (d.ssid || "").trim();
           const pass = (d.password || "").trim();
@@ -465,14 +513,56 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                             className={inputClass}
                           />
                         </div>
+                        {kindOf(l.icon) === "pay" && (
+                          <div className="mt-2 space-y-2">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              {[
+                                ["link", "Enlace de pago"],
+                                ["bank", "Cuenta bancaria"],
+                              ].map(([mode, text]) => {
+                                const current = l.data?.mode === "bank" ? "bank" : "link";
+                                return (
+                                  <button
+                                    key={mode}
+                                    type="button"
+                                    onClick={() => updateData(i, { mode })}
+                                    aria-pressed={current === mode}
+                                    className={`rounded-lg border px-3 py-2 transition ${
+                                      current === mode
+                                        ? "border-brand-500 bg-brand-600/15 text-slate-50"
+                                        : "border-slate-700 text-slate-400 hover:bg-slate-800"
+                                    }`}
+                                  >
+                                    {text}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                            {l.data?.mode === "bank" ? (
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <input value={l.data?.bank || ""} onChange={(e) => updateData(i, { bank: e.target.value })} maxLength={40} placeholder="Banco (ej. BBVA)" className={inputClass} />
+                                <input value={l.data?.holder || ""} onChange={(e) => updateData(i, { holder: e.target.value })} maxLength={60} placeholder="A nombre de" className={inputClass} />
+                                <input value={l.data?.clabe || ""} onChange={(e) => updateData(i, { clabe: e.target.value })} inputMode="numeric" maxLength={24} placeholder="CLABE (18 dígitos)" className={`${inputClass} font-mono sm:col-span-2`} />
+                                <input value={l.data?.account || ""} onChange={(e) => updateData(i, { account: e.target.value })} inputMode="numeric" maxLength={20} placeholder="Número de cuenta (opcional)" className={inputClass} />
+                                <input value={l.data?.card || ""} onChange={(e) => updateData(i, { card: e.target.value })} inputMode="numeric" maxLength={24} placeholder="Tarjeta de 16 dígitos (opcional)" className={inputClass} />
+                                <input value={l.data?.reference || ""} onChange={(e) => updateData(i, { reference: e.target.value })} maxLength={40} placeholder="Concepto sugerido (opcional)" className={`${inputClass} sm:col-span-2`} />
+                              </div>
+                            ) : (
+                              <input
+                                value={l.url}
+                                onChange={(e) => updateLink(i, { url: e.target.value })}
+                                placeholder="Enlace de pago (Mercado Pago, PayPal, etc.)"
+                                className={inputClass}
+                              />
+                            )}
+                          </div>
+                        )}
                         {kindOf(l.icon) === "url" && (
                           <input
                             value={l.url}
                             onChange={(e) => updateLink(i, { url: e.target.value })}
                             placeholder={
-                              l.icon === "pay"
-                                ? "Enlace de pago (Mercado Pago, PayPal, etc.)"
-                                : l.icon === "maps"
+                              l.icon === "maps"
                                 ? "Enlace de Google Maps (Compartir → Copiar enlace)"
                                 : "https://..."
                             }
@@ -565,7 +655,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   <p className="mt-3 text-xs text-slate-500">
                     Para WhatsApp usa <span className="font-mono">https://wa.me/52</span> seguido de tu número a 10
                     dígitos. Con «Llamar», «Mensaje SMS» y «Correo» solo escribes el dato. «Guardar contacto» baja una
-                    tarjeta al celular y «Red WiFi» muestra el nombre y la contraseña para copiarlas. Prueba siempre los
+                    tarjeta al celular y «Red WiFi» muestra el nombre y la contraseña para copiarlas. «Pago» sirve para un enlace (Mercado Pago, PayPal…) o para tu cuenta bancaria, con botones de copiar. Prueba siempre los
                     botones después de guardar.
                   </p>
                 </div>
