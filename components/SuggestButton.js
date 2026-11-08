@@ -1,6 +1,6 @@
 import { suggestionLink } from "@/lib/contact";
 
-// Botón de sugerencias: abre el correo hacia godstap@ con el mensaje listo para escribir.
+// Botón de sugerencias: abre el correo hacia contacto@ con el mensaje listo para escribir.
 // variant: "pill" (botón con borde), "link" (texto de color) o "plain" (hereda el color, para pies de página).
 export default function SuggestButton({ context, label = "Enviar una sugerencia", variant = "pill", className = "" }) {
   const look =

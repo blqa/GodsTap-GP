@@ -207,7 +207,7 @@ export default function CorreosPage() {
 
       <section className="space-y-4">
         <h2 className="text-xl font-bold text-slate-50">El formato</h2>
-        <p className="text-sm text-slate-400">Aplica a todo correo que salga de godstap@ o contacto@, escrito a mano o automático.</p>
+        <p className="text-sm text-slate-400">Aplica a todo correo que salga de contacto@, escrito a mano o automático.</p>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {FORMAT_RULES.map((r) => (
             <div key={r.title} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
@@ -244,7 +244,7 @@ export default function CorreosPage() {
         </div>
         <div className="space-y-4">
           {SIGNATURES.map((s) => (
-            <Signature key={s.email} sig={s} name={name} phone={phone} />
+            <Signature key={s.title} sig={s} name={name} phone={phone} />
           ))}
         </div>
         <ol className="max-w-2xl list-decimal space-y-1.5 pl-5 text-sm text-slate-400">
