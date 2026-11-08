@@ -1,11 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import { getEmoji, kindOf } from "@/lib/linkIcons";
+import { useEffect, useRef, useState } from "react";
+import LinkIcon from "@/components/LinkIcon";
+import { kindOf } from "@/lib/linkIcons";
 import { buildVCard, linkHref } from "@/lib/linkActions";
+import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
 import { alpha, getSafeUrl, normalizeTheme, textOn } from "@/lib/microsite";
 
-export default function Microsite({ name, mainUrl, links, theme, preview = false, hideBrand = false }) {
+export default function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false, hideBrand = false }) {
   const t = normalizeTheme(theme);
   const fg = textOn(t.bg);
   const onAccent = textOn(t.accent);
@@ -13,9 +15,12 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
   const businessName = String(name || "").trim() || "Negocio";
   const initial = businessName.charAt(0).toUpperCase() || "G";
   const main = getSafeUrl(mainUrl);
+  const slogan = String(tagline || "").trim().slice(0, 90);
+  const cleanedMenu = cleanMenu(menu);
 
   const [openWifi, setOpenWifi] = useState(null);
   const [copied, setCopied] = useState("");
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // Solo se muestran botones con texto y datos válidos (enlaces http/https, teléfono, correo, contacto o WiFi)
   const extra = (Array.isArray(links) ? links : [])
@@ -75,72 +80,123 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
     }
   };
 
-  const rowStyle = {
-    backgroundColor: alpha(fg, 0.08),
-    border: `1px solid ${alpha(fg, 0.18)}`,
+  // Estilos compartidos por los botones
+  const glass = {
+    backgroundColor: alpha(fg, 0.07),
+    border: `1px solid ${alpha(fg, 0.16)}`,
     color: fg,
+    backdropFilter: "blur(6px)",
   };
   const rowClass =
-    "flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-sm font-medium transition hover:opacity-80 active:scale-[0.98]";
+    "ms-in group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 text-left text-[15px] font-medium transition active:scale-[0.98] hover:brightness-110";
+  const chip = { backgroundColor: alpha(t.accent, 0.22), color: t.accent };
+  const chipOnLight = brightnessLight(t.bg) ? { backgroundColor: alpha(t.accent, 0.16), color: t.accent } : chip;
+
+  const rowInner = (icon, label, end) => (
+    <>
+      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl" style={chipOnLight}>
+        <LinkIcon name={icon} className="h-5 w-5" />
+      </span>
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      <span style={{ color: alpha(fg, 0.45) }}>{end}</span>
+    </>
+  );
+
+  let step = 0;
+  const delay = () => ({ "--i": step++ });
 
   return (
     <main
-      className={`relative flex items-center justify-center overflow-hidden px-5 ${
-        preview ? "min-h-full py-10" : "min-h-screen py-12"
-      }`}
+      className={`relative flex justify-center overflow-hidden px-5 ${preview ? "min-h-full py-10" : "min-h-screen py-12"}`}
       style={{ backgroundColor: t.bg, color: fg }}
     >
       <div
-        className="pointer-events-none absolute -top-32 left-1/2 h-96 w-96 -translate-x-1/2 rounded-full blur-3xl"
-        style={{ backgroundColor: alpha(t.accent, 0.25) }}
+        className="pointer-events-none absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full blur-3xl"
+        style={{ backgroundColor: alpha(t.accent, 0.28) }}
       />
       <div
-        className="pointer-events-none absolute -bottom-32 -right-10 h-80 w-80 rounded-full blur-3xl"
-        style={{ backgroundColor: alpha(t.accent, 0.12) }}
+        className="pointer-events-none absolute -bottom-40 -right-16 h-96 w-96 rounded-full blur-3xl"
+        style={{ backgroundColor: alpha(t.accent, 0.14) }}
       />
 
-      <div className="relative w-full max-w-sm text-center">
-        <div
-          className="mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full text-3xl font-bold shadow-xl"
-          style={{
-            backgroundColor: t.accent,
-            color: onAccent,
-            boxShadow: `0 0 0 4px ${t.bg}, 0 0 0 5px ${alpha(fg, 0.15)}`,
-          }}
-        >
-          {initial}
-        </div>
-
-        <h1 className="break-words text-2xl font-semibold tracking-tight">{businessName}</h1>
-        <p className="mt-1.5 text-sm" style={{ color: alpha(fg, 0.65) }}>
-          Toca el botón para continuar
-        </p>
-
-        {main && (
-          <a
-            href={main}
-            onClick={onClick}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-8 flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold shadow-lg transition hover:opacity-90 active:scale-[0.98]"
-            style={{ backgroundColor: t.accent, color: onAccent }}
+      <div className="relative flex w-full max-w-sm flex-col text-center">
+        <div className="my-auto w-full">
+          <div
+            className="ms-in mx-auto mb-5 flex h-24 w-24 items-center justify-center rounded-full text-4xl font-bold"
+            style={{
+              ...delay(),
+              background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`,
+              color: onAccent,
+              boxShadow: `0 0 0 4px ${t.bg}, 0 0 0 5.5px ${alpha(t.accent, 0.55)}, 0 18px 40px -12px ${alpha(t.accent, 0.7)}`,
+            }}
           >
-            Visitar sitio
-            <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5L21 12m0 0l-7.5 7.5M21 12H3" />
-            </svg>
-          </a>
-        )}
+            {initial}
+          </div>
 
-        {extra.length > 0 && (
-          <div className={`${main ? "mt-4" : "mt-8"} space-y-3`}>
+          <h1 className="ms-in break-words text-[1.7rem] font-semibold leading-tight tracking-tight" style={delay()}>
+            {businessName}
+          </h1>
+          <p className="ms-in mx-auto mt-2 max-w-[18rem] text-sm leading-relaxed" style={{ ...delay(), color: alpha(fg, 0.68) }}>
+            {slogan || "Toca una opción para continuar"}
+          </p>
+
+          <div className="mt-8 space-y-3">
+            {cleanedMenu && (
+              <button
+                type="button"
+                onClick={() => setMenuOpen(true)}
+                className="ms-in flex w-full items-center justify-center gap-2.5 rounded-2xl px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
+                style={{
+                  ...delay(),
+                  backgroundColor: t.accent,
+                  color: onAccent,
+                  boxShadow: `0 14px 30px -14px ${alpha(t.accent, 0.9)}`,
+                }}
+              >
+                <LinkIcon name="book" className="h-5 w-5" />
+                Ver menú
+                <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: alpha(onAccent, 0.18) }}>
+                  {countItems(cleanedMenu)}
+                </span>
+              </button>
+            )}
+
+            {main &&
+              (cleanedMenu ? (
+                <a
+                  href={main}
+                  onClick={onClick}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={rowClass}
+                  style={{ ...glass, ...delay() }}
+                >
+                  {rowInner("web", "Visitar sitio", <LinkIcon name="chevron" className="h-4 w-4" strokeWidth={2} />)}
+                </a>
+              ) : (
+                <a
+                  href={main}
+                  onClick={onClick}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="ms-in flex w-full items-center justify-center gap-2 rounded-2xl px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
+                  style={{
+                    ...delay(),
+                    backgroundColor: t.accent,
+                    color: onAccent,
+                    boxShadow: `0 14px 30px -14px ${alpha(t.accent, 0.9)}`,
+                  }}
+                >
+                  Visitar sitio
+                  <LinkIcon name="chevron" className="h-5 w-5" strokeWidth={2.2} />
+                </a>
+              ))}
+
             {extra.map((l, i) => {
               if (l.kind === "contact") {
                 return (
-                  <button key={i} type="button" onClick={() => saveContact(l)} className={rowClass} style={rowStyle}>
-                    <span className="text-lg">{getEmoji(l.icon)}</span>
-                    <span className="flex-1 truncate">{l.label}</span>
-                    <span style={{ color: alpha(fg, 0.5) }}>↓</span>
+                  <button key={i} type="button" onClick={() => saveContact(l)} className={rowClass} style={{ ...glass, ...delay() }}>
+                    {rowInner(l.icon, l.label, <LinkIcon name="download" className="h-4 w-4" />)}
                   </button>
                 );
               }
@@ -153,24 +209,24 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
                       onClick={() => setOpenWifi(open ? null : i)}
                       aria-expanded={open}
                       className={rowClass}
-                      style={rowStyle}
+                      style={{ ...glass, ...delay() }}
                     >
-                      <span className="text-lg">{getEmoji(l.icon)}</span>
-                      <span className="flex-1 truncate">{l.label}</span>
-                      <span style={{ color: alpha(fg, 0.5) }}>{open ? "−" : "+"}</span>
+                      {rowInner(l.icon, l.label, <LinkIcon name={open ? "minus" : "plus"} className="h-4 w-4" />)}
                     </button>
                     {open && (
-                      <div className="mt-2 space-y-2 rounded-2xl p-4 text-left text-sm" style={{ border: `1px solid ${alpha(fg, 0.18)}` }}>
+                      <div className="mt-2 space-y-3 rounded-2xl p-4 text-left text-sm" style={{ ...glass }}>
                         {[
                           ["Red", l.data.ssid, "ssid"],
                           ["Contraseña", l.data.password, "pass"],
                         ]
                           .filter(([, v]) => v)
-                          .map(([name2, v, key]) => (
+                          .map(([label2, v, key]) => (
                             <div key={key} className="flex items-center justify-between gap-3">
                               <div className="min-w-0">
-                                <p className="text-xs" style={{ color: alpha(fg, 0.55) }}>{name2}</p>
-                                <p className="break-all font-mono">{v}</p>
+                                <p className="text-xs" style={{ color: alpha(fg, 0.55) }}>
+                                  {label2}
+                                </p>
+                                <p className="break-all font-mono text-[15px]">{v}</p>
                               </div>
                               <button
                                 type="button"
@@ -195,32 +251,161 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
                   onClick={onClick}
                   {...(web ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className={rowClass}
-                  style={rowStyle}
+                  style={{ ...glass, ...delay() }}
                 >
-                  <span className="text-lg">{getEmoji(l.icon)}</span>
-                  <span className="flex-1 truncate">{l.label}</span>
-                  <span style={{ color: alpha(fg, 0.5) }}>→</span>
+                  {rowInner(l.icon, l.label, <LinkIcon name="chevron" className="h-4 w-4" strokeWidth={2} />)}
                 </a>
               );
             })}
           </div>
-        )}
 
-        {!main && extra.length === 0 && (
-          <p
-            className="mt-8 rounded-xl px-4 py-3 text-sm"
-            style={{ border: `1px solid ${alpha(fg, 0.18)}`, color: alpha(fg, 0.65) }}
-          >
-            Este enlace aún no está configurado.
-          </p>
-        )}
+          {!main && extra.length === 0 && !cleanedMenu && (
+            <p className="mt-8 rounded-xl px-4 py-3 text-sm" style={{ border: `1px solid ${alpha(fg, 0.18)}`, color: alpha(fg, 0.65) }}>
+              Este enlace aún no está configurado.
+            </p>
+          )}
+        </div>
 
         {!hideBrand && (
-          <p className="mt-10 text-xs" style={{ color: alpha(fg, 0.45) }}>
+          <p className="ms-in mt-12 text-xs" style={{ ...delay(), color: alpha(fg, 0.42) }}>
             <span className="font-medium">GodsTap</span> · by God’s Plan
           </p>
         )}
       </div>
+
+      {menuOpen && cleanedMenu && (
+        <MenuSheet
+          menu={cleanedMenu}
+          name={businessName}
+          theme={t}
+          fg={fg}
+          onAccent={onAccent}
+          preview={preview}
+          onClose={() => setMenuOpen(false)}
+        />
+      )}
     </main>
+  );
+}
+
+function brightnessLight(hex) {
+  const n = parseInt(hex.slice(1), 16);
+  const r = n >> 16, g = (n >> 8) & 255, b = n & 255;
+  return (r * 299 + g * 587 + b * 114) / 1000 > 150;
+}
+
+// Hoja con el menú: categorías arriba (chips) y platillos con su precio
+export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose }) {
+  const scroller = useRef(null);
+  const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    if (preview) return undefined;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e) => e.key === "Escape" && onClose();
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prev;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [preview, onClose]);
+
+  const goTo = (i) => {
+    const box = scroller.current;
+    const el = box?.querySelector(`[data-sec="${i}"]`);
+    if (!box || !el) return;
+    box.scrollTo({ top: el.offsetTop - 118, behavior: "smooth" });
+    setActive(i);
+  };
+
+  const onScroll = () => {
+    const box = scroller.current;
+    if (!box) return;
+    let idx = 0;
+    box.querySelectorAll("[data-sec]").forEach((el, i) => {
+      if (el.offsetTop - 130 <= box.scrollTop) idx = i;
+    });
+    setActive(idx);
+  };
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-label={`Menú de ${name}`}
+      className={`${preview ? "absolute" : "fixed"} inset-0 z-40 flex flex-col`}
+      style={{ backgroundColor: t.bg, color: fg }}
+    >
+      <div className="relative shrink-0 px-5 pb-3 pt-4" style={{ borderBottom: `1px solid ${alpha(fg, 0.12)}`, backgroundColor: alpha(t.bg, 0.96) }}>
+        <div className="mx-auto flex w-full max-w-sm items-center gap-3">
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar menú"
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full transition active:scale-95"
+            style={{ backgroundColor: alpha(fg, 0.1) }}
+          >
+            <LinkIcon name="back" className="h-5 w-5" strokeWidth={2} />
+          </button>
+          <div className="min-w-0">
+            <p className="truncate text-base font-semibold leading-tight">{name}</p>
+            <p className="text-xs" style={{ color: alpha(fg, 0.6) }}>Menú</p>
+          </div>
+        </div>
+        {menu.sections.length > 1 && (
+          <div className="mx-auto mt-3 flex w-full max-w-sm gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
+            {menu.sections.map((s, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => goTo(i)}
+                className="shrink-0 rounded-full px-3.5 py-1.5 text-sm font-medium transition"
+                style={
+                  active === i
+                    ? { backgroundColor: t.accent, color: onAccent }
+                    : { backgroundColor: alpha(fg, 0.08), color: alpha(fg, 0.8) }
+                }
+              >
+                {s.title}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div ref={scroller} onScroll={onScroll} className="relative flex-1 overflow-y-auto px-5 pb-16 pt-5">
+        <div className="mx-auto w-full max-w-sm">
+          {menu.sections.map((s, i) => (
+            <section key={i} data-sec={i} className="mb-8">
+              <h2 className="mb-3 text-lg font-semibold tracking-tight" style={{ color: t.accent }}>
+                {s.title}
+              </h2>
+              <ul className="space-y-4">
+                {s.items.map((it, j) => (
+                  <li key={j}>
+                    <div className="flex items-baseline gap-2">
+                      <span className="font-medium leading-snug">{it.name}</span>
+                      {it.price && <span className="mb-1 min-w-4 flex-1 self-end border-b border-dotted" style={{ borderColor: alpha(fg, 0.28) }} />}
+                      {it.price && <span className="shrink-0 font-semibold tabular-nums">{formatPrice(it.price)}</span>}
+                    </div>
+                    {it.desc && (
+                      <p className="mt-0.5 text-sm leading-snug" style={{ color: alpha(fg, 0.62) }}>
+                        {it.desc}
+                      </p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+          {menu.note && (
+            <p className="rounded-xl px-4 py-3 text-sm" style={{ border: `1px solid ${alpha(fg, 0.15)}`, color: alpha(fg, 0.7) }}>
+              {menu.note}
+            </p>
+          )}
+        </div>
+      </div>
+    </div>
   );
 }

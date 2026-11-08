@@ -194,8 +194,10 @@ function PublicTag() {
   return (
     <Microsite
       name={tag.business_name}
+      tagline={tag.tagline}
       mainUrl={tag.target_url}
       links={paid ? tag.links : []}
+      menu={paid ? tag.menu : undefined}
       theme={paid ? tag.theme : undefined}
       hideBrand={!tagShowBrand(tag)}
     />

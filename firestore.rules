@@ -35,6 +35,18 @@ service cloud.firestore {
       );
     }
 
+    // Menú de platillos: hasta 12 categorías, con nota opcional (los textos se limitan desde la app)
+    function validMenu(m) {
+      return m == null || (
+        m is map
+        && m.keys().hasOnly(['sections', 'note'])
+        && m.sections is list
+        && m.sections.size() <= 12
+        && m.get('note', '') is string
+        && m.get('note', '').size() <= 200
+      );
+    }
+
     match /users/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
       // El administrador ve y edita todas las cuentas (crear, editar, suspender, eliminar)
@@ -60,7 +72,7 @@ service cloud.firestore {
       // El dueño solo puede editar estos campos (el plan NO está en la lista)
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'updated_at'])
+             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'updated_at'])
         && request.resource.data.mode in ['redirect', 'microsite']
         && request.resource.data.target_url is string
         && request.resource.data.target_url.matches('^https?://.+')
@@ -70,9 +82,13 @@ service cloud.firestore {
         && request.resource.data.get('nickname', '').size() <= 40
         && request.resource.data.get('links', []) is list
         && request.resource.data.get('links', []).size() <= 6
+        && request.resource.data.get('tagline', '') is string
+        && request.resource.data.get('tagline', '').size() <= 90
         && validTheme(request.resource.data.get('theme', null))
+        && validMenu(request.resource.data.get('menu', null))
         && (isPaid() || request.resource.data.get('links', []) == resource.data.get('links', []))
-        && (isPaid() || request.resource.data.get('theme', null) == resource.data.get('theme', null));
+        && (isPaid() || request.resource.data.get('theme', null) == resource.data.get('theme', null))
+        && (isPaid() || request.resource.data.get('menu', null) == resource.data.get('menu', null));
 
       // Vincular
       allow update: if isSignedIn()

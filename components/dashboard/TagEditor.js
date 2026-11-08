@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
+import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { ICONS, kindOf } from "@/lib/linkIcons";
 import { isValidEmail, isValidPhone, normalizePhone, stripScheme } from "@/lib/linkActions";
@@ -10,6 +10,8 @@ import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/pl
 import { whatsappLink } from "@/lib/contact";
 import { logEvent } from "@/lib/audit";
 import Microsite from "@/components/Microsite";
+import MenuEditor from "@/components/dashboard/MenuEditor";
+import { cleanMenu } from "@/lib/menu";
 
 const MAX_LINKS = 6;
 
@@ -67,6 +69,18 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
         }))
       : []
   );
+  const [tagline, setTagline] = useState(tag.tagline || "");
+  const [menu, setMenu] = useState({
+    sections: Array.isArray(tag.menu?.sections)
+      ? tag.menu.sections.map((s) => ({
+          title: s?.title || "",
+          items: Array.isArray(s?.items)
+            ? s.items.map((it) => ({ name: it?.name || "", price: it?.price || "", desc: it?.desc || "" }))
+            : [],
+        }))
+      : [],
+    note: tag.menu?.note || "",
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -114,6 +128,12 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
       return;
     }
 
+    const cleanTagline = tagline.trim();
+    if (cleanTagline.length > 90) {
+      setError("La frase debajo del nombre puede tener máximo 90 caracteres.");
+      return;
+    }
+
     const cleanNick = nickname.trim();
     if (cleanNick.length > 40) {
       setError("El nombre de tu GT puede tener máximo 40 caracteres.");
@@ -125,6 +145,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
       business_name: cleanName,
       mode,
       target_url: cleanUrl,
+      tagline: cleanTagline,
       updated_at: serverTimestamp(),
     };
 
@@ -201,6 +222,10 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
       }
       payload.links = cleanLinks;
       payload.theme = { bg: theme.bg, accent: theme.accent };
+
+      const cleanedMenu = cleanMenu(menu);
+      if (cleanedMenu) payload.menu = cleanedMenu;
+      else if (tag.menu) payload.menu = deleteField();
     }
 
     // Qué cambió (para el registro de movimientos)
@@ -210,6 +235,8 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     if (mode !== (tag.mode === "redirect" ? "redirect" : "microsite")) changed.push("modo");
     if (cleanUrl !== (tag.target_url || "")) changed.push("enlace principal");
     if (payload.links && JSON.stringify(payload.links) !== JSON.stringify(tag.links || [])) changed.push("botones");
+    if (cleanTagline !== (tag.tagline || "")) changed.push("frase");
+    if (paid && JSON.stringify(cleanMenu(menu)) !== JSON.stringify(cleanMenu(tag.menu))) changed.push("menú");
     if (payload.theme && JSON.stringify(payload.theme) !== JSON.stringify(normalizeTheme(tag.theme))) changed.push("colores");
 
     setSaving(true);
@@ -298,6 +325,18 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   <option value="redirect">Redirección directa</option>
                 </select>
               </div>
+              {mode === "microsite" && (
+                <div className="sm:col-span-2">
+                  <label className="mb-1.5 block text-sm font-medium text-slate-300">Frase debajo del nombre (opcional)</label>
+                  <input
+                    value={tagline}
+                    onChange={(e) => setTagline(e.target.value)}
+                    maxLength={90}
+                    placeholder="Ej. Café de especialidad · Abierto de 8 a 20 h"
+                    className={inputClass}
+                  />
+                </div>
+              )}
               <div className="sm:col-span-2">
                 <label className="mb-1.5 block text-sm font-medium text-slate-300">
                   {mode === "microsite" ? "Enlace principal (botón destacado)" : "Enlace de destino"}
@@ -310,6 +349,9 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
               <div className="space-y-3 border-t border-slate-800 pt-5">
                 <Locked title="Colores personalizados" tagId={tag.id}>
                   Elige paletas o los colores de tu marca para tu micrositio.
+                </Locked>
+                <Locked title="Menú de platillos" tagId={tag.id}>
+                  Muestra tu menú con categorías, platillos y precios al tocar «Ver menú».
                 </Locked>
                 <Locked title="Botones adicionales" tagId={tag.id}>
                   Agrega hasta {MAX_LINKS} botones: WhatsApp, Instagram, menú, ubicación, reseñas y más.
@@ -527,6 +569,9 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                     botones después de guardar.
                   </p>
                 </div>
+
+                {/* Menú */}
+                <MenuEditor menu={menu} onChange={setMenu} />
               </>
             )}
 
@@ -548,8 +593,10 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   <Microsite
                     preview
                     name={name}
+                    tagline={tagline}
                     mainUrl={url}
                     links={paid ? links : []}
+                    menu={paid ? menu : undefined}
                     theme={paid ? theme : undefined}
                     hideBrand={!tagShowBrand(tag)}
                   />
