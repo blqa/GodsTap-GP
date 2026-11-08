@@ -276,7 +276,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
                 }}
               >
                 <LinkIcon name="book" className="h-5 w-5" />
-                Ver menú
+                {cleanedMenu.label || "Ver menú"}
                 <span className="rounded-full px-2 py-0.5 text-xs font-medium" style={{ backgroundColor: alpha(onAccent, 0.18) }}>
                   {countItems(cleanedMenu)}
                 </span>
@@ -436,6 +436,8 @@ function brightnessLight(hex) {
 
 // Hoja con el menú: categorías arriba (chips) y platillos con su precio
 export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose }) {
+  // «Ver servicios» → «Servicios»; sin texto personalizado → «Menú»
+  const sheetTitle = menu.label ? menu.label.replace(/^ver\s+/i, "").replace(/^./, (c) => c.toUpperCase()) : "Menú";
   const scroller = useRef(null);
   const [active, setActive] = useState(0);
 
@@ -473,7 +475,7 @@ export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose
     <div
       role="dialog"
       aria-modal="true"
-      aria-label={`Menú de ${name}`}
+      aria-label={`${sheetTitle} de ${name}`}
       className={`${preview ? "absolute" : "fixed"} inset-0 z-40 flex flex-col`}
       style={{ backgroundColor: t.bg, color: fg, fontFamily: fontStack(t.font) }}
     >
@@ -490,7 +492,7 @@ export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose
           </button>
           <div className="min-w-0">
             <p className="truncate text-base font-semibold leading-tight">{name}</p>
-            <p className="text-xs" style={{ color: alpha(fg, 0.6) }}>Menú</p>
+            <p className="text-xs" style={{ color: alpha(fg, 0.6) }}>{sheetTitle}</p>
           </div>
         </div>
         {menu.sections.length > 1 && (

@@ -90,6 +90,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
         }))
       : [],
     note: tag.menu?.note || "",
+    label: tag.menu?.label || "",
   });
   const [logo, setLogo] = useState(typeof tag.logo === "string" ? tag.logo : "");
   const [cover, setCover] = useState(typeof tag.cover === "string" ? tag.cover : "");
@@ -482,8 +483,8 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
               (paid ? (
                 <MenuEditor menu={menu} onChange={setMenu} />
               ) : (
-                <Locked title="Menú de platillos" tagId={tag.id}>
-                  Muestra tu menú con categorías, platillos y precios al tocar «Ver menú».
+                <Locked title="Menú, servicios o catálogo" tagId={tag.id}>
+                  Muestra tu menú, tus servicios con precio o tu catálogo, con categorías, al tocar un botón.
                 </Locked>
               ))}
           </div>

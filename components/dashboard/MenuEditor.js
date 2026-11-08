@@ -64,14 +64,26 @@ function MenuEditor({ menu, onChange }) {
   return (
     <div>
       <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-slate-50">Menú de platillos</h3>
+        <h3 className="text-sm font-semibold text-slate-50">Menú, servicios o catálogo</h3>
         <span className="text-xs text-slate-500">
           {total} de {MENU_LIMITS.items} platillos
         </span>
       </div>
       <p className="mb-3 text-xs text-slate-500">
-        Tus clientes lo ven al tocar «Ver menú», con las categorías arriba. Déjalo vacío si no lo necesitas.
+        Tus clientes lo ven al tocar el botón, con las categorías arriba. Sirve para platillos, servicios con precio o productos. Déjalo vacío si no lo necesitas.
       </p>
+
+      <div className="mb-3">
+        <label className="mb-1.5 block text-sm font-medium text-slate-300">Texto del botón</label>
+        <input
+          value={menu.label || ""}
+          onChange={(e) => onChange({ ...menu, label: e.target.value })}
+          maxLength={MENU_LIMITS.label}
+          placeholder="Ver menú"
+          className={inputClass}
+        />
+        <p className="mt-1 text-xs text-slate-500">Ej. «Ver menú», «Ver servicios», «Ver catálogo» o «Ver precios».</p>
+      </div>
 
       <div className="mb-3">
         <button type="button" onClick={() => setPasteOpen(!pasteOpen)} className={small}>

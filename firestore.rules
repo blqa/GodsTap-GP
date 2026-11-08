@@ -42,11 +42,13 @@ service cloud.firestore {
     function validMenu(m) {
       return m == null || (
         m is map
-        && m.keys().hasOnly(['sections', 'note'])
+        && m.keys().hasOnly(['sections', 'note', 'label'])
         && m.sections is list
         && m.sections.size() <= 12
         && m.get('note', '') is string
         && m.get('note', '').size() <= 200
+        && m.get('label', '') is string
+        && m.get('label', '').size() <= 24
       );
     }
 
