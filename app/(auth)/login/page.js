@@ -7,6 +7,7 @@ import { auth } from "@/lib/firebaseConfig";
 import Link from "next/link";
 import AuthShell from "@/components/AuthShell";
 import { isAdminUid } from "@/lib/admin";
+import { useRedirectIfSignedIn } from "@/lib/useRedirectIfSignedIn";
 
 const ERRORES = {
   "auth/invalid-credential": "Correo o contraseña incorrectos.",
@@ -23,6 +24,7 @@ const inputClass =
 
 export default function LoginPage() {
   const router = useRouter();
+  useRedirectIfSignedIn();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(true);

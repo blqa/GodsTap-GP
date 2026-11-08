@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
+import HeaderAuth from "@/components/landing/HeaderAuth";
 import HeroPhone from "@/components/landing/HeroPhone";
 import SetupSim from "@/components/landing/SetupSim";
 import SuggestButton from "@/components/SuggestButton";
@@ -123,16 +124,7 @@ export default function HomePage() {
             <a href="#planes" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 sm:block">
               Planes
             </a>
-            <Link href="/login" className="px-3 py-2 text-sm font-medium text-slate-200 transition hover:text-slate-50">
-              <span className="sm:hidden">Entrar</span>
-              <span className="hidden sm:inline">Iniciar sesión</span>
-            </Link>
-            <Link
-              href="/register"
-              className="hidden rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500 sm:block"
-            >
-              Crear cuenta
-            </Link>
+            <HeaderAuth />
             <ThemeToggle className="ml-1" />
           </nav>
         </div>

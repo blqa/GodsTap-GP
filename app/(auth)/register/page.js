@@ -8,6 +8,7 @@ import { doc, serverTimestamp, setDoc } from "firebase/firestore";
 import { auth, db } from "@/lib/firebaseConfig";
 import AuthShell from "@/components/AuthShell";
 import { logEvent } from "@/lib/audit";
+import { useRedirectIfSignedIn } from "@/lib/useRedirectIfSignedIn";
 
 const ERRORES = {
   "auth/email-already-in-use": "Ya existe una cuenta con ese correo.",
@@ -21,6 +22,7 @@ const inputClass =
 
 export default function RegisterPage() {
   const router = useRouter();
+  useRedirectIfSignedIn();
   const [name, setName] = useState("");
   const [business, setBusiness] = useState("");
   const [email, setEmail] = useState("");
