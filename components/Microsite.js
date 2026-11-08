@@ -156,13 +156,14 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
     >
       {/* Los brillos de fondo van en su propia capa recortada (así la barra fija sí puede "pegarse" arriba) */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        {/* Degradados radiales (sin filtro de desenfoque): evitan manchas o recuadros de otro color en iPhone */}
         <div
-          className="absolute -top-40 left-1/2 h-[28rem] w-[28rem] -translate-x-1/2 rounded-full blur-3xl"
-          style={{ backgroundColor: alpha(t.accent, 0.28) }}
+          className="absolute -top-72 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2"
+          style={{ background: `radial-gradient(closest-side, ${alpha(t.accent, 0.3)}, ${alpha(t.accent, 0.12)} 55%, ${alpha(t.accent, 0)})` }}
         />
         <div
-          className="absolute -bottom-40 -right-16 h-96 w-96 rounded-full blur-3xl"
-          style={{ backgroundColor: alpha(t.accent, 0.14) }}
+          className="absolute -bottom-56 -right-40 h-[32rem] w-[32rem]"
+          style={{ background: `radial-gradient(closest-side, ${alpha(t.accent, 0.16)}, ${alpha(t.accent, 0)})` }}
         />
       </div>
 
@@ -218,7 +219,7 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
               ...delay(),
               background: `linear-gradient(145deg, ${t.accent}, ${alpha(t.accent, 0.72)})`,
               color: onAccent,
-              boxShadow: `0 0 0 4px ${t.bg}, 0 0 0 5.5px ${alpha(t.accent, 0.55)}, 0 18px 40px -12px ${alpha(t.accent, 0.7)}`,
+              boxShadow: `0 0 0 3px ${alpha(t.accent, 0.4)}, 0 0 0 7px ${alpha(t.accent, 0.14)}, 0 18px 40px -14px ${alpha(t.accent, 0.6)}`,
             }}
           >
             {initial}
