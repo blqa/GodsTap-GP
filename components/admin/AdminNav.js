@@ -11,6 +11,7 @@ const TABS = [
   { href: "/dashboard/admin", label: "GT", match: (p) => p === "/dashboard/admin" },
   { href: "/dashboard/admin/cuentas", label: "Cuentas", match: (p) => p.startsWith("/dashboard/admin/cuenta") },
   { href: "/dashboard/admin/registro", label: "Registro", match: (p) => p.startsWith("/dashboard/admin/registro") },
+  { href: "/dashboard/admin/correos", label: "Correos", match: (p) => p.startsWith("/dashboard/admin/correos") },
 ];
 
 // Pestañas del modo administrador. Solo se muestran si la sesión es la del administrador.
@@ -28,7 +29,7 @@ export default function AdminNav() {
   return (
     <nav aria-label="Administración" className="mb-6 flex flex-col gap-3 border-b border-slate-800 pb-4 sm:mb-8 sm:flex-row sm:items-center sm:gap-2">
       <span className="w-fit rounded-full bg-brand-600 px-2.5 py-1 text-xs font-semibold text-white sm:mr-2">Modo administrador</span>
-      <div className="grid grid-cols-3 gap-1 sm:flex sm:gap-2">
+      <div className="grid grid-cols-2 gap-1 min-[420px]:grid-cols-4 sm:flex sm:gap-2">
       {TABS.map((t) => {
         const active = t.match(pathname);
         return (
