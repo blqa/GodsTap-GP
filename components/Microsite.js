@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { memo, useEffect, useRef, useState } from "react";
 import LinkIcon from "@/components/LinkIcon";
 import MicrositeFx from "@/components/MicrositeFx";
 import { kindOf } from "@/lib/linkIcons";
@@ -8,7 +8,7 @@ import { buildVCard, cleanDigits, formatCard, formatClabe, linkHref } from "@/li
 import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
 import { alpha, getSafeUrl, normalizeTheme, textOn } from "@/lib/microsite";
 
-export default function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false, hideBrand = false }) {
+function Microsite({ name, tagline, mainUrl, links, menu, theme, preview = false, hideBrand = false }) {
   const t = normalizeTheme(theme);
   const fg = textOn(t.bg);
   const onAccent = textOn(t.accent);
@@ -130,7 +130,6 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
     backgroundColor: alpha(fg, 0.07),
     border: `1px solid ${alpha(fg, 0.16)}`,
     color: fg,
-    backdropFilter: "blur(6px)",
   };
   const rowClass =
     "ms-in group flex w-full items-center gap-3.5 rounded-2xl px-4 py-3 text-left text-[15px] font-medium transition active:scale-[0.98] hover:brightness-110";
@@ -157,7 +156,7 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
     >
       {/* Los brillos de fondo van en su propia capa recortada (así la barra fija sí puede "pegarse" arriba) */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
-        <MicrositeFx style={t.fx} accent={t.accent} fg={fg} />
+        <MicrositeFx style={t.fx} accent={t.accent} fg={fg} preview={preview} />
         {/* Degradados radiales (sin filtro de desenfoque): evitan manchas o recuadros de otro color en iPhone */}
         <div
           className="absolute -top-72 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2"
@@ -188,10 +187,8 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
             }`}
             style={{
               top: "max(0.5rem, env(safe-area-inset-top))",
-              backgroundColor: alpha(t.bg, 0.94),
+              backgroundColor: alpha(t.bg, 0.96),
               border: `1px solid ${alpha(fg, 0.14)}`,
-              backdropFilter: "blur(14px)",
-              WebkitBackdropFilter: "blur(14px)",
               boxShadow: `0 10px 30px -12px ${alpha("#000000", 0.45)}`,
               color: fg,
             }}
@@ -520,3 +517,6 @@ export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose
     </div>
   );
 }
+
+// Memoizado: al escribir en otros campos del editor, la vista previa no se vuelve a calcular
+export default memo(Microsite);

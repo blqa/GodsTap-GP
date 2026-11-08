@@ -9,7 +9,7 @@ function rgba(hex, a) {
 
 // Fondo animado del micrositio (canvas): partículas, burbujas o destellos que flotan despacio.
 // Se detiene si la pestaña está oculta y, con "reducir movimiento" activado, se dibuja quieto.
-export default function MicrositeFx({ style = "particles", accent, fg }) {
+export default function MicrositeFx({ style = "particles", accent, fg, preview = false }) {
   const ref = useRef(null);
 
   useEffect(() => {
@@ -19,7 +19,9 @@ export default function MicrositeFx({ style = "particles", accent, fg }) {
     const ctx = canvas?.getContext("2d");
     if (!canvas || !host || !ctx) return undefined;
 
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    // En la vista previa del editor siempre se anima (así ves el efecto); en la página real se respeta "reducir movimiento"
+    const reduce = !preview && window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    const minFrame = preview ? 1 / 30 : 0; // la vista previa va a 30 cuadros por segundo para no cargar el editor
     const rnd = (a, b) => a + Math.random() * (b - a);
     let w = 1;
     let h = 1;
@@ -51,7 +53,10 @@ export default function MicrositeFx({ style = "particles", accent, fg }) {
       canvas.height = Math.round(h * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
       const bubbles = style === "bubbles";
-      const target = Math.round(Math.min(bubbles ? 22 : 64, Math.max(bubbles ? 8 : 22, (w * h) / (bubbles ? 38000 : 11000))));
+      const cap = preview ? 0.4 : 1;
+      const target = Math.round(
+        Math.min((bubbles ? 22 : 64) * cap, Math.max((bubbles ? 8 : 22) * cap, (w * h) / (bubbles ? 38000 : 11000)))
+      );
       while (parts.length < target) parts.push(make(true));
       parts.length = Math.min(parts.length, target);
     };
@@ -96,7 +101,7 @@ export default function MicrositeFx({ style = "particles", accent, fg }) {
           ctx.fill();
         } else {
           const a = 0.22 + 0.5 * tw;
-          if (p.r > 1.8) {
+          if (p.r > 1.8 && !preview) {
             ctx.beginPath();
             ctx.arc(p.x, p.y, p.r * 2.6, 0, Math.PI * 2);
             ctx.fillStyle = rgba(color, a * 0.18);
@@ -111,10 +116,12 @@ export default function MicrositeFx({ style = "particles", accent, fg }) {
     };
 
     const loop = (now) => {
-      const dt = Math.min(0.05, (now - last) / 1000 || 0.016);
+      raf = requestAnimationFrame(loop);
+      const elapsed = (now - last) / 1000;
+      if (elapsed < minFrame) return;
+      const dt = Math.min(0.05, elapsed || 0.016);
       last = now;
       draw(dt, now / 1000);
-      raf = requestAnimationFrame(loop);
     };
 
     const start = () => {
@@ -127,9 +134,11 @@ export default function MicrositeFx({ style = "particles", accent, fg }) {
       raf = requestAnimationFrame(loop);
     };
 
+    // Solo se anima mientras la pestaña está a la vista y la página está en pantalla
+    let onScreen = true;
     const onVisibility = () => {
-      if (document.hidden) cancelAnimationFrame(raf);
-      else start();
+      cancelAnimationFrame(raf);
+      if (!document.hidden && onScreen) start();
     };
 
     resize();
@@ -137,13 +146,22 @@ export default function MicrositeFx({ style = "particles", accent, fg }) {
     const ro = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => { resize(); if (reduce) draw(0, 0); }) : null;
     ro?.observe(host);
     document.addEventListener("visibilitychange", onVisibility);
+    const io =
+      typeof IntersectionObserver !== "undefined"
+        ? new IntersectionObserver(([entry]) => {
+            onScreen = entry.isIntersecting;
+            onVisibility();
+          })
+        : null;
+    io?.observe(canvas);
 
     return () => {
       cancelAnimationFrame(raf);
+      io?.disconnect();
       ro?.disconnect();
       document.removeEventListener("visibilitychange", onVisibility);
     };
-  }, [style, accent, fg]);
+  }, [style, accent, fg, preview]);
 
   if (style === "none") return null;
   return <canvas ref={ref} className="absolute inset-0 h-full w-full" aria-hidden="true" />;

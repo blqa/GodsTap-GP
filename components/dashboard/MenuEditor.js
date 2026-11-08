@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { memo, useState } from "react";
 import { MENU_LIMITS, countItems, parseMenuText } from "@/lib/menu";
 
 const inputClass =
@@ -9,7 +9,7 @@ const inputClass =
 const small = "rounded-md border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 transition hover:bg-slate-800 disabled:opacity-30";
 
 // Editor del menú de platillos. `menu` = { sections: [{ title, items: [{ name, price, desc }] }], note }
-export default function MenuEditor({ menu, onChange }) {
+function MenuEditor({ menu, onChange }) {
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [pasteMsg, setPasteMsg] = useState("");
@@ -195,3 +195,5 @@ export default function MenuEditor({ menu, onChange }) {
     </div>
   );
 }
+
+export default memo(MenuEditor);
