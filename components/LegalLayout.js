@@ -52,7 +52,7 @@ export default function LegalLayout({ title, updated, intro, sections }) {
 
       <footer className="border-t border-slate-800/80 px-5 py-8">
         <div className="mx-auto flex max-w-3xl flex-col items-center justify-between gap-3 text-xs text-slate-500 sm:flex-row">
-          <p>© 2026 GodsTap · by God’s Plan</p>
+          <p>© 2026 GodsTap · by <a href="https://godsplan.site" target="_blank" rel="noopener noreferrer" className="transition hover:text-slate-300">God’s Plan</a></p>
           <nav className="flex gap-5">
             <Link href="/privacidad" className="hover:text-slate-300">Aviso de privacidad</Link>
             <Link href="/terminos" className="hover:text-slate-300">Términos y condiciones</Link>
