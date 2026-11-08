@@ -3,6 +3,7 @@ import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
 import HeroPhone from "@/components/landing/HeroPhone";
 import SetupSim from "@/components/landing/SetupSim";
+import SuggestButton from "@/components/SuggestButton";
 import { CONTACT_EMAIL, whatsappLink } from "@/lib/contact";
 
 const STEPS = [
@@ -367,6 +368,7 @@ export default function HomePage() {
             <Link href="/terminos" className="transition hover:text-slate-300">
               Términos y condiciones
             </Link>
+            <SuggestButton variant="plain" label="Sugerencias" context="Página principal" />
             <a href={`mailto:${CONTACT_EMAIL}`} className="transition hover:text-slate-300">
               {CONTACT_EMAIL}
             </a>

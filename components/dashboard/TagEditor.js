@@ -9,6 +9,7 @@ import { brightness, normalizeTheme, themeForSave } from "@/lib/microsite";
 import { isStoredImage } from "@/lib/images";
 import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
+import SuggestButton from "@/components/SuggestButton";
 import { logEvent } from "@/lib/audit";
 import Microsite from "@/components/Microsite";
 import MenuEditor from "@/components/dashboard/MenuEditor";
@@ -524,6 +525,12 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
               {error}
             </p>
           )}
+          <SuggestButton
+            variant="link"
+            label="¿Falta algo? Sugerir"
+            context={`Editor del GT ${tag.id || ""}`}
+            className="mr-auto hidden text-sm sm:inline"
+          />
           <button
             type="button"
             onClick={onClose}

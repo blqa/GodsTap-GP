@@ -8,6 +8,7 @@ import Microsite from "@/components/Microsite";
 import { countScan } from "@/lib/scans";
 import { tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { LogoMark } from "@/components/Logo";
+import SuggestButton from "@/components/SuggestButton";
 
 // Solo permite http/https (bloquea javascript:, data:, etc.)
 function getSafeUrl(url) {
@@ -131,6 +132,10 @@ function UnclaimedState({ tagId }) {
         </div>
 
         <p className="mt-8 text-center text-xs text-slate-600">
+          ¿Dudas o ideas?{" "}
+          <SuggestButton variant="link" label="Escríbenos" context={`GT sin activar ${tagId}`} />
+        </p>
+        <p className="mt-4 text-center text-xs text-slate-600">
           <span className="font-medium text-slate-500">GodsTap</span> · by God’s Plan
         </p>
       </div>
