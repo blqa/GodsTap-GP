@@ -310,7 +310,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
       onClose();
     } catch (err) {
       console.error(err);
-      setError("No se pudo guardar. Inténtalo de nuevo.");
+      setError(`No se pudo guardar. Inténtalo de nuevo.${err?.code ? ` (${err.code})` : ""}`);
       setSaving(false);
     }
   };

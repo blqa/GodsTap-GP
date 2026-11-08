@@ -52,7 +52,7 @@ service cloud.firestore {
 
     // Imágenes del micrositio guardadas como texto (data URL), ya comprimidas por la app
     function validImage(v, maxSize) {
-      return v == null || (v is string && v.size() <= maxSize && (v.size() == 0 || v.matches('data:image/.*')));
+      return v == null || (v is string && v.size() <= maxSize);
     }
 
     match /users/{uid} {
