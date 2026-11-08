@@ -62,14 +62,36 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
   useEffect(() => {
     const el = heroRef.current;
     if (!el || typeof IntersectionObserver === "undefined") return undefined;
-    const io = new IntersectionObserver(([entry]) => setPinned(!entry.isIntersecting), { rootMargin: "-56px 0px 0px 0px" });
+    // En la vista previa (un "celular" con su propio scroll) se mide contra ese celular, no contra toda la página
+    const root = preview ? rootRef.current?.parentElement || null : null;
+    const io = new IntersectionObserver(([entry]) => setPinned(!entry.isIntersecting), { root, rootMargin: "-56px 0px 0px 0px" });
     io.observe(el);
     return () => io.disconnect();
-  }, []);
+  }, [preview]);
 
   const [openWifi, setOpenWifi] = useState(null);
   const [copied, setCopied] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  // En la vista previa (editor y página principal) el menú se abre sobre lo que se ve del "celular", no sobre toda la página
+  const rootRef = useRef(null);
+  const [sheetBox, setSheetBox] = useState(null);
+  const openMenu = () => {
+    if (preview) {
+      const sc = rootRef.current?.parentElement;
+      if (sc) setSheetBox({ top: sc.scrollTop, height: sc.clientHeight });
+    }
+    setMenuOpen(true);
+  };
+  useEffect(() => {
+    if (!preview || !menuOpen) return undefined;
+    const sc = rootRef.current?.parentElement;
+    if (!sc) return undefined;
+    const before = sc.style.overflowY;
+    sc.style.overflowY = "hidden";
+    return () => {
+      sc.style.overflowY = before;
+    };
+  }, [preview, menuOpen]);
 
   // Solo se muestran botones con texto y datos válidos (enlaces http/https, teléfono, correo, contacto o WiFi)
   const extra = (Array.isArray(links) ? links : [])
@@ -159,6 +181,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
 
   return (
     <main
+      ref={rootRef}
       className={`relative flex justify-center px-5 ${preview ? "min-h-full" : "min-h-dvh"} ${
         coverSrc ? "pb-12 pt-0" : preview ? "py-10" : "py-12"
       }`}
@@ -265,7 +288,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
             {cleanedMenu && (
               <button
                 type="button"
-                onClick={() => setMenuOpen(true)}
+                onClick={openMenu}
                 className="ms-in flex w-full items-center justify-center gap-2.5 px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
                 style={{
                   ...delay(),
@@ -421,6 +444,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, pr
           fg={fg}
           onAccent={onAccent}
           preview={preview}
+          box={sheetBox}
           onClose={() => setMenuOpen(false)}
         />
       )}
@@ -435,7 +459,7 @@ function brightnessLight(hex) {
 }
 
 // Hoja con el menú: categorías arriba (chips) y platillos con su precio
-export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose }) {
+export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, box, onClose }) {
   // «Ver servicios» → «Servicios»; sin texto personalizado → «Menú»
   const sheetTitle = menu.label ? menu.label.replace(/^ver\s+/i, "").replace(/^./, (c) => c.toUpperCase()) : "Menú";
   const scroller = useRef(null);
@@ -476,8 +500,13 @@ export function MenuSheet({ menu, name, theme: t, fg, onAccent, preview, onClose
       role="dialog"
       aria-modal="true"
       aria-label={`${sheetTitle} de ${name}`}
-      className={`${preview ? "absolute" : "fixed"} inset-0 z-40 flex flex-col`}
-      style={{ backgroundColor: t.bg, color: fg, fontFamily: fontStack(t.font) }}
+      className={`${preview ? "absolute inset-x-0" : "fixed inset-0"} z-40 flex flex-col ${preview && !box ? "inset-y-0" : ""}`}
+      style={{
+        backgroundColor: t.bg,
+        color: fg,
+        fontFamily: fontStack(t.font),
+        ...(preview && box ? { top: box.top, height: box.height } : null),
+      }}
     >
       <div className="relative shrink-0 px-5 pb-3 pt-4" style={{ borderBottom: `1px solid ${alpha(fg, 0.12)}`, backgroundColor: alpha(t.bg, 0.96) }}>
         <div className="mx-auto flex w-full max-w-sm items-center gap-3">

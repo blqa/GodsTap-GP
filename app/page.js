@@ -1,6 +1,8 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
+import HeroPhone from "@/components/landing/HeroPhone";
+import SetupSim from "@/components/landing/SetupSim";
 import { CONTACT_EMAIL, whatsappLink } from "@/lib/contact";
 
 const STEPS = [
@@ -14,7 +16,7 @@ const STEPS = [
   },
   {
     title: "Configúralo en un minuto",
-    desc: "Elige el nombre de tu negocio y a dónde quieres llevar a tus clientes.",
+    desc: "Elige el nombre, el estilo y los botones de tu negocio. Pruébalo aquí abajo.",
   },
   {
     title: "Tus clientes lo escanean",
@@ -101,74 +103,6 @@ const FAQ = [
   },
 ];
 
-// Botones del micrositio de ejemplo que se ve en el celular del hero
-const DEMO_LINKS = [
-  { label: "Ver el menú", main: true },
-  { label: "Pedir por WhatsApp" },
-  { label: "Dejar una reseña" },
-  { label: "Instagram", extra: true },
-];
-
-function NfcArcs({ className = "" }) {
-  return (
-    <svg className={className} viewBox="0 0 28 28" fill="none" aria-hidden="true">
-      <circle cx="9.5" cy="14" r="1.9" fill="white" />
-      <g stroke="white" strokeWidth="1.8" strokeLinecap="round">
-        <path d="M12.56 11.43A4 4 0 0 1 12.56 16.57" />
-        <path d="M15.25 9.18A7.5 7.5 0 0 1 15.25 18.82" strokeOpacity="0.8" />
-        <path d="M17.93 6.93A11 11 0 0 1 17.93 21.07" strokeOpacity="0.55" />
-      </g>
-    </svg>
-  );
-}
-
-function TapDemo() {
-  return (
-    <div className="tap-stage" aria-hidden="true">
-      <span className="tap-ring" />
-      <span className="tap-ring" />
-      <span className="tap-ring" />
-
-      <div className="tap-phone">
-        <div className="tap-screen">
-          <div
-            className="tap-reveal flex h-14 w-14 items-center justify-center rounded-full bg-[#f2c14e] font-display text-lg font-bold text-[#082f33]"
-            style={{ animationDelay: "1.1s" }}
-          >
-            LE
-          </div>
-          <p className="tap-reveal mt-3 font-display text-lg font-bold leading-tight" style={{ animationDelay: "1.25s" }}>
-            Taquería La Esquina
-          </p>
-          <p className="tap-reveal tap-hide-sm mt-0.5 text-[0.7rem] text-[#f6efe0]/70" style={{ animationDelay: "1.35s" }}>
-            Abierto hasta las 11 pm
-          </p>
-          {DEMO_LINKS.map((l, i) => (
-            <div
-              key={l.label}
-              className={`tap-reveal w-full rounded-xl py-2.5 text-xs ${l.extra ? "tap-hide-sm" : ""} ${i === 0 ? "mt-5" : "mt-2"} ${
-                l.main
-                  ? "bg-[#f2c14e] font-semibold text-[#082f33]"
-                  : "border border-white/20 font-medium text-[#f6efe0]"
-              }`}
-              style={{ animationDelay: `${1.5 + i * 0.15}s` }}
-            >
-              {l.label}
-            </div>
-          ))}
-          <p className="tap-reveal tap-hide-sm mt-auto text-[0.6rem] text-[#f6efe0]/40" style={{ animationDelay: "2.3s" }}>
-            GodsTap · by God’s Plan
-          </p>
-        </div>
-      </div>
-
-      <div className="tap-tag">
-        <NfcArcs className="w-[58%]" />
-      </div>
-    </div>
-  );
-}
-
 export default function HomePage() {
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -181,6 +115,9 @@ export default function HomePage() {
           <nav className="flex items-center gap-1 sm:gap-2">
             <a href="#como-funciona" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 md:block">
               Cómo funciona
+            </a>
+            <a href="#configurador" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 md:block">
+              Pruébalo
             </a>
             <a href="#planes" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 sm:block">
               Planes
@@ -222,10 +159,10 @@ export default function HomePage() {
                 Crear mi cuenta
               </Link>
               <a
-                href="#como-funciona"
+                href="#configurador"
                 className="rounded-xl border border-slate-700 px-7 py-3.5 text-center text-sm font-medium text-slate-200 transition hover:border-slate-600 hover:bg-slate-900"
               >
-                Ver cómo funciona
+                Pruébalo en 30 segundos
               </a>
             </div>
             <p className="mt-6 text-sm text-slate-500">
@@ -233,7 +170,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <TapDemo />
+          <HeroPhone />
         </div>
       </section>
 
@@ -255,6 +192,19 @@ export default function HomePage() {
             </li>
           ))}
         </ol>
+      </section>
+
+      {/* Configurador de prueba */}
+      <section id="configurador" className="scroll-mt-20 border-y border-slate-800/80 bg-slate-900/40 px-5 py-24">
+        <div className="mx-auto max-w-6xl">
+          <div className="mb-12 max-w-xl">
+            <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">Pruébalo: tu página en menos de un minuto</h2>
+            <p className="mt-3 text-slate-400">
+              Así de sencillo es configurar un GT. Elige, toca y mira cómo cambia el celular al instante.
+            </p>
+          </div>
+          <SetupSim />
+        </div>
       </section>
 
       {/* Qué puedes hacer */}
