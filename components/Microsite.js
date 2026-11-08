@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import LinkIcon from "@/components/LinkIcon";
+import MicrositeFx from "@/components/MicrositeFx";
 import { kindOf } from "@/lib/linkIcons";
 import { buildVCard, cleanDigits, formatCard, formatClabe, linkHref } from "@/lib/linkActions";
 import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
@@ -156,6 +157,7 @@ export default function Microsite({ name, tagline, mainUrl, links, menu, theme, 
     >
       {/* Los brillos de fondo van en su propia capa recortada (así la barra fija sí puede "pegarse" arriba) */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+        <MicrositeFx style={t.fx} accent={t.accent} fg={fg} />
         {/* Degradados radiales (sin filtro de desenfoque): evitan manchas o recuadros de otro color en iPhone */}
         <div
           className="absolute -top-72 left-1/2 h-[40rem] w-[40rem] -translate-x-1/2"

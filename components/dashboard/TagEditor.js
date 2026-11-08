@@ -5,7 +5,7 @@ import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore
 import { db } from "@/lib/firebaseConfig";
 import { ICONS, kindOf } from "@/lib/linkIcons";
 import { cleanDigits, isValidClabe, isValidEmail, isValidPhone, normalizePhone, stripScheme } from "@/lib/linkActions";
-import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
+import { FX_STYLES, PRESETS, brightness, normalizeTheme, themeForSave } from "@/lib/microsite";
 import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
 import { logEvent } from "@/lib/audit";
@@ -269,7 +269,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
         cleanLinks.push(item);
       }
       payload.links = cleanLinks;
-      payload.theme = { bg: theme.bg, accent: theme.accent };
+      payload.theme = themeForSave(theme);
 
       const cleanedMenu = cleanMenu(menu);
       if (cleanedMenu) payload.menu = cleanedMenu;
@@ -285,7 +285,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     if (payload.links && JSON.stringify(payload.links) !== JSON.stringify(tag.links || [])) changed.push("botones");
     if (cleanTagline !== (tag.tagline || "")) changed.push("frase");
     if (paid && JSON.stringify(cleanMenu(menu)) !== JSON.stringify(cleanMenu(tag.menu))) changed.push("menú");
-    if (payload.theme && JSON.stringify(payload.theme) !== JSON.stringify(normalizeTheme(tag.theme))) changed.push("colores");
+    if (payload.theme && JSON.stringify(payload.theme) !== JSON.stringify(themeForSave(tag.theme))) changed.push("colores");
 
     setSaving(true);
     try {
@@ -421,7 +421,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                         <button
                           key={p.name}
                           type="button"
-                          onClick={() => setTheme({ bg: p.bg, accent: p.accent })}
+                          onClick={() => setTheme({ ...theme, bg: p.bg, accent: p.accent })}
                           className={`flex items-center gap-2 rounded-lg border px-2.5 py-1.5 text-xs transition ${
                             selected
                               ? "border-brand-500 bg-brand-500/10 text-white"
@@ -459,6 +459,27 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                       />
                       Color de botones
                     </label>
+                  </div>
+
+                  <div className="mt-4">
+                    <p className="mb-2 text-xs font-medium text-slate-400">Animación de fondo</p>
+                    <div className="flex flex-wrap gap-2">
+                      {FX_STYLES.map((f) => (
+                        <button
+                          key={f.value}
+                          type="button"
+                          onClick={() => setTheme({ ...theme, fx: f.value })}
+                          aria-pressed={theme.fx === f.value}
+                          className={`rounded-lg border px-3 py-1.5 text-xs transition ${
+                            theme.fx === f.value
+                              ? "border-brand-500 bg-brand-600/15 text-slate-50"
+                              : "border-slate-700 text-slate-400 hover:bg-slate-800"
+                          }`}
+                        >
+                          {f.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
 
                   {lowContrast && (

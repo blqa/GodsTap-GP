@@ -27,7 +27,8 @@ service cloud.firestore {
     function validTheme(t) {
       return t == null || (
         t is map
-        && t.keys().hasOnly(['bg', 'accent'])
+        && t.keys().hasOnly(['bg', 'accent', 'fx'])
+        && t.get('fx', 'particles') in ['particles', 'bubbles', 'sparkles', 'none']
         && t.bg is string
         && t.bg.matches('^#[0-9a-fA-F]{6}$')
         && t.accent is string
