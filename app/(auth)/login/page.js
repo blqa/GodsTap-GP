@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signInWithEmailAndPassword } from "firebase/auth";
+import { browserLocalPersistence, browserSessionPersistence, setPersistence, signInWithEmailAndPassword } from "firebase/auth";
 import { auth } from "@/lib/firebaseConfig";
 import Link from "next/link";
 import AuthShell from "@/components/AuthShell";
@@ -25,6 +25,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -34,6 +35,9 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Con «Mantener sesión iniciada» la sesión sigue abierta aunque cierres el navegador;
+      // sin marcarla, se cierra sola al cerrar la pestaña o el navegador.
+      await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
       const cred = await signInWithEmailAndPassword(auth, email.trim(), password);
       // La cuenta de administrador entra directo al modo administrador
       router.push(isAdminUid(cred.user.uid) ? "/dashboard/admin" : "/dashboard");
@@ -99,6 +103,16 @@ export default function LoginPage() {
             className={inputClass}
           />
         </div>
+
+        <label className="flex cursor-pointer items-center gap-2.5 text-sm text-slate-300">
+          <input
+            type="checkbox"
+            checked={remember}
+            onChange={(e) => setRemember(e.target.checked)}
+            className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-brand-600"
+          />
+          Mantener sesión iniciada
+        </label>
 
         <button
           type="submit"
