@@ -3,7 +3,8 @@
 import { useState } from "react";
 import { doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import { ICONS } from "@/lib/linkIcons";
+import { ICONS, kindOf } from "@/lib/linkIcons";
+import { isValidEmail, isValidPhone, normalizePhone, stripScheme } from "@/lib/linkActions";
 import { PRESETS, brightness, normalizeTheme } from "@/lib/microsite";
 import { PLANS, formatDate, planStatus, tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
@@ -60,8 +61,9 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     Array.isArray(tag.links)
       ? tag.links.map((l) => ({
           label: l?.label || "",
-          url: l?.url || "",
+          url: ["phone", "email"].includes(kindOf(l?.icon)) ? stripScheme(l?.url) : l?.url || "",
           icon: l?.icon || "link",
+          data: l?.data && typeof l.data === "object" ? l.data : {},
         }))
       : []
   );
@@ -72,6 +74,14 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
 
   const updateLink = (i, patch) =>
     setLinks(links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
+
+  // Al cambiar de tipo de botón se limpian los datos del anterior
+  const changeIcon = (i, icon) => {
+    const same = kindOf(links[i].icon) === kindOf(icon);
+    updateLink(i, same ? { icon } : { icon, url: "", data: {} });
+  };
+
+  const updateData = (i, patch) => updateLink(i, { data: { ...(links[i].data || {}), ...patch } });
 
   const removeLink = (i) => setLinks(links.filter((_, idx) => idx !== i));
 
@@ -85,7 +95,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
 
   const addLink = () => {
     if (links.length >= MAX_LINKS) return;
-    setLinks([...links, { label: "", url: "", icon: "link" }]);
+    setLinks([...links, { label: "", url: "", icon: "link", data: {} }]);
   };
 
   const handleSave = async (e) => {
@@ -122,18 +132,72 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     if (paid) {
       const cleanLinks = [];
       for (let i = 0; i < links.length; i++) {
-        const label = links[i].label.trim();
-        const link = links[i].url.trim();
-        if (!label && !link) continue; // fila vacía: se ignora
+        const l = links[i];
+        const kind = kindOf(l.icon);
+        const label = l.label.trim();
+        const raw = (l.url || "").trim();
+        const d = l.data || {};
+        const empty = !label && !raw && !(d.name || d.phone || d.email || d.ssid || d.password);
+        if (empty) continue; // fila vacía: se ignora
         if (!label || label.length > 30) {
           setError(`Botón ${i + 1}: escribe un texto (máximo 30 caracteres).`);
           return;
         }
-        if (!isValidUrl(link)) {
-          setError(`Botón ${i + 1}: el enlace debe empezar con http:// o https://`);
-          return;
+        const item = { label, icon: l.icon, url: "" };
+        if (kind === "url") {
+          if (!isValidUrl(raw)) {
+            setError(`Botón ${i + 1}: el enlace debe empezar con http:// o https://`);
+            return;
+          }
+          item.url = raw;
+        } else if (kind === "phone") {
+          const p = normalizePhone(raw);
+          if (!isValidPhone(p)) {
+            setError(`Botón ${i + 1}: escribe un teléfono válido (10 dígitos).`);
+            return;
+          }
+          item.url = `${l.icon === "sms" ? "sms" : "tel"}:${p}`;
+        } else if (kind === "email") {
+          if (!isValidEmail(raw)) {
+            setError(`Botón ${i + 1}: escribe un correo válido.`);
+            return;
+          }
+          item.url = `mailto:${raw}`;
+        } else if (kind === "contact") {
+          const cname = (d.name || "").trim().slice(0, 60);
+          const cphone = (d.phone || "").trim() ? normalizePhone(d.phone) : "";
+          const cemail = (d.email || "").trim();
+          if (!cname) {
+            setError(`Botón ${i + 1}: escribe el nombre del contacto.`);
+            return;
+          }
+          if (!cphone && !cemail) {
+            setError(`Botón ${i + 1}: agrega un teléfono o un correo al contacto.`);
+            return;
+          }
+          if (cphone && !isValidPhone(cphone)) {
+            setError(`Botón ${i + 1}: el teléfono del contacto no es válido.`);
+            return;
+          }
+          if (cemail && !isValidEmail(cemail)) {
+            setError(`Botón ${i + 1}: el correo del contacto no es válido.`);
+            return;
+          }
+          item.data = { name: cname, ...(cphone ? { phone: cphone } : {}), ...(cemail ? { email: cemail } : {}) };
+        } else if (kind === "wifi") {
+          const ssid = (d.ssid || "").trim();
+          const pass = (d.password || "").trim();
+          if (!ssid || ssid.length > 32) {
+            setError(`Botón ${i + 1}: escribe el nombre de la red (máximo 32 caracteres).`);
+            return;
+          }
+          if (pass.length > 63) {
+            setError(`Botón ${i + 1}: la contraseña del WiFi es muy larga.`);
+            return;
+          }
+          item.data = { ssid, ...(pass ? { password: pass } : {}) };
         }
-        cleanLinks.push({ label, url: link, icon: links[i].icon });
+        cleanLinks.push(item);
       }
       payload.links = cleanLinks;
       payload.theme = { bg: theme.bg, accent: theme.accent };
@@ -344,7 +408,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                     {links.map((l, i) => (
                       <div key={i} className="rounded-xl border border-slate-800 bg-slate-950/60 p-3">
                         <div className="grid gap-2 sm:grid-cols-[9rem_1fr]">
-                          <select value={l.icon} onChange={(e) => updateLink(i, { icon: e.target.value })} className={inputClass}>
+                          <select value={l.icon} onChange={(e) => changeIcon(i, e.target.value)} className={inputClass}>
                             {ICONS.map((ic) => (
                               <option key={ic.value} value={ic.value}>
                                 {ic.emoji} {ic.label}
@@ -359,12 +423,83 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                             className={inputClass}
                           />
                         </div>
-                        <input
-                          value={l.url}
-                          onChange={(e) => updateLink(i, { url: e.target.value })}
-                          placeholder="https://..."
-                          className={`${inputClass} mt-2`}
-                        />
+                        {kindOf(l.icon) === "url" && (
+                          <input
+                            value={l.url}
+                            onChange={(e) => updateLink(i, { url: e.target.value })}
+                            placeholder={
+                              l.icon === "pay"
+                                ? "Enlace de pago (Mercado Pago, PayPal, etc.)"
+                                : l.icon === "maps"
+                                ? "Enlace de Google Maps (Compartir → Copiar enlace)"
+                                : "https://..."
+                            }
+                            className={`${inputClass} mt-2`}
+                          />
+                        )}
+                        {kindOf(l.icon) === "phone" && (
+                          <input
+                            type="tel"
+                            inputMode="tel"
+                            value={l.url}
+                            onChange={(e) => updateLink(i, { url: e.target.value })}
+                            placeholder="Teléfono a 10 dígitos (ej. 55 1234 5678)"
+                            className={`${inputClass} mt-2`}
+                          />
+                        )}
+                        {kindOf(l.icon) === "email" && (
+                          <input
+                            type="email"
+                            value={l.url}
+                            onChange={(e) => updateLink(i, { url: e.target.value })}
+                            placeholder="correo@ejemplo.com"
+                            className={`${inputClass} mt-2`}
+                          />
+                        )}
+                        {kindOf(l.icon) === "contact" && (
+                          <div className="mt-2 grid gap-2 sm:grid-cols-3">
+                            <input
+                              value={l.data?.name || ""}
+                              onChange={(e) => updateData(i, { name: e.target.value })}
+                              maxLength={60}
+                              placeholder="Nombre del contacto"
+                              className={inputClass}
+                            />
+                            <input
+                              type="tel"
+                              inputMode="tel"
+                              value={l.data?.phone || ""}
+                              onChange={(e) => updateData(i, { phone: e.target.value })}
+                              placeholder="Teléfono"
+                              className={inputClass}
+                            />
+                            <input
+                              type="email"
+                              value={l.data?.email || ""}
+                              onChange={(e) => updateData(i, { email: e.target.value })}
+                              placeholder="Correo (opcional)"
+                              className={inputClass}
+                            />
+                          </div>
+                        )}
+                        {kindOf(l.icon) === "wifi" && (
+                          <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                            <input
+                              value={l.data?.ssid || ""}
+                              onChange={(e) => updateData(i, { ssid: e.target.value })}
+                              maxLength={32}
+                              placeholder="Nombre de la red"
+                              className={inputClass}
+                            />
+                            <input
+                              value={l.data?.password || ""}
+                              onChange={(e) => updateData(i, { password: e.target.value })}
+                              maxLength={63}
+                              placeholder="Contraseña (opcional)"
+                              className={inputClass}
+                            />
+                          </div>
+                        )}
                         <div className="mt-2 flex gap-4 text-xs text-slate-400">
                           <button type="button" onClick={() => moveLink(i, -1)} disabled={i === 0} className="hover:text-slate-50 disabled:opacity-30">
                             ↑ Subir
@@ -387,7 +522,9 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
 
                   <p className="mt-3 text-xs text-slate-500">
                     Para WhatsApp usa <span className="font-mono">https://wa.me/52</span> seguido de tu número a 10
-                    dígitos. Prueba siempre el enlace después de guardar.
+                    dígitos. Con «Llamar», «Mensaje SMS» y «Correo» solo escribes el dato. «Guardar contacto» baja una
+                    tarjeta al celular y «Red WiFi» muestra el nombre y la contraseña para copiarlas. Prueba siempre los
+                    botones después de guardar.
                   </p>
                 </div>
               </>

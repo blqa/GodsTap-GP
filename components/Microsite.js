@@ -1,6 +1,8 @@
 "use client";
 
-import { getEmoji } from "@/lib/linkIcons";
+import { useState } from "react";
+import { getEmoji, kindOf } from "@/lib/linkIcons";
+import { buildVCard, linkHref } from "@/lib/linkActions";
 import { alpha, getSafeUrl, normalizeTheme, textOn } from "@/lib/microsite";
 
 export default function Microsite({ name, mainUrl, links, theme, preview = false, hideBrand = false }) {
@@ -12,18 +14,74 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
   const initial = businessName.charAt(0).toUpperCase() || "G";
   const main = getSafeUrl(mainUrl);
 
-  // Solo se muestran botones con texto y URL http/https válida
+  const [openWifi, setOpenWifi] = useState(null);
+  const [copied, setCopied] = useState("");
+
+  // Solo se muestran botones con texto y datos válidos (enlaces http/https, teléfono, correo, contacto o WiFi)
   const extra = (Array.isArray(links) ? links : [])
-    .map((l) => ({
-      label: String(l?.label || "").slice(0, 40),
-      icon: l?.icon,
-      url: getSafeUrl(l?.url),
-    }))
-    .filter((l) => l.label && l.url)
+    .map((l) => {
+      const kind = kindOf(l?.icon);
+      const data = l?.data && typeof l.data === "object" ? l.data : {};
+      return {
+        label: String(l?.label || "").slice(0, 40),
+        icon: l?.icon,
+        kind,
+        url: kind === "contact" || kind === "wifi" ? null : linkHref(l),
+        data,
+      };
+    })
+    .filter((l) => {
+      if (!l.label) return false;
+      if (l.kind === "contact") return !!String(l.data.name || "").trim();
+      if (l.kind === "wifi") return !!String(l.data.ssid || "").trim();
+      return !!l.url;
+    })
     .slice(0, 6);
 
   // En la vista previa los botones no navegan
   const onClick = preview ? (e) => e.preventDefault() : undefined;
+
+  const saveContact = (l) => {
+    if (preview) return;
+    try {
+      const vcf = buildVCard({
+        name: String(l.data.name || "").slice(0, 60),
+        phone: l.data.phone,
+        email: l.data.email,
+        org: businessName,
+      });
+      const blob = new Blob([vcf], { type: "text/vcard;charset=utf-8" });
+      const href = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = href;
+      a.download = `${String(l.data.name || "contacto").replace(/[^\w\- ]+/g, "").trim() || "contacto"}.vcf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(href), 4000);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const copyText = async (key, value) => {
+    if (preview) return;
+    try {
+      await navigator.clipboard.writeText(String(value || ""));
+      setCopied(key);
+      setTimeout(() => setCopied(""), 1800);
+    } catch {
+      // sin permiso del portapapeles: la persona puede copiarlo a mano
+    }
+  };
+
+  const rowStyle = {
+    backgroundColor: alpha(fg, 0.08),
+    border: `1px solid ${alpha(fg, 0.18)}`,
+    color: fg,
+  };
+  const rowClass =
+    "flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-sm font-medium transition hover:opacity-80 active:scale-[0.98]";
 
   return (
     <main
@@ -76,25 +134,75 @@ export default function Microsite({ name, mainUrl, links, theme, preview = false
 
         {extra.length > 0 && (
           <div className={`${main ? "mt-4" : "mt-8"} space-y-3`}>
-            {extra.map((l, i) => (
-              <a
-                key={i}
-                href={l.url}
-                onClick={onClick}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex w-full items-center gap-3 rounded-2xl px-5 py-3.5 text-left text-sm font-medium transition hover:opacity-80 active:scale-[0.98]"
-                style={{
-                  backgroundColor: alpha(fg, 0.08),
-                  border: `1px solid ${alpha(fg, 0.18)}`,
-                  color: fg,
-                }}
-              >
-                <span className="text-lg">{getEmoji(l.icon)}</span>
-                <span className="flex-1 truncate">{l.label}</span>
-                <span style={{ color: alpha(fg, 0.5) }}>→</span>
-              </a>
-            ))}
+            {extra.map((l, i) => {
+              if (l.kind === "contact") {
+                return (
+                  <button key={i} type="button" onClick={() => saveContact(l)} className={rowClass} style={rowStyle}>
+                    <span className="text-lg">{getEmoji(l.icon)}</span>
+                    <span className="flex-1 truncate">{l.label}</span>
+                    <span style={{ color: alpha(fg, 0.5) }}>↓</span>
+                  </button>
+                );
+              }
+              if (l.kind === "wifi") {
+                const open = openWifi === i;
+                return (
+                  <div key={i}>
+                    <button
+                      type="button"
+                      onClick={() => setOpenWifi(open ? null : i)}
+                      aria-expanded={open}
+                      className={rowClass}
+                      style={rowStyle}
+                    >
+                      <span className="text-lg">{getEmoji(l.icon)}</span>
+                      <span className="flex-1 truncate">{l.label}</span>
+                      <span style={{ color: alpha(fg, 0.5) }}>{open ? "−" : "+"}</span>
+                    </button>
+                    {open && (
+                      <div className="mt-2 space-y-2 rounded-2xl p-4 text-left text-sm" style={{ border: `1px solid ${alpha(fg, 0.18)}` }}>
+                        {[
+                          ["Red", l.data.ssid, "ssid"],
+                          ["Contraseña", l.data.password, "pass"],
+                        ]
+                          .filter(([, v]) => v)
+                          .map(([name2, v, key]) => (
+                            <div key={key} className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-xs" style={{ color: alpha(fg, 0.55) }}>{name2}</p>
+                                <p className="break-all font-mono">{v}</p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={() => copyText(`${i}-${key}`, v)}
+                                className="shrink-0 rounded-lg px-3 py-1.5 text-xs font-semibold"
+                                style={{ backgroundColor: t.accent, color: onAccent }}
+                              >
+                                {copied === `${i}-${key}` ? "Copiado" : "Copiar"}
+                              </button>
+                            </div>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                );
+              }
+              const web = l.url.startsWith("http");
+              return (
+                <a
+                  key={i}
+                  href={l.url}
+                  onClick={onClick}
+                  {...(web ? { target: "_blank", rel: "noopener noreferrer" } : {})}
+                  className={rowClass}
+                  style={rowStyle}
+                >
+                  <span className="text-lg">{getEmoji(l.icon)}</span>
+                  <span className="flex-1 truncate">{l.label}</span>
+                  <span style={{ color: alpha(fg, 0.5) }}>→</span>
+                </a>
+              );
+            })}
           </div>
         )}
 
