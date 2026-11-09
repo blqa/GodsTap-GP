@@ -41,7 +41,7 @@ const SECTIONS = [
   {
     title: "Planes y pagos",
     paragraphs: [
-      "El plan Básico viene incluido con tu GT. El plan Pro es una suscripción. Los precios, las formas de pago y la activación se acuerdan directamente con God’s Plan, y el plan se activa desde la administración de GodsTap.",
+      "El plan Básico viene incluido con tu GT, que se paga una sola vez e incluye un mes de Pro sin costo. El plan Pro es una suscripción mensual. Los precios vigentes se publican en la página principal; las formas de pago y la activación se acuerdan directamente con God’s Plan, y el plan se activa desde la administración de GodsTap.",
       "Si un plan de pago no se renueva, tu GT puede regresar al plan Básico. Las condiciones de devolución del GT físico se acuerdan al momento de la compra.",
     ],
   },

@@ -48,26 +48,29 @@ const FEATURES = [
 const PLANS = [
   {
     name: "Básico",
-    price: "Consulta precio",
-    note: "Incluido con tu GT",
+    price: "$350 MXN",
+    note: "Pago único por tu GT · incluye 1 mes de Pro gratis",
     soon: false,
     featured: false,
     features: [
-      "1 enlace de redirección o micrositio simple",
+      "Tu GT con chip NFC listo para usar",
+      "1 enlace directo (ej. tus reseñas de Google) o micrositio sencillo",
+      "Horario con «Abierto» o «Cerrado» al momento",
       "Cambios ilimitados desde tu panel",
-      "Asistente de configuración rápida",
     ],
   },
   {
     name: "Pro",
-    price: "Consulta precio",
-    note: "Suscripción",
+    price: "$100 MXN al mes",
+    note: "Tu primer mes va incluido al comprar tu GT",
     soon: false,
     featured: true,
     features: [
-      "Micrositio con varios botones",
-      "Colores personalizados",
-      "Estadísticas de escaneos",
+      "Varios botones: WhatsApp, reseñas, WiFi, pagos y más",
+      "Menú, servicios o catálogo con precios",
+      "Galería de fotos de tu trabajo",
+      "Tu logo, tu portada y tus colores",
+      "Estadísticas de escaneos y de clics por botón",
       "Sin la marca GodsTap",
     ],
   },
@@ -87,6 +90,10 @@ const PLANS = [
 ];
 
 const FAQ = [
+  {
+    q: "¿Cuánto cuesta?",
+    a: "El GT cuesta $350 MXN en un solo pago e incluye un mes de Pro gratis. Después puedes seguir con Pro por $100 MXN al mes o quedarte en Básico sin pagar nada más.",
+  },
   {
     q: "¿Mis clientes necesitan instalar una app?",
     a: "No. Basta con acercar el celular al GT. La mayoría de los iPhone y Android recientes leen NFC sin instalar nada.",
@@ -226,7 +233,7 @@ export default function HomePage() {
       <section id="planes" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-24">
         <div className="mb-12 max-w-xl">
           <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">Planes</h2>
-          <p className="mt-3 text-slate-400">Empieza con el básico y crece cuando tu negocio lo pida.</p>
+          <p className="mt-3 text-slate-400">Compras tu GT una sola vez y pruebas Pro un mes gratis. Después tú decides si lo sigues usando.</p>
         </div>
         <div className="grid gap-5 lg:grid-cols-3">
           {PLANS.map((p) => (
@@ -270,7 +277,7 @@ export default function HomePage() {
                 ))}
               </ul>
               <a
-                href={whatsappLink(p.soon ? `Hola, quiero que me avisen cuando esté listo el plan ${p.name} de GodsTap` : `Hola, quiero información del plan ${p.name} de GodsTap`)}
+                href={whatsappLink(p.soon ? `Hola, quiero que me avisen cuando esté listo el plan ${p.name} de GodsTap` : `Hola, quiero un GT de GodsTap (plan ${p.name})`)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`mt-9 block rounded-lg px-4 py-2.5 text-center text-sm font-semibold transition ${
@@ -279,7 +286,7 @@ export default function HomePage() {
                     : "border border-slate-700 text-slate-200 hover:bg-slate-800"
                 }`}
               >
-                {p.soon ? "Avísame cuando esté listo" : "Pedir información"}
+                {p.soon ? "Avísame cuando esté listo" : "Pedirlo por WhatsApp"}
               </a>
             </div>
           ))}
