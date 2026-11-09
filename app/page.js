@@ -4,6 +4,9 @@ import ThemeToggle from "@/components/ThemeToggle";
 import HeaderAuth from "@/components/landing/HeaderAuth";
 import HeroPhone from "@/components/landing/HeroPhone";
 import SetupSim from "@/components/landing/SetupSim";
+import PhoneFrame from "@/components/landing/PhoneFrame";
+import Microsite from "@/components/Microsite";
+import { getDemo } from "@/lib/demoSites";
 import SuggestButton from "@/components/SuggestButton";
 import { CONTACT_EMAIL, whatsappLink } from "@/lib/contact";
 
@@ -48,6 +51,8 @@ const FEATURES = [
 const PLANS = [
   {
     name: "Básico",
+    look: "basic",
+    lookLabel: "Así se ve con Básico",
     price: "$350 MXN",
     note: "Pago único por tu GT · incluye 1 mes de Pro gratis",
     soon: false,
@@ -61,6 +66,8 @@ const PLANS = [
   },
   {
     name: "Pro",
+    look: "pro",
+    lookLabel: "Así puede verse con Pro",
     price: "$100 MXN al mes",
     note: "Tu primer mes va incluido al comprar tu GT",
     soon: false,
@@ -74,20 +81,27 @@ const PLANS = [
       "Sin la marca GodsTap",
     ],
   },
-  {
-    name: "Negocio",
-    price: "Consulta precio",
-    note: "Para varias sucursales",
-    soon: true,
-    featured: false,
-    features: [
-      "Varios GT y sucursales",
-      "Usuarios de equipo",
-      "Dominio propio",
-      "Atención prioritaria",
-    ],
-  },
 ];
+
+// El mismo negocio de ejemplo con cada plan, para comparar
+const SAMPLE = getDemo("cafeteria");
+const PLAN_LOOKS = {
+  // Básico: nombre, frase, horario y un botón principal, con el diseño estándar
+  basic: { name: SAMPLE.name, tagline: SAMPLE.tagline, mainUrl: SAMPLE.mainUrl, hours: SAMPLE.hours },
+  // Pro: además logo, portada, colores, menú y todos los botones, sin la marca GodsTap
+  pro: {
+    name: SAMPLE.name,
+    tagline: SAMPLE.tagline,
+    mainUrl: SAMPLE.mainUrl,
+    hours: SAMPLE.hours,
+    links: SAMPLE.links,
+    menu: SAMPLE.menu,
+    theme: SAMPLE.theme,
+    logo: SAMPLE.logo,
+    cover: SAMPLE.cover,
+    hideBrand: true,
+  },
+};
 
 const FAQ = [
   {
@@ -233,9 +247,11 @@ export default function HomePage() {
       <section id="planes" className="mx-auto max-w-6xl scroll-mt-20 px-5 py-24">
         <div className="mb-12 max-w-xl">
           <h2 className="text-3xl font-bold tracking-tight text-slate-50 sm:text-4xl">Planes</h2>
-          <p className="mt-3 text-slate-400">Compras tu GT una sola vez y pruebas Pro un mes gratis. Después tú decides si lo sigues usando.</p>
+          <p className="mt-3 text-slate-400">
+            Compras tu GT una sola vez y pruebas Pro un mes gratis. Aquí ves el mismo negocio con cada plan: desliza dentro de cada celular.
+          </p>
         </div>
-        <div className="grid gap-5 lg:grid-cols-3">
+        <div className="mx-auto grid max-w-4xl gap-5 md:grid-cols-2">
           {PLANS.map((p) => (
             <div
               key={p.name}
@@ -245,6 +261,14 @@ export default function HomePage() {
                   : "border border-slate-700 bg-slate-900/60"
               }`}
             >
+              <div className="mb-7 flex flex-col items-center">
+                <p className={`mb-3 text-xs font-medium uppercase tracking-[0.14em] ${p.featured ? "text-brand-100" : "text-slate-500"}`}>
+                  {p.lookLabel}
+                </p>
+                <PhoneFrame className="h-[31rem] w-[16.5rem]">
+                  <Microsite preview {...PLAN_LOOKS[p.look]} />
+                </PhoneFrame>
+              </div>
               <div className="flex items-center justify-between">
                 <h3 className={`text-xl font-bold ${p.featured ? "text-white" : "text-slate-50"}`}>{p.name}</h3>
                 {p.soon && (
