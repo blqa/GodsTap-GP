@@ -16,6 +16,8 @@ import MenuEditor from "@/components/dashboard/MenuEditor";
 import LinksEditor, { MAX_LINKS } from "@/components/dashboard/editor/LinksEditor";
 import DesignEditor from "@/components/dashboard/editor/DesignEditor";
 import GalleryEditor from "@/components/dashboard/editor/GalleryEditor";
+import HoursEditor from "@/components/dashboard/editor/HoursEditor";
+import { EMPTY_HOURS, cleanHours } from "@/lib/hours";
 import { cleanMenu } from "@/lib/menu";
 
 const EMPTY_LINKS = [];
@@ -100,6 +102,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
   const [gallery, setGallery] = useState(() =>
     Array.isArray(tag.gallery) ? tag.gallery.filter((g) => typeof g === "string").slice(0, GALLERY_MAX) : []
   );
+  const [hours, setHours] = useState(() => cleanHours(tag.hours) || EMPTY_HOURS);
   const [tab, setTab] = useState("general");
   const [view, setView] = useState("edit"); // en celular: «edit» o «preview»
   const [saving, setSaving] = useState(false);
@@ -149,6 +152,11 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
       tagline: cleanTagline,
       updated_at: serverTimestamp(),
     };
+
+    // El horario está disponible en todos los planes
+    const cleanedHours = mode === "microsite" ? cleanHours(hours) : cleanHours(tag.hours);
+    if (cleanedHours) payload.hours = cleanedHours;
+    else if (tag.hours) payload.hours = deleteField();
 
     // Botones y colores solo se guardan en planes de pago
     if (paid) {
@@ -305,6 +313,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     if (cleanUrl !== (tag.target_url || "")) changed.push("enlace principal");
     if (payload.links && JSON.stringify(payload.links) !== JSON.stringify(tag.links || [])) changed.push("botones");
     if (cleanTagline !== (tag.tagline || "")) changed.push("frase");
+    if (JSON.stringify(cleanedHours) !== JSON.stringify(cleanHours(tag.hours))) changed.push("horario");
     if (paid && JSON.stringify(cleanMenu(menu)) !== JSON.stringify(cleanMenu(tag.menu))) changed.push("menú");
     if (paid && logo !== (tag.logo || "")) changed.push("logo");
     if (paid && cover !== (tag.cover || "")) changed.push("portada");
@@ -454,6 +463,8 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   </div>
                 </div>
 
+                {isMicro && <HoursEditor hours={hours} setHours={setHours} />}
+
                 {mode === "redirect" && (
                   <p className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-xs text-slate-500">
                     En modo redirección no se muestra ninguna página: el cliente va directo al enlace.
@@ -529,6 +540,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                     logo={paid ? logo : undefined}
                     cover={paid ? cover : undefined}
                     gallery={paid ? gallery : undefined}
+                    hours={hours}
                     hideBrand={!tagShowBrand(tag)}
                   />
                 </div>

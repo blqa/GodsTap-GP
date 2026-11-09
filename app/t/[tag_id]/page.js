@@ -1,11 +1,11 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { doc, getDoc } from "firebase/firestore/lite";
 import { dbLite } from "@/lib/firebaseLite";
 import Microsite from "@/components/Microsite";
-import { countScan } from "@/lib/scans";
+import { countClick, countScan } from "@/lib/scans";
 import { tagIsPaid, tagShowBrand } from "@/lib/plans";
 import { LogoMark } from "@/components/Logo";
 import SuggestButton from "@/components/SuggestButton";
@@ -214,6 +214,15 @@ function PublicTag() {
     };
   }, [rawId]);
 
+  // Cuenta qué botón tocan (para las estadísticas del dueño)
+  const ownerUid = tag?.owner_uid;
+  const onAction = useCallback(
+    (label) => {
+      if (rawId && ownerUid) countClick(decodeURIComponent(rawId), ownerUid, label);
+    },
+    [rawId, ownerUid]
+  );
+
   if (status === "loading") return <Spinner />;
   if (status === "redirecting") return <Spinner label="Redirigiendo..." />;
   if (status === "unclaimed") return <UnclaimedState tagId={decodeURIComponent(rawId)} />;
@@ -250,6 +259,8 @@ function PublicTag() {
       logo={paid ? tag.logo : undefined}
       cover={paid ? tag.cover : undefined}
       gallery={paid ? tag.gallery : undefined}
+      hours={tag.hours}
+      onAction={onAction}
       hideBrand={!tagShowBrand(tag)}
     />
   );

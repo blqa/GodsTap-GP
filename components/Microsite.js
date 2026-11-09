@@ -8,8 +8,9 @@ import { buildVCard, cleanDigits, formatCard, formatClabe, linkHref } from "@/li
 import { cleanMenu, countItems, formatPrice } from "@/lib/menu";
 import { alpha, fontStack, getSafeUrl, normalizeTheme, shapeRadius, textOn } from "@/lib/microsite";
 import { isStoredImage } from "@/lib/images";
+import { DAY_NAMES, cleanHours, formatRange, hoursStatus } from "@/lib/hours";
 
-function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, gallery, preview = false, hideBrand = false }) {
+function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, gallery, hours, onAction, preview = false, hideBrand = false }) {
   const t = normalizeTheme(theme);
   const fg = textOn(t.bg);
   const onAccent = textOn(t.accent);
@@ -20,6 +21,7 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
   const slogan = String(tagline || "").trim().slice(0, 90);
   const cleanedMenu = cleanMenu(menu);
   const photos = (Array.isArray(gallery) ? gallery : []).filter((g) => isStoredImage(g, "photo")).slice(0, 6);
+  const schedule = cleanHours(hours);
   const logoSrc = isStoredImage(logo, "logo") ? logo : null;
   const coverSrc = isStoredImage(cover, "cover") ? cover : null;
   const rad = shapeRadius(t.shape);
@@ -84,7 +86,14 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
     }
     open(true);
   };
-  const openMenu = () => openSheet(setMenuOpen);
+  const openMenu = () => {
+    track(cleanMenu(menu)?.label || "Ver menú");
+    openSheet(setMenuOpen);
+  };
+  const openGallery = () => {
+    track("Ver galería");
+    openSheet(setGalleryOpen);
+  };
   const sheetOpen = menuOpen || galleryOpen;
   useEffect(() => {
     if (!preview || !sheetOpen) return undefined;
@@ -124,8 +133,26 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
   // En la vista previa los botones no navegan
   const onClick = preview ? (e) => e.preventDefault() : undefined;
 
+  // Avisa qué botón se tocó (para las estadísticas). En la vista previa no cuenta.
+  const track = (label) => {
+    if (!preview && onAction) onAction(label);
+  };
+
+  // «Abierto / Cerrado» se calcula ya en el celular de la persona, con la hora de Ciudad de México
+  const [hoursNow, setHoursNow] = useState(null);
+  const [hoursOpen, setHoursOpen] = useState(false);
+  const scheduleKey = schedule ? schedule.join("|") : "";
+  useEffect(() => {
+    if (!scheduleKey) return undefined;
+    const update = () => setHoursNow(hoursStatus(scheduleKey.split("|")));
+    update();
+    const id = setInterval(update, 60000);
+    return () => clearInterval(id);
+  }, [scheduleKey]);
+
   const saveContact = (l) => {
     if (preview) return;
+    track(l.label);
     try {
       const vcf = buildVCard({
         name: String(l.data.name || "").slice(0, 60),
@@ -288,6 +315,39 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
             {slogan || "Toca una opción para continuar"}
           </p>
 
+          {schedule && (
+            <div className="ms-in mt-4" style={delay()}>
+              <button
+                type="button"
+                onClick={() => setHoursOpen((v) => !v)}
+                aria-expanded={hoursOpen}
+                className="inline-flex max-w-full items-center gap-1.5 rounded-full px-3 py-1.5 text-[12.5px] font-medium transition active:scale-[0.98]"
+                style={{ backgroundColor: alpha(fg, 0.08), border: `1px solid ${alpha(fg, 0.14)}`, color: fg }}
+              >
+                <span
+                  className="h-2 w-2 shrink-0 rounded-full"
+                  style={{ backgroundColor: hoursNow ? (hoursNow.open ? "#22c55e" : "#ef4444") : alpha(fg, 0.35) }}
+                  aria-hidden="true"
+                />
+                <span className="truncate">{hoursNow ? hoursNow.text : "Ver horario"}</span>
+                <LinkIcon name={hoursOpen ? "minus" : "plus"} className="h-3.5 w-3.5 shrink-0" />
+              </button>
+              {hoursOpen && (
+                <ul className="mx-auto mt-3 max-w-[19rem] space-y-1.5 px-3.5 py-3 text-left text-[13px]" style={{ ...glass, borderRadius: panelRad }}>
+                  {DAY_NAMES.map((dayName, i) => {
+                    const isToday = hoursNow?.day === i;
+                    return (
+                      <li key={dayName} className="flex justify-between gap-4" style={{ fontWeight: isToday ? 600 : 400, color: isToday ? fg : alpha(fg, 0.72) }}>
+                        <span>{dayName}</span>
+                        <span className="whitespace-nowrap">{formatRange(schedule[i])}</span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
+          )}
+
           <div className="mt-8 space-y-3">
             {cleanedMenu && (
               <button
@@ -312,13 +372,13 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
 
             {photos.length > 0 &&
               (cleanedMenu ? (
-                <button type="button" onClick={() => openSheet(setGalleryOpen)} className={rowClass} style={{ ...glass, ...delay() }}>
+                <button type="button" onClick={openGallery} className={rowClass} style={{ ...glass, ...delay() }}>
                   {rowInner("image", "Ver galería", <span className="text-xs">{photos.length} {photos.length === 1 ? "foto" : "fotos"}</span>)}
                 </button>
               ) : (
                 <button
                   type="button"
-                  onClick={() => openSheet(setGalleryOpen)}
+                  onClick={openGallery}
                   className="ms-in flex w-full items-center justify-center gap-2.5 px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
                   style={{
                     ...delay(),
@@ -340,7 +400,10 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
               ((cleanedMenu || photos.length > 0) ? (
                 <a
                   href={main}
-                  onClick={onClick}
+                  onClick={(e) => {
+                    onClick?.(e);
+                    track("Visitar sitio");
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className={rowClass}
@@ -351,7 +414,10 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
               ) : (
                 <a
                   href={main}
-                  onClick={onClick}
+                  onClick={(e) => {
+                    onClick?.(e);
+                    track("Visitar sitio");
+                  }}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="ms-in flex w-full items-center justify-center gap-2 px-6 py-4 text-base font-semibold transition active:scale-[0.98] hover:brightness-110"
@@ -397,7 +463,10 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
                   <div key={i}>
                     <button
                       type="button"
-                      onClick={() => setOpenWifi(open ? null : i)}
+                      onClick={() => {
+                        if (!open) track(l.label);
+                        setOpenWifi(open ? null : i);
+                      }}
                       aria-expanded={open}
                       className={rowClass}
                       style={{ ...glass, ...delay() }}
@@ -441,7 +510,10 @@ function Microsite({ name, tagline, mainUrl, links, menu, theme, logo, cover, ga
                 <a
                   key={i}
                   href={l.url}
-                  onClick={onClick}
+                  onClick={(e) => {
+                    onClick?.(e);
+                    track(l.label);
+                  }}
                   {...(web ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                   className={rowClass}
                   style={{ ...glass, ...delay() }}

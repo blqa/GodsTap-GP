@@ -62,6 +62,11 @@ service cloud.firestore {
       return g == null || (g is list && g.size() <= 6);
     }
 
+    // Horario: lista de 7 textos (lunes a domingo); la app valida el formato de cada uno
+    function validHours(h) {
+      return h == null || (h is list && h.size() == 7);
+    }
+
     match /users/{uid} {
       allow read, write: if isSignedIn() && request.auth.uid == uid;
       // El administrador ve y edita todas las cuentas (crear, editar, suspender, eliminar)
@@ -87,7 +92,7 @@ service cloud.firestore {
       // El dueño solo puede editar estos campos (el plan NO está en la lista)
       allow update: if isOwner()
         && request.resource.data.diff(resource.data).affectedKeys()
-             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'logo', 'cover', 'gallery', 'updated_at'])
+             .hasOnly(['business_name', 'mode', 'target_url', 'links', 'theme', 'nickname', 'tagline', 'menu', 'logo', 'cover', 'gallery', 'hours', 'updated_at'])
         && request.resource.data.mode in ['redirect', 'microsite']
         && request.resource.data.target_url is string
         && request.resource.data.target_url.matches('^https?://.+')
@@ -104,6 +109,7 @@ service cloud.firestore {
         && validImage(request.resource.data.get('logo', null), 70000)
         && validImage(request.resource.data.get('cover', null), 210000)
         && validGallery(request.resource.data.get('gallery', null))
+        && validHours(request.resource.data.get('hours', null))
         && (isPaid() || request.resource.data.get('links', []) == resource.data.get('links', []))
         && (isPaid() || request.resource.data.get('theme', null) == resource.data.get('theme', null))
         && (isPaid() || request.resource.data.get('menu', null) == resource.data.get('menu', null))
@@ -147,19 +153,29 @@ service cloud.firestore {
     }
 
     match /scan_days/{docId} {
-      allow create: if request.resource.data.keys().hasOnly(['tag_id', 'owner_uid', 'day', 'count'])
+      // Se crea con el primer escaneo del día (count = 1) o con el primer clic en un botón (clicks con 1 botón)
+      allow create: if request.resource.data.keys().hasOnly(['tag_id', 'owner_uid', 'day', 'count', 'clicks'])
         && request.resource.data.tag_id is string
         && request.resource.data.owner_uid is string
         && request.resource.data.day is string
         && request.resource.data.day.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$')
         && docId == request.resource.data.tag_id + '_' + request.resource.data.day
-        && request.resource.data.count == 1
+        && request.resource.data.get('count', 1) == 1
+        && request.resource.data.get('clicks', {}) is map
+        && request.resource.data.get('clicks', {}).size() <= 1
         && get(/databases/$(database)/documents/tags/$(request.resource.data.tag_id)).data.get('owner_uid', null)
              == request.resource.data.owner_uid;
 
       allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['count'])
         && request.resource.data.count is int
-        && request.resource.data.count == resource.data.count + 1;
+        && request.resource.data.count == resource.data.get('count', 0) + 1;
+
+      // Clics por botón: cada escritura cambia un solo botón, sin borrar los demás (máximo 30 botones distintos al día)
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks'])
+        && request.resource.data.clicks is map
+        && request.resource.data.clicks.size() <= 30
+        && request.resource.data.clicks.diff(resource.data.get('clicks', {})).affectedKeys().size() == 1
+        && request.resource.data.clicks.diff(resource.data.get('clicks', {})).removedKeys().size() == 0;
 
       allow get, list: if isSignedIn()
         && (resource.data.owner_uid == request.auth.uid || isAdmin());

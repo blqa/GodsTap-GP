@@ -21,6 +21,7 @@ function summary(l) {
 // Botones adicionales del micrositio. Cada botón se abre y se cierra para que la lista no ocupe toda la pantalla.
 export default function LinksEditor({ links, setLinks }) {
   const [open, setOpen] = useState(null);
+  const [placeQuery, setPlaceQuery] = useState("");
 
   const updateLink = (i, patch) => setLinks(links.map((l, idx) => (idx === i ? { ...l, ...patch } : l)));
 
@@ -52,6 +53,22 @@ export default function LinksEditor({ links, setLinks }) {
     setOpen(links.length);
   };
 
+  // Botón de reseñas de Google ya armado: solo falta pegar el enlace
+  const hasReviews = links.some((l) => l.icon === "reviews");
+  const addReviews = () => {
+    if (links.length >= MAX_LINKS) return;
+    setLinks([...links, { label: "Déjanos tu reseña en Google", url: "", icon: "reviews", data: {} }]);
+    setOpen(links.length);
+    setPlaceQuery("");
+  };
+
+  // Sin acceso a la ficha de Google: enlace que abre el negocio en Google Maps
+  const usePlaceSearch = (i) => {
+    const q = placeQuery.trim();
+    if (!q) return;
+    updateLink(i, { url: `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(q)}` });
+  };
+
   return (
     <div>
       <div className="mb-3 flex items-center justify-between gap-3">
@@ -70,6 +87,22 @@ export default function LinksEditor({ links, setLinks }) {
           + Agregar
         </button>
       </div>
+
+      {!hasReviews && links.length < MAX_LINKS && (
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3">
+          <p className="min-w-0 flex-1 text-sm text-slate-200">
+            <span className="font-semibold">⭐ Consigue más reseñas en Google.</span>{" "}
+            <span className="text-slate-400">Tu cliente toca el botón y llega directo a calificarte.</span>
+          </p>
+          <button
+            type="button"
+            onClick={addReviews}
+            className="shrink-0 rounded-lg bg-brand-600 px-3.5 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
+          >
+            Agregar botón de reseñas
+          </button>
+        </div>
+      )}
 
       {links.length === 0 && (
         <p className="rounded-lg border border-dashed border-slate-700 px-4 py-5 text-center text-sm text-slate-500">
@@ -166,10 +199,47 @@ export default function LinksEditor({ links, setLinks }) {
                       placeholder={
                         l.icon === "maps"
                           ? "Enlace de Google Maps (Compartir → Copiar enlace)"
-                          : "https://..."
+                          : l.icon === "reviews"
+                            ? "Pega aquí tu enlace de reseñas (ej. https://g.page/r/.../review)"
+                            : "https://..."
                       }
                       className={`${inputClass} mt-2`}
                     />
+                  )}
+                  {l.icon === "reviews" && (
+                    <div className="mt-2 rounded-lg border border-slate-800 bg-slate-900/60 p-3 text-xs text-slate-400">
+                      <p className="font-semibold text-slate-200">¿Cómo consigo mi enlace de reseñas?</p>
+                      <ol className="mt-1.5 list-decimal space-y-1 pl-4">
+                        <li>En tu celular, busca el nombre de tu negocio en Google con la cuenta que administra tu ficha.</li>
+                        <li>
+                          Toca «Pedir opiniones» (según tu celular puede decir «Obtener más opiniones» o «Solicitar
+                          reseñas»).
+                        </li>
+                        <li>Copia el enlace que te da Google y pégalo en la casilla de arriba.</li>
+                      </ol>
+                      <p className="mt-3 font-semibold text-slate-200">¿No administras tu ficha de Google?</p>
+                      <p className="mt-1">
+                        Escribe tu negocio como aparece en Google Maps y armamos un enlace que abre tu ficha; ahí tus
+                        clientes tocan «Opiniones» para calificarte.
+                      </p>
+                      <div className="mt-2 flex gap-2">
+                        <input
+                          value={placeQuery}
+                          onChange={(e) => setPlaceQuery(e.target.value)}
+                          maxLength={120}
+                          placeholder="Ej. Barbería Los Rudos, Santiago Acahualtepec"
+                          className={inputClass}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => usePlaceSearch(i)}
+                          disabled={!placeQuery.trim()}
+                          className="shrink-0 rounded-lg border border-slate-700 px-3 py-2 text-sm text-slate-200 transition hover:bg-slate-800 disabled:opacity-40"
+                        >
+                          Usar
+                        </button>
+                      </div>
+                    </div>
                   )}
                   {kindOf(l.icon) === "phone" && (
                     <input

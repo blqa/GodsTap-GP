@@ -64,6 +64,7 @@ export default function HeroPhone() {
                 theme={m.theme}
                 logo={m.logo}
                 cover={m.cover}
+                hours={m.hours}
               />
             </PhoneFrame>
           </div>

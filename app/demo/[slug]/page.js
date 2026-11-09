@@ -32,6 +32,7 @@ function Demo() {
       theme={demo.theme}
       logo={demo.logo}
       cover={demo.cover}
+      hours={demo.hours}
     />
   );
 }
