@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { GpBy, GpFamily } from "@/components/GodsPlan";
 import ThemeToggle from "@/components/ThemeToggle";
 import { CONTACT_EMAIL } from "@/lib/contact";
 import { AGENCY_URL } from "@/lib/site";
@@ -10,9 +11,12 @@ export default function LegalLayout({ title, updated, intro, sections }) {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="border-b border-slate-800/80">
         <div className="mx-auto flex h-16 max-w-3xl items-center justify-between px-5">
-          <Link href="/" aria-label="GodsTap · by God’s Plan, inicio">
-            <Logo showBy />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" aria-label="GodsTap, inicio">
+              <Logo />
+            </Link>
+            <GpBy className="hidden sm:inline-flex" />
+          </div>
           <ThemeToggle />
         </div>
       </header>
@@ -60,6 +64,7 @@ export default function LegalLayout({ title, updated, intro, sections }) {
           </nav>
         </div>
       </footer>
+      <GpFamily />
     </div>
   );
 }

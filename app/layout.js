@@ -1,17 +1,32 @@
-import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 import { BASE_URL } from "@/lib/site";
 
-const display = Bricolage_Grotesque({
-  variable: "--font-bricolage",
-  subsets: ["latin"],
+// Tipografía de God's Plan (DESIGN_SYSTEM.md §3), alojada en el propio proyecto.
+// Son los mismos archivos que usan godsplan.dev y rig.godsplan.dev.
+const display = localFont({
+  src: "./fonts/Montserrat-var.woff2",
+  weight: "500 900",
+  style: "normal",
+  variable: "--font-montserrat",
   display: "swap",
 });
 
-const body = Instrument_Sans({
-  variable: "--font-instrument",
-  subsets: ["latin"],
+const body = localFont({
+  src: "./fonts/Inter-var.woff2",
+  weight: "300 700",
+  style: "normal",
+  variable: "--font-inter",
   display: "swap",
+});
+
+const mono = localFont({
+  src: "./fonts/MartianMono-var.woff2",
+  weight: "300 600",
+  style: "normal",
+  variable: "--font-martian",
+  display: "swap",
+  preload: false,
 });
 
 export const metadata = {
@@ -41,7 +56,7 @@ export default function RootLayout({ children }) {
     <html
       lang="es"
       suppressHydrationWarning
-      className={`${display.variable} ${body.variable} h-full antialiased`}
+      className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       <head>
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
