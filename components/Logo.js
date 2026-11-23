@@ -18,9 +18,10 @@ export function LogoMark({ className = "h-9", onRed = false }) {
   );
 }
 
-// showBy: añade "· by God’s Plan" junto al nombre (siempre visible en pantallas medianas en adelante)
 // light: úsalo sobre un fondo rojo, para que el texto sea blanco en ambos temas
-export default function Logo({ showBy = false, light = false, size = "md", className = "" }) {
+// El sello "by God’s Plan" ya no va aquí: se pone a un lado con <GpBy /> (components/GodsPlan.js),
+// porque es un enlace y el logotipo suele estar dentro de otro enlace.
+export default function Logo({ light = false, size = "md", className = "" }) {
   const mark = size === "lg" ? "h-12" : "h-9";
   const text = size === "lg" ? "text-2xl" : "text-xl";
   return (
@@ -28,12 +29,6 @@ export default function Logo({ showBy = false, light = false, size = "md", class
       <LogoMark className={mark} onRed={light} />
       <span className={`font-display ${text} font-bold leading-none tracking-tight ${light ? "text-white" : "text-slate-50"}`}>
         GodsTap
-        {showBy && (
-          <span className={`hidden font-sans text-sm font-normal tracking-normal sm:inline ${light ? "text-brand-100" : "text-slate-500"}`}>
-            {" "}
-            · by God’s Plan
-          </span>
-        )}
       </span>
     </span>
   );

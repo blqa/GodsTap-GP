@@ -10,6 +10,7 @@ import { CONTACT_EMAIL, whatsappLink } from "@/lib/contact";
 import RevokedNotice from "@/components/dashboard/RevokedNotice";
 import CompleteProfile from "@/components/dashboard/CompleteProfile";
 import Logo from "@/components/Logo";
+import { GpBy, GpFamily } from "@/components/GodsPlan";
 import SuggestButton from "@/components/SuggestButton";
 import ThemeToggle from "@/components/ThemeToggle";
 import Link from "next/link";
@@ -130,9 +131,12 @@ export default function DashboardShell({ children }) {
     <div className="min-h-screen bg-slate-950 text-slate-100">
       <header className="sticky top-0 z-30 border-b border-slate-800 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href={isAdmin ? "/dashboard/admin" : "/dashboard"} aria-label="GodsTap · by God’s Plan, ir al inicio del panel">
-            <Logo showBy />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href={isAdmin ? "/dashboard/admin" : "/dashboard"} aria-label="GodsTap, ir al inicio del panel">
+              <Logo />
+            </Link>
+            <GpBy className="hidden sm:inline-flex" />
+          </div>
 
           <div className="flex items-center gap-1.5 sm:gap-3">
             <div className="hidden items-center gap-2 md:flex">
@@ -174,6 +178,7 @@ export default function DashboardShell({ children }) {
         <p className="text-sm text-slate-500">¿Tienes una idea o algo no te funciona? Cuéntanos, leemos todo.</p>
         <SuggestButton context={`Panel (${user.email || "sin correo"})`} />
       </footer>
+      <GpFamily />
     </div>
   );
 }

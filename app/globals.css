@@ -2,48 +2,122 @@
 
 /* ==========================================================================
    GodsTap · sistema de diseño
-   - Marca: rojo sangre (brand-*)
-   - Neutros: grises con un fondo vino (slate-* se reasigna aquí)
+   Sigue el sistema de God's Plan: DESIGN_SYSTEM.md en blqa/godsplan-site.
+   - Tokens --gp-* (iguales en godsplan.dev, rig y godstap), mapeados a
+     Tailwind como bg-gp-*, text-gp-*, border-gp-* (ver @theme inline).
+   - Marca: carmesí de God's Plan (brand-* apunta a la misma paleta)
+   - Neutros: negro cálido en capas (slate-* se reasigna aquí)
    - Dos temas: oscuro (por defecto) y claro, con <html data-theme="light">
    Los componentes siguen usando las clases de Tailwind de siempre; el cambio
    de tema ocurre cambiando los valores de estas variables.
    ========================================================================== */
 
 @theme {
-  /* Rojo sangre */
-  --color-brand-50: #fff1f2;
-  --color-brand-100: #ffe0e3;
-  --color-brand-200: #ffc4cb;
-  --color-brand-300: #ff97a3;
-  --color-brand-400: #f4606f;
-  --color-brand-500: #d92d3f;
-  --color-brand-600: #b3162b;
-  --color-brand-700: #8f1023;
-  --color-brand-800: #6e0d1d;
-  --color-brand-900: #4a0914;
-  --color-brand-950: #2b050c;
+  /* Carmesí de God's Plan (DESIGN_SYSTEM.md §2):
+     400 = --gp-crimson-400 (texto sobre oscuro), 600/700 = rellenos de CTA */
+  --color-brand-50: #fff1f1;
+  --color-brand-100: #ffd9db;
+  --color-brand-200: #ffb3b6;
+  --color-brand-300: #ff8a8f;
+  --color-brand-400: #ef5058;
+  --color-brand-500: #c8202c;
+  --color-brand-600: #a3080c;
+  --color-brand-700: #8a0303;
+  --color-brand-800: #6b0202;
+  --color-brand-900: #4a0202;
+  --color-brand-950: #2b0101;
 }
 
 @theme inline {
-  --font-sans: var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-bricolage), var(--font-instrument), ui-sans-serif, system-ui, sans-serif;
+  /* Fuentes locales (next/font/local en app/layout.js) */
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-montserrat), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-martian), ui-monospace, "SFMono-Regular", Menlo, monospace;
+
+  /* Tokens de God's Plan como clases de Tailwind: bg-gp-bg-2, text-gp-text-3, border-gp-line... */
+  --color-gp-bg-0: var(--gp-bg-0);
+  --color-gp-bg-1: var(--gp-bg-1);
+  --color-gp-bg-2: var(--gp-bg-2);
+  --color-gp-bg-3: var(--gp-bg-3);
+  --color-gp-line: var(--gp-line);
+  --color-gp-line-strong: var(--gp-line-strong);
+  --color-gp-line-accent: var(--gp-line-accent);
+  --color-gp-text-1: var(--gp-text-1);
+  --color-gp-text-2: var(--gp-text-2);
+  --color-gp-text-3: var(--gp-text-3);
+  --color-gp-crimson-700: var(--gp-crimson-700);
+  --color-gp-crimson-600: var(--gp-crimson-600);
+  --color-gp-crimson-400: var(--gp-crimson-400);
+  --color-gp-crimson-300: var(--gp-crimson-300);
+  --color-gp-crimson-tint: var(--gp-crimson-tint);
+  --color-gp-ok: var(--gp-ok);
+  --color-gp-whatsapp: var(--gp-whatsapp);
+  --radius-gp-sm: 6px;
+  --radius-gp-md: 10px;
+  --radius-gp-lg: 16px;
+  --ease-gp-out: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+/* ---------- Tokens de God's Plan (DESIGN_SYSTEM.md, copiados tal cual) ---------- */
+:root {
+  --gp-bg-0: #0b0a0a;
+  --gp-bg-1: #110f0f;
+  --gp-bg-2: #171414;
+  --gp-bg-3: #1e1a1a;
+  --gp-line: rgba(255, 236, 234, 0.08);
+  --gp-line-strong: rgba(255, 236, 234, 0.15);
+  --gp-line-accent: rgba(239, 80, 88, 0.45);
+  --gp-text-1: #f4efee;
+  --gp-text-2: #bcb3b1;
+  --gp-text-3: #958b89;
+  --gp-crimson-700: #8a0303;
+  --gp-crimson-600: #a3080c;
+  --gp-crimson-400: #ef5058;
+  --gp-crimson-300: #ff8a8f;
+  --gp-crimson-tint: rgba(138, 3, 3, 0.16);
+  --gp-ok: #3ecf8e;
+  --gp-whatsapp: #25d366;
+  --gp-font-display: var(--font-montserrat), var(--font-inter), system-ui, sans-serif;
+  --gp-font-sans: var(--font-inter), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --gp-font-mono: var(--font-martian), ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --gp-max: 78rem;
+  --gp-gutter: clamp(1.25rem, 0.6rem + 2.6vw, 2.5rem);
+}
+
+/* Tema claro de GodsTap: el sistema de God's Plan es oscuro; estos valores solo
+   mantienen legibles (>= 4.5:1) los componentes .gp-* sobre el fondo claro. */
+html[data-theme="light"] {
+  --gp-bg-0: #f8f4f3;
+  --gp-bg-1: #f1ebea;
+  --gp-bg-2: #ffffff;
+  --gp-bg-3: #ece3e2;
+  --gp-line: rgba(28, 20, 20, 0.1);
+  --gp-line-strong: rgba(28, 20, 20, 0.18);
+  --gp-line-accent: rgba(163, 8, 12, 0.4);
+  --gp-text-1: #1c1414;
+  --gp-text-2: #4a3d3c;
+  --gp-text-3: #6e5a58;
+  --gp-crimson-400: #a3080c;
+  --gp-crimson-300: #8a0303;
 }
 
 /* ---------- Tema oscuro (por defecto) ---------- */
 html {
   color-scheme: dark;
 
-  --color-slate-50: #faf6f6;
-  --color-slate-100: #f2eaea;
-  --color-slate-200: #e5d9da;
-  --color-slate-300: #cfbcbe;
-  --color-slate-400: #b49a9d;
-  --color-slate-500: #9a7b7f;
-  --color-slate-600: #5a3d41;
-  --color-slate-700: #3a2528;
-  --color-slate-800: #261819;
-  --color-slate-900: #170d0f;
-  --color-slate-950: #0e0708;
+  /* Neutros de God's Plan: 950 = --gp-bg-0, 900 = --gp-bg-2, 800 = --gp-bg-3,
+     100 = --gp-text-1, 400 = --gp-text-2, 500 = --gp-text-3 */
+  --color-slate-50: #faf7f6;
+  --color-slate-100: #f4efee;
+  --color-slate-200: #e2dbd9;
+  --color-slate-300: #cfc7c5;
+  --color-slate-400: #bcb3b1;
+  --color-slate-500: #958b89;
+  --color-slate-600: #5c5351;
+  --color-slate-700: #3a3332;
+  --color-slate-800: #1e1a1a;
+  --color-slate-900: #171414;
+  --color-slate-950: #0b0a0a;
 }
 
 /* ---------- Tema claro ---------- */
@@ -341,4 +415,24 @@ label,
   .ms-in {
     animation: none;
   }
+}
+
+/* ---------- Sello "by God's Plan" y franja de la familia (DESIGN_SYSTEM.md §8) ---------- */
+@layer components {
+  .gp-by { display: inline-flex; align-items: center; gap: .4rem; padding: .2rem .5rem; border: 1px solid var(--gp-line); border-radius: 6px; font-family: var(--gp-font-mono); font-stretch: 87.5%; font-size: .6875rem; line-height: 1.4; color: var(--gp-text-3); text-decoration: none; white-space: nowrap; transition: color 160ms, border-color 160ms; }
+  .gp-by:hover { color: var(--gp-text-1); border-color: var(--gp-line-strong); }
+  .gp-by__mark { width: .8rem; height: .8rem; fill: var(--gp-crimson-400); flex: none; }
+  /* Variante de GodsTap: sobre el panel rojo de inicio de sesión */
+  .gp-by--on-red { color: #ffd9db; border-color: rgba(255, 255, 255, 0.28); }
+  .gp-by--on-red:hover { color: #fff; border-color: rgba(255, 255, 255, 0.6); }
+  .gp-by--on-red .gp-by__mark { fill: #fff; }
+
+  .gp-family { border-top: 1px solid var(--gp-line); background: var(--gp-bg-0); }
+  .gp-family__inner { max-width: var(--gp-max, 78rem); margin: 0 auto; padding: 1.1rem var(--gp-gutter, 1.5rem); display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .75rem 1.5rem; font-family: var(--gp-font-mono); font-stretch: 87.5%; font-size: .75rem; color: var(--gp-text-3); }
+  .gp-family__home { display: inline-flex; align-items: center; gap: .5rem; color: inherit; text-decoration: none; }
+  .gp-family__home strong { color: var(--gp-text-1); font-weight: 500; }
+  .gp-family__links { display: flex; gap: 1.25rem; }
+  .gp-family__links a { color: var(--gp-text-3); text-decoration: none; transition: color 160ms; }
+  .gp-family__links a:hover, .gp-family__links a[aria-current="page"] { color: var(--gp-text-1); }
+  .gp-family__links a[aria-current="page"] { text-decoration: underline; text-decoration-color: var(--gp-crimson-400); text-underline-offset: 4px; }
 }

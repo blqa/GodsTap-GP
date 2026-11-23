@@ -1,14 +1,18 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { GpBy } from "@/components/GodsPlan";
 import { DEMOS } from "@/lib/demoSites";
 
 export default function DemoIndex() {
   return (
     <main className="min-h-dvh bg-slate-950 px-5 py-10 text-slate-50">
       <div className="mx-auto max-w-5xl">
-        <Link href="/" aria-label="Ir al inicio">
-          <Logo showBy />
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/" aria-label="Ir al inicio">
+            <Logo />
+          </Link>
+          <GpBy className="hidden sm:inline-flex" />
+        </div>
         <h1 className="mt-10 text-3xl font-bold tracking-tight sm:text-4xl">Ejemplos de micrositios</h1>
         <p className="mt-3 max-w-xl text-slate-400">
           Así se ve lo que abre el celular de tu cliente al acercarlo al GT. Ábrelos desde tu teléfono para ver el

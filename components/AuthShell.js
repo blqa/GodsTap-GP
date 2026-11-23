@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { GpBy } from "@/components/GodsPlan";
 import ThemeToggle from "@/components/ThemeToggle";
 import { AGENCY_URL } from "@/lib/site";
 
@@ -23,9 +24,12 @@ export default function AuthShell({ title, subtitle, children, footer }) {
           <circle cx="200" cy="200" r="185" strokeOpacity="0.06" strokeWidth="1.2" />
         </svg>
 
-        <Link href="/" className="relative w-fit" aria-label="Ir al inicio">
-          <Logo light showBy />
-        </Link>
+        <div className="relative flex w-fit items-center gap-3">
+          <Link href="/" aria-label="Ir al inicio">
+            <Logo light />
+          </Link>
+          <GpBy onRed />
+        </div>
 
         <div className="relative max-w-md">
           <p className="font-display text-4xl font-bold leading-[1.05] tracking-tight text-white xl:text-5xl">

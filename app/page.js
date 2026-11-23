@@ -1,5 +1,6 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
+import { GpBy, GpFamily } from "@/components/GodsPlan";
 import ThemeToggle from "@/components/ThemeToggle";
 import HeaderAuth from "@/components/landing/HeaderAuth";
 import HeroPhone from "@/components/landing/HeroPhone";
@@ -133,9 +134,12 @@ export default function HomePage() {
       {/* Barra superior */}
       <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-5">
-          <Link href="/" aria-label="GodsTap · by God’s Plan, inicio">
-            <Logo showBy />
-          </Link>
+          <div className="flex items-center gap-3">
+            <Link href="/" aria-label="GodsTap, inicio">
+              <Logo />
+            </Link>
+            <GpBy className="hidden sm:inline-flex" />
+          </div>
           <nav className="flex items-center gap-1 sm:gap-2">
             <a href="#como-funciona" className="hidden px-3 py-2 text-sm text-slate-300 transition hover:text-slate-50 md:block">
               Cómo funciona
@@ -399,6 +403,7 @@ export default function HomePage() {
           </nav>
         </div>
       </footer>
+      <GpFamily />
 
       {/* Botón flotante de WhatsApp */}
       <a
