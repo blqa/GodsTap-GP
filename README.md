@@ -2,7 +2,7 @@
 
 Smart Tags NFC para negocios locales. El cliente acerca el celular a su **GT** (la etiqueta física) y aparece su negocio: menú, redes, promociones o lo que el dueño decida, editable en cualquier momento desde su cuenta.
 
-**Sitio:** https://godstap.godsplan.site
+**Sitio:** https://godstap.godsplan.dev
 
 ## Cómo funciona
 
@@ -49,5 +49,5 @@ Aviso de privacidad en `/privacidad` y términos y condiciones en `/terminos`.
 
 ---
 
-Un producto de **[God’s Plan](https://godsplan.site)** · agencia de proyectos.
-Contacto: [contacto@godsplan.site](mailto:contacto@godsplan.site)
+Un producto de **[God’s Plan](https://godsplan.dev)** · agencia de proyectos.
+Contacto: [contacto@godsplan.dev](mailto:contacto@godsplan.dev)

@@ -20,8 +20,8 @@ import ScansPanel from "@/components/dashboard/ScansPanel";
 import { PLANS, formatDate, planStatus, tagIsPaid } from "@/lib/plans";
 import { whatsappLink } from "@/lib/contact";
 import { logEvent } from "@/lib/audit";
+import { isBaseUrl } from "@/lib/site";
 
-const BASE_URL = "https://godstap.godsplan.site";
 const DEFAULT_NAME = "GT sin activar";
 
 const inputClass =
@@ -36,7 +36,7 @@ function isValidUrl(url) {
 }
 
 function isPlaceholderUrl(url) {
-  return !url || url.replace(/\/$/, "") === BASE_URL;
+  return !url || isBaseUrl(url);
 }
 
 function needsSetup(tag) {

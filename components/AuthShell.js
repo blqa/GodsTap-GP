@@ -1,6 +1,7 @@
 import Link from "next/link";
 import Logo from "@/components/Logo";
 import ThemeToggle from "@/components/ThemeToggle";
+import { AGENCY_URL } from "@/lib/site";
 
 // Marco compartido de inicio de sesión y registro.
 // En pantallas grandes: panel rojo de marca a la izquierda y formulario a la derecha.
@@ -35,7 +36,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
           </p>
         </div>
 
-        <p className="relative text-xs text-brand-200">© 2026 GodsTap · by <a href="https://godsplan.site" target="_blank" rel="noopener noreferrer" className="hover:underline">God’s Plan</a></p>
+        <p className="relative text-xs text-brand-200">© 2026 GodsTap · by <a href={AGENCY_URL} target="_blank" rel="noopener noreferrer" className="hover:underline">God’s Plan</a></p>
       </aside>
 
       {/* Formulario */}
@@ -54,7 +55,7 @@ export default function AuthShell({ title, subtitle, children, footer }) {
           {footer && <div className="mt-6 text-center text-sm text-slate-400">{footer}</div>}
         </div>
 
-        <p className="text-center text-xs text-slate-500 lg:hidden">© 2026 GodsTap · by <a href="https://godsplan.site" target="_blank" rel="noopener noreferrer" className="hover:underline">God’s Plan</a></p>
+        <p className="text-center text-xs text-slate-500 lg:hidden">© 2026 GodsTap · by <a href={AGENCY_URL} target="_blank" rel="noopener noreferrer" className="hover:underline">God’s Plan</a></p>
       </section>
     </main>
   );

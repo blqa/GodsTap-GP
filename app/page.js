@@ -9,6 +9,7 @@ import Microsite from "@/components/Microsite";
 import { getDemo } from "@/lib/demoSites";
 import SuggestButton from "@/components/SuggestButton";
 import { CONTACT_EMAIL, whatsappLink } from "@/lib/contact";
+import { AGENCY_URL } from "@/lib/site";
 
 const STEPS = [
   {
@@ -383,7 +384,7 @@ export default function HomePage() {
       {/* Pie */}
       <footer className="border-t border-slate-800/80 px-5 py-8">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-4 text-xs text-slate-500 sm:flex-row">
-          <p>© 2026 GodsTap · by <a href="https://godsplan.site" target="_blank" rel="noopener noreferrer" className="transition hover:text-slate-300">God’s Plan</a></p>
+          <p>© 2026 GodsTap · by <a href={AGENCY_URL} target="_blank" rel="noopener noreferrer" className="transition hover:text-slate-300">God’s Plan</a></p>
           <nav className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2">
             <Link href="/privacidad" className="transition hover:text-slate-300">
               Aviso de privacidad

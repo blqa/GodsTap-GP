@@ -1,5 +1,6 @@
 import { Bricolage_Grotesque, Instrument_Sans } from "next/font/google";
 import "./globals.css";
+import { BASE_URL } from "@/lib/site";
 
 const display = Bricolage_Grotesque({
   variable: "--font-bricolage",
@@ -14,7 +15,7 @@ const body = Instrument_Sans({
 });
 
 export const metadata = {
-  metadataBase: new URL("https://godstap.godsplan.site"),
+  metadataBase: new URL(BASE_URL),
   title: "GodsTap · by God’s Plan",
   description: "Smart Tags NFC para negocios locales.",
   openGraph: {
