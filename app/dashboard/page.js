@@ -557,6 +557,9 @@ export default function DashboardPage() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-slate-50">Mis GT</h1>
           <p className="mt-1 text-sm text-slate-400">Administra tus dispositivos NFC vinculados.</p>
+          <a href="/dashboard/nuevo" className="mt-2 inline-block text-sm font-medium text-brand-400 hover:text-brand-300 hover:underline">
+            Probar el panel nuevo →
+          </a>
         </div>
         <button
           onClick={() => {

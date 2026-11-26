@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { deleteField, doc, serverTimestamp, updateDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { kindOf } from "@/lib/linkIcons";
@@ -41,7 +41,7 @@ function isValidUrl(url) {
   }
 }
 
-function Locked({ title, tagId, children }) {
+function Locked({ title, tagId, children, inline = false }) {
   return (
     <div className="rounded-xl border border-dashed border-slate-700 bg-slate-950/60 p-4">
       <div className="flex items-center gap-2">
@@ -56,16 +56,22 @@ function Locked({ title, tagId, children }) {
         href={whatsappLink("Hola, quiero el plan Pro de GodsTap para mi GT " + tagId)}
         target="_blank"
         rel="noopener noreferrer"
-        className="mt-3 inline-block text-sm text-brand-400 hover:underline"
+        className={
+          inline
+            ? "mt-3 inline-flex items-center gap-2 rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-brand-500"
+            : "mt-3 inline-block text-sm text-brand-400 hover:underline"
+        }
       >
-        Pedir el plan Pro
+        {inline ? "Desbloquear Pro" : "Pedir el plan Pro"}
       </a>
     </div>
   );
 }
 
 // admin: el administrador puede editar todo, aunque el plan del GT no lo incluya
-export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
+// inline: el editor va dentro de la página (panel nuevo) en lugar de abrirse en una ventana encima;
+//         el modo (redirección / micrositio) se cambia desde el switch del panel, no aquí.
+export default function TagEditor({ tag, onClose, onSaved, admin = false, inline = false, initialTab = "general" }) {
   const paid = admin || tagIsPaid(tag);
   const status = planStatus(tag);
 
@@ -103,7 +109,17 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     Array.isArray(tag.gallery) ? tag.gallery.filter((g) => typeof g === "string").slice(0, GALLERY_MAX) : []
   );
   const [hours, setHours] = useState(() => cleanHours(tag.hours) || EMPTY_HOURS);
-  const [tab, setTab] = useState("general");
+  const [tab, setTab] = useState(initialTab);
+  const [savedOk, setSavedOk] = useState(false);
+  // Panel nuevo: el botón flotante «Ver cómo queda» solo aparece mientras el editor está en pantalla
+  const formRef = useRef(null);
+  const [inView, setInView] = useState(false);
+  useEffect(() => {
+    if (!inline || !formRef.current || typeof IntersectionObserver === "undefined") return undefined;
+    const io = new IntersectionObserver(([entry]) => setInView(entry.isIntersecting), { threshold: 0.05 });
+    io.observe(formRef.current);
+    return () => io.disconnect();
+  }, [inline]);
   const [view, setView] = useState("edit"); // en celular: «edit» o «preview»
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -330,6 +346,12 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
         business_name: cleanName,
         summary: changed.length ? `Cambió: ${changed.join(", ")}.` : "Guardó sin cambios.",
       });
+      if (inline) {
+        setSaving(false);
+        setSavedOk(true);
+        await onSaved();
+        return;
+      }
       await onSaved();
       onClose();
     } catch (err) {
@@ -347,16 +369,22 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
     }`;
 
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-black/70 p-4 backdrop-blur-sm">
+    <div className={inline ? "" : "fixed inset-0 z-50 overflow-y-auto bg-black/70 p-4 backdrop-blur-sm"}>
       <form
+        ref={formRef}
         onSubmit={handleSave}
-        className="mx-auto my-4 w-full max-w-5xl rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl sm:my-6"
+        onChange={() => savedOk && setSavedOk(false)}
+        className={
+          inline
+            ? "w-full rounded-2xl border border-slate-800 bg-slate-900/60"
+            : "mx-auto my-4 w-full max-w-5xl rounded-2xl border border-slate-800 bg-slate-900 shadow-2xl sm:my-6"
+        }
       >
         <div className="p-4 pb-3 sm:p-6 sm:pb-4">
           <div className="flex items-start justify-between gap-4">
             <div className="flex flex-wrap items-center gap-3">
               <h2 className="text-lg font-semibold text-slate-50">
-                Editar GT <span className="font-mono text-sm text-slate-400">{tag.id}</span>
+                {inline ? "Editor" : "Editar GT"} <span className="font-mono text-sm text-slate-400">{tag.id}</span>
               </h2>
               <span
                 className={`rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ${
@@ -370,9 +398,11 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   : `Plan ${PLANS[status.plan].label}${status.until ? ` · vence el ${formatDate(status.until)}` : ""}`}
               </span>
             </div>
-            <button type="button" onClick={onClose} aria-label="Cerrar" className="text-slate-500 hover:text-slate-50">
-              ✕
-            </button>
+            {!inline && (
+              <button type="button" onClick={onClose} aria-label="Cerrar" className="text-slate-500 hover:text-slate-50">
+                ✕
+              </button>
+            )}
           </div>
 
           {admin && (
@@ -383,8 +413,8 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
         </div>
 
         {/* Barra fija: en celular alterna entre editar y ver la vista previa; las pestañas dividen el editor en partes cortas */}
-        <div className="sticky top-0 z-20 border-y border-slate-800 bg-slate-900 px-4 sm:px-6">
-          {isMicro && (
+        <div className={`sticky z-20 border-y border-slate-800 bg-slate-900 px-4 sm:px-6 ${inline ? "top-16" : "top-0"}`}>
+          {isMicro && !inline && (
             <div className="grid grid-cols-2 gap-1 pt-2 lg:hidden">
               {[
                 ["edit", "Editar"],
@@ -436,13 +466,15 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                     <label className="mb-1.5 block text-sm font-medium text-slate-300">Nombre del negocio</label>
                     <input value={name} onChange={(e) => setName(e.target.value)} maxLength={80} className={inputClass} />
                   </div>
-                  <div>
-                    <label className="mb-1.5 block text-sm font-medium text-slate-300">Modo</label>
-                    <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputClass}>
-                      <option value="microsite">Micrositio</option>
-                      <option value="redirect">Redirección directa</option>
-                    </select>
-                  </div>
+                  {!inline && (
+                    <div>
+                      <label className="mb-1.5 block text-sm font-medium text-slate-300">Modo</label>
+                      <select value={mode} onChange={(e) => setMode(e.target.value)} className={inputClass}>
+                        <option value="microsite">Micrositio</option>
+                        <option value="redirect">Redirección directa</option>
+                      </select>
+                    </div>
+                  )}
                   {mode === "microsite" && (
                     <div className="sm:col-span-2">
                       <label className="mb-1.5 block text-sm font-medium text-slate-300">Frase debajo del nombre (opcional)</label>
@@ -463,7 +495,11 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   </div>
                 </div>
 
-                {isMicro && <HoursEditor hours={hours} setHours={setHours} />}
+                {isMicro && (
+                  <div id="horario" className="scroll-mt-32">
+                    <HoursEditor hours={hours} setHours={setHours} />
+                  </div>
+                )}
 
                 {mode === "redirect" && (
                   <p className="rounded-lg border border-slate-800 bg-slate-950/60 px-4 py-3 text-xs text-slate-500">
@@ -490,7 +526,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
                   lowContrast={lowContrast}
                 />
               ) : (
-                <Locked title="Diseño personalizado" tagId={tag.id}>
+                <Locked title="Diseño personalizado" tagId={tag.id} inline={inline}>
                   Plantillas, logo de tu negocio, foto de portada, colores, tipo de letra y animación de fondo.
                 </Locked>
               ))}
@@ -499,7 +535,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
               (paid ? (
                 <LinksEditor links={links} setLinks={setLinks} />
               ) : (
-                <Locked title="Botones adicionales" tagId={tag.id}>
+                <Locked title="Botones adicionales" tagId={tag.id} inline={inline}>
                   Agrega hasta {MAX_LINKS} botones: WhatsApp, Instagram, menú, ubicación, reseñas y más.
                 </Locked>
               ))}
@@ -508,7 +544,7 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
               (paid ? (
                 <MenuEditor menu={menu} onChange={setMenu} />
               ) : (
-                <Locked title="Menú, servicios o catálogo" tagId={tag.id}>
+                <Locked title="Menú, servicios o catálogo" tagId={tag.id} inline={inline}>
                   Muestra tu menú, tus servicios con precio o tu catálogo, con categorías, al tocar un botón.
                 </Locked>
               ))}
@@ -517,14 +553,14 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
               (paid ? (
                 <GalleryEditor gallery={gallery} setGallery={setGallery} />
               ) : (
-                <Locked title="Galería de fotos" tagId={tag.id}>
+                <Locked title="Galería de fotos" tagId={tag.id} inline={inline}>
                   Sube hasta {GALLERY_MAX} fotos de tu trabajo, tu local o tus productos para que tus clientes las vean al tocar un botón.
                 </Locked>
               ))}
           </div>
 
           {/* Columna derecha: vista previa (en celular se abre con el botón de arriba) */}
-          <div className={`lg:sticky lg:top-16 lg:self-start ${view === "edit" ? "hidden lg:block" : ""}`}>
+          <div className={`lg:sticky lg:self-start ${inline ? "lg:top-32" : "lg:top-16"} ${view === "edit" ? "hidden lg:block" : ""}`}>
             <p className="mb-3 text-center text-xs font-medium text-slate-500">Vista previa</p>
             {isMicro ? (
               <div className="mx-auto w-full max-w-[300px] rounded-[2.5rem] border-4 border-slate-700 bg-slate-800 p-2 shadow-xl">
@@ -553,6 +589,30 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
           </div>
         </div>
 
+        {/* Panel nuevo, en celular: botón flotante para ver cómo queda y regresar a editar */}
+        {inline && isMicro && inView && (
+          <button
+            type="button"
+            onClick={() => {
+              setView(view === "edit" ? "preview" : "edit");
+              document.getElementById("gt-editor")?.scrollIntoView({ behavior: "smooth", block: "start" });
+            }}
+            className="fixed bottom-20 right-4 z-40 inline-flex items-center gap-2 rounded-full bg-brand-600 px-4 py-3 text-sm font-semibold text-white shadow-lg shadow-black/30 transition hover:bg-brand-500 lg:hidden"
+          >
+            {view === "edit" ? (
+              <>
+                <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                Ver cómo queda
+              </>
+            ) : (
+              "← Seguir editando"
+            )}
+          </button>
+        )}
+
         {/* Barra de guardar siempre a la mano */}
         <div className="sticky bottom-0 z-20 flex flex-wrap items-center justify-end gap-3 rounded-b-2xl border-t border-slate-800 bg-slate-900 px-4 py-3 sm:px-6">
           {error && (
@@ -566,12 +626,17 @@ export default function TagEditor({ tag, onClose, onSaved, admin = false }) {
             context={`Editor del GT ${tag.id || ""}`}
             className="mr-auto hidden text-sm sm:inline"
           />
+          {savedOk && !error && (
+            <p role="status" className="text-sm font-medium text-emerald-400">
+              ✓ Guardado. Ya lo ven tus clientes.
+            </p>
+          )}
           <button
             type="button"
             onClick={onClose}
             className="rounded-lg border border-slate-700 px-5 py-2 text-sm font-medium text-slate-300 transition hover:bg-slate-800"
           >
-            Cancelar
+            {inline ? "Descartar" : "Cancelar"}
           </button>
           <button
             type="submit"

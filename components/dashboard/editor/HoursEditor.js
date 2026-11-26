@@ -4,7 +4,7 @@ import { memo } from "react";
 import { DAY_NAMES, EMPTY_HOURS, parseRange } from "@/lib/hours";
 
 const timeClass =
-  "w-full rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-50 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 disabled:opacity-40";
+  "w-full min-w-0 rounded-lg border border-slate-700 bg-slate-950 px-2 py-2 text-sm text-slate-50 outline-none transition focus:border-brand-500 focus:ring-2 focus:ring-brand-500/30 disabled:opacity-40";
 const small = "rounded-md border border-slate-700 px-2.5 py-1.5 text-xs text-slate-300 transition hover:bg-slate-800";
 
 const DEFAULT_RANGE = "09:00-18:00";
@@ -48,8 +48,8 @@ function HoursEditor({ hours, setHours }) {
               const isOpen = Boolean(parseRange(hours[i]));
               const [o, c] = isOpen ? hours[i].split("-") : ["", ""];
               return (
-                <li key={dayName} className="grid grid-cols-[6.5rem_1fr_1fr] items-center gap-2">
-                  <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-200">
+                <li key={dayName} className="grid grid-cols-2 items-center gap-2 sm:grid-cols-[6.5rem_minmax(0,1fr)_minmax(0,1fr)]">
+                  <label className="col-span-2 flex cursor-pointer items-center gap-2 text-sm text-slate-200 sm:col-span-1">
                     <input
                       type="checkbox"
                       checked={isOpen}

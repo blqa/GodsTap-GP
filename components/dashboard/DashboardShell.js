@@ -126,6 +126,8 @@ export default function DashboardShell({ children }) {
 
   const isAdmin = isAdminUid(user.uid);
   const inAdmin = pathname?.startsWith("/dashboard/admin");
+  // El panel nuevo trae su propio pie (sugerencias + modo claro/oscuro), así que aquí no se repite
+  const newPanel = pathname === "/dashboard/nuevo";
 
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100">
@@ -156,7 +158,7 @@ export default function DashboardShell({ children }) {
               </Link>
             )}
 
-            <ThemeToggle />
+            {!newPanel && <ThemeToggle />}
 
             <button
               onClick={handleSignOut}
@@ -174,10 +176,12 @@ export default function DashboardShell({ children }) {
       <main className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
         {children}
       </main>
+      {!newPanel && (
       <footer className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-slate-800/80 px-4 py-6 text-center sm:flex-row sm:px-6 sm:text-left lg:px-8">
         <p className="text-sm text-slate-500">¿Tienes una idea o algo no te funciona? Cuéntanos, leemos todo.</p>
         <SuggestButton context={`Panel (${user.email || "sin correo"})`} />
       </footer>
+      )}
       <GpFamily />
     </div>
   );

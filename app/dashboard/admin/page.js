@@ -35,7 +35,8 @@ function randomString(length, chars) {
 }
 
 function downloadCsv(items) {
-  const csv = "id,url,codigo\n" + items.map((i) => `${i.id},${i.url},${i.code}`).join("\n");
+  // url = la que se graba en el chip NFC; url_qr = la que va en el código QR impreso
+  const csv = "id,url,url_qr,codigo\n" + items.map((i) => `${i.id},${i.url},${i.qr},${i.code}`).join("\n");
   const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -137,7 +138,8 @@ export default function AdminPage() {
           created_at: serverTimestamp(),
         });
         batch.set(doc(db, "activation_codes", id), { code });
-        items.push({ id, url: `${BASE_URL}/t/${id}`, code });
+        // ?v=nfc / ?v=qr: así el panel del cliente sabe si entraron por el chip o por el QR
+        items.push({ id, url: `${BASE_URL}/t/${id}?v=nfc`, qr: `${BASE_URL}/t/${id}?v=qr`, code });
       }
       addLogToBatch(batch, {
         action: "tag_batch_created",
@@ -402,7 +404,8 @@ export default function AdminPage() {
             {created.map((c) => (
               <li key={c.id} className="rounded-lg border border-slate-800 bg-slate-950/40 p-3 font-mono text-xs text-slate-300">
                 <p className="font-semibold text-slate-50">{c.id}</p>
-                <p className="mt-1 break-all text-slate-400">{c.url}</p>
+                <p className="mt-1 break-all text-slate-400">Chip: {c.url}</p>
+                <p className="mt-1 break-all text-slate-400">QR: {c.qr}</p>
                 <p className="mt-1">Código: <span className="text-emerald-300">{c.code}</span></p>
               </li>
             ))}
@@ -413,6 +416,7 @@ export default function AdminPage() {
                 <tr>
                   <th className="py-2 pr-4">ID</th>
                   <th className="py-2 pr-4">URL para el chip</th>
+                  <th className="py-2 pr-4">URL para el QR</th>
                   <th className="py-2">Código</th>
                 </tr>
               </thead>
@@ -421,6 +425,7 @@ export default function AdminPage() {
                   <tr key={c.id} className="border-t border-slate-800">
                     <td className="py-2 pr-4">{c.id}</td>
                     <td className="py-2 pr-4">{c.url}</td>
+                    <td className="py-2 pr-4">{c.qr}</td>
                     <td className="py-2">{c.code}</td>
                   </tr>
                 ))}

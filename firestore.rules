@@ -5,6 +5,12 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Un canal de entrada queda igual o sube exactamente 1
+    function viaStep(before, after, k) {
+      return after.get(k, 0) is int
+        && (after.get(k, 0) == before.get(k, 0) || after.get(k, 0) == before.get(k, 0) + 1);
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -154,7 +160,7 @@ service cloud.firestore {
 
     match /scan_days/{docId} {
       // Se crea con el primer escaneo del día (count = 1) o con el primer clic en un botón (clicks con 1 botón)
-      allow create: if request.resource.data.keys().hasOnly(['tag_id', 'owner_uid', 'day', 'count', 'clicks'])
+      allow create: if request.resource.data.keys().hasOnly(['tag_id', 'owner_uid', 'day', 'count', 'clicks', 'via'])
         && request.resource.data.tag_id is string
         && request.resource.data.owner_uid is string
         && request.resource.data.day is string
@@ -163,6 +169,12 @@ service cloud.firestore {
         && request.resource.data.get('count', 1) == 1
         && request.resource.data.get('clicks', {}) is map
         && request.resource.data.get('clicks', {}).size() <= 1
+        && request.resource.data.get('via', {}) is map
+        && request.resource.data.get('via', {}).keys().hasOnly(['nfc', 'qr', 'otro'])
+        && request.resource.data.get('via', {}).size() <= 1
+        && request.resource.data.get('via', {}).get('nfc', 1) == 1
+        && request.resource.data.get('via', {}).get('qr', 1) == 1
+        && request.resource.data.get('via', {}).get('otro', 1) == 1
         && get(/databases/$(database)/documents/tags/$(request.resource.data.tag_id)).data.get('owner_uid', null)
              == request.resource.data.owner_uid;
 
@@ -176,6 +188,15 @@ service cloud.firestore {
         && request.resource.data.clicks.size() <= 30
         && request.resource.data.clicks.diff(resource.data.get('clicks', {})).affectedKeys().size() == 1
         && request.resource.data.clicks.diff(resource.data.get('clicks', {})).removedKeys().size() == 0;
+
+      // Canal de entrada (NFC, QR u otro): cada escritura suma 1 a un solo canal
+      allow update: if request.resource.data.diff(resource.data).affectedKeys().hasOnly(['via'])
+        && request.resource.data.via is map
+        && request.resource.data.via.keys().hasOnly(['nfc', 'qr', 'otro'])
+        && viaStep(resource.data.get('via', {}), request.resource.data.via, 'nfc')
+        && viaStep(resource.data.get('via', {}), request.resource.data.via, 'qr')
+        && viaStep(resource.data.get('via', {}), request.resource.data.via, 'otro')
+        && request.resource.data.via.diff(resource.data.get('via', {})).affectedKeys().size() == 1;
 
       allow get, list: if isSignedIn()
         && (resource.data.owner_uid == request.auth.uid || isAdmin());
