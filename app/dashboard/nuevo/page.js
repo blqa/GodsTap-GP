@@ -535,7 +535,8 @@ export default function NewDashboardPage() {
   };
 
   const goToHours = () => {
-    if (headTag && headTag.id !== editTag?.id) {
+    // Con «Todos» elegido, el horario se ajusta en el GT del encabezado
+    if (headTag && (pick === ALL || headTag.id !== editTag?.id)) {
       setPick(headTag.id);
     }
     setEditorTab("general");
@@ -794,14 +795,51 @@ export default function NewDashboardPage() {
         </MetricCard>
       </section>
 
-      {/* 4. Editor + vista previa */}
-      {editTag && (
+      {/* 4a. Con «Todos» elegido: primero se escoge qué GT editar */}
+      {!selected && tags.length > 1 && (
+        <section ref={editorRef} id="gt-editor" className="scroll-mt-20">
+          <h2 className="text-xl font-semibold text-slate-50">¿Cuál quieres editar?</h2>
+          <p className="mt-0.5 text-sm text-slate-500">Arriba ves el total de tus {tags.length} GT. Para cambiar uno, elígelo aquí.</p>
+          <ul className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            {tags.map((t) => {
+              const st = planStatus(t);
+              const tagTotal = periodStats(scanDocs, [t.id], period).total;
+              return (
+                <li key={t.id}>
+                  <button
+                    onClick={() => {
+                      choose(t.id);
+                      setTimeout(() => document.getElementById("gt-editor")?.scrollIntoView({ behavior: "smooth", block: "start" }), 80);
+                    }}
+                    className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-4 text-left transition hover:border-brand-500/50 hover:bg-slate-900"
+                  >
+                    <span className="min-w-0">
+                      <span className="block truncate text-sm font-semibold text-slate-50">{tagLabel(t)}</span>
+                      <span className="mt-0.5 block truncate text-xs text-slate-500">
+                        {t.mode === "redirect" ? "Redirección" : "Micrositio"} · {st.paid ? PLANS[st.plan].label : st.expired ? "Pro vencido" : "Básico"} · {fmt(tagTotal)} toques
+                      </span>
+                    </span>
+                    <span className="shrink-0 rounded-lg border border-slate-700 px-3 py-1.5 text-sm font-medium text-slate-200 transition group-hover:border-brand-500 group-hover:text-slate-50">
+                      Editar
+                    </span>
+                  </button>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
+
+      {/* 4b. Editor + vista previa de un GT */}
+      {editTag && (selected || tags.length === 1) && (
         <section ref={editorRef} id="gt-editor" className="scroll-mt-20 space-y-4">
           <div className="flex flex-wrap items-end justify-between gap-2">
             <div>
               <h2 className="text-xl font-semibold text-slate-50">Editar {tagLabel(editTag)}</h2>
-              {!selected && tags.length > 1 && (
-                <p className="mt-0.5 text-xs text-slate-500">Estás viendo el total. Para editar otro GT, elígelo arriba.</p>
+              {tags.length > 1 && (
+                <button onClick={() => choose(ALL)} className="mt-0.5 text-xs text-slate-500 hover:text-slate-300 hover:underline">
+                  ← Ver todos mis GT
+                </button>
               )}
             </div>
             <a href={`/t/${editTag.id}`} target="_blank" rel="noopener noreferrer" className="text-sm text-slate-300 hover:text-slate-50 hover:underline">
