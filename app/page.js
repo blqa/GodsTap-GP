@@ -342,7 +342,7 @@ export default function HomePage() {
             <div className="gpk-story__head">
               <p className="tag" data-reveal><span>El problema</span></p>
               <h2 className="gpk-two" id="problema-t" data-reveal>
-                Tus clientes sí te quieren calificar.<span>Solo no encuentran cómo.</span>
+                Tus clientes sí te quieren calificar.{" "}<span>Solo no encuentran cómo.</span>
               </h2>
               <p className="gpk-story__lede" data-reveal style={{ "--d": 1 }}>
                 Buscarte en Google, escribir tu WhatsApp o pedir el menú: cada paso de más es un cliente que se rinde.
@@ -472,7 +472,7 @@ export default function HomePage() {
             <div className="gpk-story__head">
               <p className="tag" data-reveal><span>Para quién es</span></p>
               <h2 className="gpk-two" id="fit-t" data-reveal>
-                Mejor decirlo claro.<span>El GT no es para todos.</span>
+                Mejor decirlo claro.{" "}<span>El GT no es para todos.</span>
               </h2>
               <p className="gpk-story__lede" data-reveal style={{ "--d": 1 }}>Así sabes si te conviene antes de pedirlo.</p>
             </div>
