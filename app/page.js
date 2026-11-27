@@ -1,5 +1,7 @@
 import Link from "next/link";
+import Script from "next/script";
 import "./estudio.css";
+import "./gp-kit.css";
 import Logo from "@/components/Logo";
 import { GpBy, GpFamily } from "@/components/GodsPlan";
 import HeaderAuth from "@/components/landing/HeaderAuth";
@@ -38,7 +40,7 @@ const STEPS = [
 
 const FEATURES = [
   {
-    icon: "arrow",
+    icon: "zap",
     tag: "Modo directo",
     title: "Redirección directa",
     desc: "Lleva al cliente de inmediato a tu menú, tu WhatsApp, tu Instagram o tus reseñas de Google.",
@@ -144,31 +146,79 @@ const FAQ = [
   },
 ];
 
+
+// Historia de la página (UI UX Pro Max: problema → cómo funciona → solución → cierre; estilo Craft)
+const PAINS = [
+  {
+    title: "Buscarte en Google les da flojera",
+    desc: "Quieren dejarte 5 estrellas, pero entre buscar tu negocio y encontrar el botón, se les olvida.",
+    fix: "Lo resuelve un GT que abre directo tus reseñas.",
+  },
+  {
+    title: "Tu menú impreso ya no está al día",
+    desc: "Cambiaste un precio o un platillo y la hoja de la mesa sigue igual.",
+    fix: "Lo resuelve el menú digital: lo cambias desde tu panel.",
+  },
+  {
+    title: "Te preguntan lo mismo todo el día",
+    desc: "La clave del WiFi, tu WhatsApp, tu horario.",
+    fix: "Lo resuelve un micrositio con WiFi, horario y WhatsApp a un toque.",
+  },
+];
+
+const FIT_YES = [
+  ["Tienes mostrador, mesas o una caja donde atiendes", "El GT se pega donde tus clientes lo vean y lo toquen."],
+  ["Quieres más reseñas en Google", "Un toque y llegan directo a calificarte."],
+  ["Cambias menú, precios o promociones seguido", "Lo actualizas desde tu panel sin reimprimir nada."],
+  ["No quieres que tus clientes instalen nada", "Basta con acercar el celular."],
+];
+const FIT_NO = [
+  ["Casi no recibes clientes en persona", "Si vendes solo en línea, el GT tendrá poco uso."],
+  ["Necesitas una tienda en línea completa", "Para eso te conviene una página web; en God’s Plan también las hacemos."],
+];
+
+// Opciones del buscador (Ctrl/⌘ + K) del kit de God's Plan
+const CMDK = [
+  { group: "Ir a", label: "Cómo funciona", href: "#como-funciona", keywords: "pasos activar vincular" },
+  { group: "Ir a", label: "Pruébalo en 30 segundos", href: "#configurador", keywords: "configurar simulador demo" },
+  { group: "Ir a", label: "Para quién es", href: "#para-quien" },
+  { group: "Ir a", label: "Planes y precios", href: "#planes", keywords: "costo cuanto cuesta pro basico" },
+  { group: "Ir a", label: "Preguntas frecuentes", href: "#preguntas", keywords: "dudas faq" },
+  ...PLANS.map((p) => ({ group: "Planes", label: `Plan ${p.name}`, hint: p.price, href: "#planes", keywords: p.features.join(" ") })),
+  ...FAQ.map((f) => ({ group: "Preguntas", label: f.q, href: "#preguntas", keywords: f.a })),
+  { group: "Cuenta", label: "Crear mi cuenta", href: "/register", keywords: "registro activar gt" },
+  { group: "Cuenta", label: "Iniciar sesión", href: "/login", keywords: "entrar panel" },
+  { group: "Cuenta", label: "Ver ejemplos de páginas", href: "/demo", keywords: "demo cafeteria barberia consultorio" },
+  { group: "Acciones", label: "Pedir un GT por WhatsApp", hint: "55 1059 0927", href: "https://wa.me/525510590927?text=Hola%2C%20quiero%20un%20GT%20de%20GodsTap", keywords: "comprar contacto" },
+  { group: "Acciones", label: "Copiar el correo", hint: CONTACT_EMAIL, action: `copy:${CONTACT_EMAIL}`, toast: `Correo copiado: ${CONTACT_EMAIL}`, keywords: "email mail" },
+  { group: "Acciones", label: "Ir a God’s Plan", hint: "godsplan.dev", href: AGENCY_URL },
+];
+
 // Cinta de lo que puede abrir un GT (decorativa)
 const RIBBON = ["Menú", "WhatsApp", "Reseñas en Google", "Instagram", "WiFi para clientes", "Horario", "Catálogo", "Pagos", "Galería", "Ubicación", "Estadísticas", "Guardar contacto"];
 
-// Íconos de trazo (1.6px, extremos redondeados), igual que godsplan.dev
-const PATHS = {
-  arrow: "M4 12h15M13 6l6 6-6 6",
-  out: "M7 17 17 7M8 7h9v9",
-  check: "m5 12.5 4.5 4.5L19 7.5",
-  page: "M6 3.5h12v17H6zM9 8h6M9 12h6M9 16h4",
-  edit: "M4 20h4L19 9l-4-4L4 16zM13.5 6.5l4 4",
-  phone: "M8 2.5h8a1.5 1.5 0 0 1 1.5 1.5v16a1.5 1.5 0 0 1-1.5 1.5H8A1.5 1.5 0 0 1 6.5 20V4A1.5 1.5 0 0 1 8 2.5zM11 18.5h2",
-  nfc: "M8.5 8.5a5 5 0 0 1 0 7M11.5 6a8.5 8.5 0 0 1 0 12M14.5 3.5a12 12 0 0 1 0 17M5.5 11a1 1 0 1 0 0 2 1 1 0 0 0 0-2z",
-  star: "m12 3.5 2.6 5.3 5.9.9-4.3 4.1 1 5.8-5.2-2.7-5.2 2.7 1-5.8-4.3-4.1 5.9-.9z",
-  menu: "M6 3.5h12v17H6zM9 8h6M9 12h6M9 16h4",
-  wifi: "M2.5 9a14 14 0 0 1 19 0M5.5 12.5a9.5 9.5 0 0 1 13 0M8.5 16a5 5 0 0 1 7 0M12 19.5h.01",
-  mail: "M3 5h18v14H3zM4 7l8 6 8-6",
-  chat: "M5 5h14a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2h-8l-5 4v-4H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2z",
+// Íconos de Lucide (ISC, lucide.dev), copiados de lucide/icons/*.svg
+const LUCIDE = {
+  arrow: "<path d=\"M5 12h14\" /> <path d=\"m12 5 7 7-7 7\" />",
+  out: "<path d=\"M7 7h10v10\" /> <path d=\"M7 17 17 7\" />",
+  check: "<path d=\"M20 6 9 17l-5-5\" />",
+  page: "<path d=\"M6 22a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h8a2.4 2.4 0 0 1 1.704.706l3.588 3.588A2.4 2.4 0 0 1 20 8v12a2 2 0 0 1-2 2z\" /> <path d=\"M14 2v5a1 1 0 0 0 1 1h5\" /> <path d=\"M10 9H8\" /> <path d=\"M16 13H8\" /> <path d=\"M16 17H8\" />",
+  edit: "<path d=\"M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z\" /> <path d=\"m15 5 4 4\" />",
+  phone: "<rect x=\"6\" y=\"2\" width=\"12\" height=\"20\" rx=\"2\" ry=\"2\" /> <path d=\"M12 18h.01\" />",
+  nfc: "<path d=\"M6 8.32a7.43 7.43 0 0 1 0 7.36\" /> <path d=\"M9.46 6.21a11.76 11.76 0 0 1 0 11.58\" /> <path d=\"M12.91 4.1a15.91 15.91 0 0 1 .01 15.8\" /> <path d=\"M16.37 2a20.16 20.16 0 0 1 0 20\" />",
+  star: "<path d=\"M11.525 2.295a.53.53 0 0 1 .95 0l2.31 4.679a2.123 2.123 0 0 0 1.595 1.16l5.166.756a.53.53 0 0 1 .294.904l-3.736 3.638a2.123 2.123 0 0 0-.611 1.878l.882 5.14a.53.53 0 0 1-.771.56l-4.618-2.428a2.122 2.122 0 0 0-1.973 0L6.396 21.01a.53.53 0 0 1-.77-.56l.881-5.139a2.122 2.122 0 0 0-.611-1.879L2.16 9.795a.53.53 0 0 1 .294-.906l5.165-.755a2.122 2.122 0 0 0 1.597-1.16z\" />",
+  menu: "<path d=\"M12 5v16\" /> <path d=\"M20.001 19A2 2 0 0022 17V5a2 2 0 00-1.999-2L16 3.002A5 5 0 0012 5a5 5 0 00-4-2H4a2 2 0 00-2 2v12a2 2 0 001.999 2H8a5 5 0 014 2 5 5 0 014-2z\" />",
+  wifi: "<path d=\"M12 20h.01\" /> <path d=\"M2 8.82a15 15 0 0 1 20 0\" /> <path d=\"M5 12.859a10 10 0 0 1 14 0\" /> <path d=\"M8.5 16.429a5 5 0 0 1 7 0\" />",
+  mail: "<path d=\"m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7\" /> <rect x=\"2\" y=\"4\" width=\"20\" height=\"16\" rx=\"2\" />",
+  chat: "<path d=\"M2.992 16.342a2 2 0 0 1 .094 1.167l-1.065 3.29a1 1 0 0 0 1.236 1.168l3.413-.998a2 2 0 0 1 1.099.092 10 10 0 1 0-4.777-4.719\" />",
+  search: "<path d=\"m21 21-4.34-4.34\" /> <circle cx=\"11\" cy=\"11\" r=\"8\" />",
+  copy: "<rect width=\"14\" height=\"14\" x=\"8\" y=\"8\" rx=\"2\" ry=\"2\" /> <path d=\"M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2\" />",
+  x: "<path d=\"M18 6 6 18\" /> <path d=\"m6 6 12 12\" />",
+  zap: "<path d=\"M15.914 4a1.5 1.5 0 00-2.474-1.561l-9 9A1.5 1.5 0 005.5 14h4.002a.5.5 0 01.471.666L8.086 20a1.5 1.5 0 002.475 1.56l9-9A1.5 1.5 0 0018.5 10h-3.997a.5.5 0 01-.472-.667z\" />",
 };
 
 function Icon({ name, className = "icon" }) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
-      <path d={PATHS[name]} />
-    </svg>
-  );
+  return <svg className={className} viewBox="0 0 24 24" aria-hidden="true" dangerouslySetInnerHTML={{ __html: LUCIDE[name] }} />;
 }
 
 // Glifo de WhatsApp: Font Awesome Free (CC BY 4.0)
@@ -211,7 +261,12 @@ export default function HomePage() {
             <a href="#planes">Planes</a>
           </nav>
           <div className="hdr__end">
-            <a className="hdr__wa" href={whatsappLink("Hola, quiero información de GodsTap")} target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp">
+            <button type="button" className="gpk-search-btn" data-cmdk-open aria-label="Buscar en GodsTap" data-tip="Busca planes, preguntas y atajos">
+              <Icon name="search" className="gpk-ic" />
+              <span>Buscar</span>
+              <kbd data-cmdk-kbd>Ctrl K</kbd>
+            </button>
+            <a className="hdr__wa" href={whatsappLink("Hola, quiero información de GodsTap")} target="_blank" rel="noopener noreferrer" aria-label="Escríbenos por WhatsApp" data-tip="Escríbenos por WhatsApp">
               <WaIcon />
             </a>
             <HeaderAuth />
@@ -243,8 +298,8 @@ export default function HomePage() {
                 <a href="#configurador" className="btn btn--ghost">Pruébalo en 30 segundos</a>
               </div>
               <ul className="badges" aria-label="Ventajas" data-enter style={{ "--d": 4 }}>
-                <li><span className="dot" aria-hidden="true" />Sin app para tus clientes</li>
-                <li><span className="dot" aria-hidden="true" />Sin cambiar el chip nunca</li>
+                <li tabIndex={0} data-tip="La mayoría de los celulares leen NFC sin instalar nada"><span className="dot" aria-hidden="true" />Sin app para tus clientes</li>
+                <li tabIndex={0} data-tip="Cambias el destino desde tu panel; el chip sigue igual"><span className="dot" aria-hidden="true" />Sin cambiar el chip nunca</li>
               </ul>
             </div>
 
@@ -280,6 +335,32 @@ export default function HomePage() {
           ))}
         </div>
 
+
+        {/* El problema (títulos en dos tonos, estilo Craft) */}
+        <section className="gpk-story" aria-labelledby="problema-t">
+          <div className="wrap">
+            <div className="gpk-story__head">
+              <p className="tag" data-reveal><span>El problema</span></p>
+              <h2 className="gpk-two" id="problema-t" data-reveal>
+                Tus clientes sí te quieren calificar.<span>Solo no encuentran cómo.</span>
+              </h2>
+              <p className="gpk-story__lede" data-reveal style={{ "--d": 1 }}>
+                Buscarte en Google, escribir tu WhatsApp o pedir el menú: cada paso de más es un cliente que se rinde.
+              </p>
+            </div>
+            <div className="gpk-pains" data-reveal style={{ "--d": 2 }}>
+              {PAINS.map((p, i) => (
+                <article key={p.title} className="gpk-pain">
+                  <span className="gpk-pain__n">{String(i + 1).padStart(2, "0")}</span>
+                  <h3>{p.title}</h3>
+                  <p>{p.desc}</p>
+                  <p className="gpk-pain__fix">{p.fix}</p>
+                </article>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* 2. Cómo funciona */}
         <section className="method method--top" id="como-funciona" aria-labelledby="pasos-t">
           <div className="wrap">
@@ -308,6 +389,25 @@ export default function HomePage() {
                 </li>
               ))}
             </ol>
+
+            {/* Llamado al final del capítulo (barra tipo terminal, estilo Craft) */}
+            <div className="gpk-term" data-reveal>
+              <div className="gpk-term__bar" aria-hidden="true"><i /><i /><i /><span>dudas</span></div>
+              <div className="gpk-term__body">
+                <p className="gpk-term__txt">
+                  <strong>¿Tienes dudas antes de pedir tu GT?</strong>
+                  <span>Escríbenos y te respondemos personalmente.</span>
+                </p>
+                <button type="button" className="gpk-term__cmd" data-copy={CONTACT_EMAIL} data-copy-msg={`Correo copiado: ${CONTACT_EMAIL}`} data-tip="Copiar el correo">
+                  <b>$</b> {CONTACT_EMAIL} <Icon name="copy" className="gpk-ic" />
+                </button>
+                <a href={whatsappLink("Hola, tengo una duda sobre GodsTap")} target="_blank" rel="noopener noreferrer" className="btn btn--light">
+                  <WaIcon className="icon icon--fill icon--wa" />
+                  Preguntar
+                </a>
+              </div>
+            </div>
+
           </div>
         </section>
 
@@ -345,10 +445,11 @@ export default function HomePage() {
                 Menú, WhatsApp, Instagram, reseñas de Google, tu sitio web. El enlace del GT nunca cambia; lo que ve tu cliente, sí.
               </p>
             </div>
+            <div className="bento-view" data-carousel>
             <ul className="bento bento--3">
               {FEATURES.map((f, i) => (
                 <li key={f.title} className={`card${f.wide ? " card--wide" : ""}${f.hot ? " card--hot" : ""}`} data-reveal style={{ "--d": i % 3 }}>
-                  <div className="card__link">
+                  <div className="card__link" data-beam={f.hot ? "" : undefined}>
                     <span className="card__ic"><Icon name={f.icon} /></span>
                     <span className="card__tag mono">{f.tag}</span>
                     <h3>{f.title}</h3>
@@ -360,6 +461,36 @@ export default function HomePage() {
                 </li>
               ))}
             </ul>
+            </div>
+          </div>
+        </section>
+
+
+        {/* Para quién es (estilo Craft) */}
+        <section className="gpk-story" id="para-quien" aria-labelledby="fit-t">
+          <div className="wrap">
+            <div className="gpk-story__head">
+              <p className="tag" data-reveal><span>Para quién es</span></p>
+              <h2 className="gpk-two" id="fit-t" data-reveal>
+                Mejor decirlo claro.<span>El GT no es para todos.</span>
+              </h2>
+              <p className="gpk-story__lede" data-reveal style={{ "--d": 1 }}>Así sabes si te conviene antes de pedirlo.</p>
+            </div>
+            <div className="gpk-fit">
+              {[FIT_YES, FIT_NO].map((col, c) => (
+                <div key={c} className={`gpk-fit__col gpk-fit__col--${c ? "no" : "yes"}`} data-reveal style={{ "--d": c }}>
+                  <p className="gpk-fit__title">
+                    <span className="gpk-fit__badge"><Icon name={c ? "x" : "check"} className="gpk-ic" /></span>
+                    {c ? "Tal vez no es para ti si…" : "Es para ti si…"}
+                  </p>
+                  <ul>
+                    {col.map(([t, d]) => (
+                      <li key={t}><strong>{t}</strong><span>{d}</span></li>
+                    ))}
+                  </ul>
+                </div>
+              ))}
+            </div>
           </div>
         </section>
 
@@ -377,7 +508,7 @@ export default function HomePage() {
             </div>
             <div className="plans">
               {PLANS.map((p, i) => (
-                <article key={p.name} className={`plan${p.featured ? " plan--featured" : ""}`} data-reveal style={{ "--d": i }}>
+                <article key={p.name} className={`plan${p.featured ? " plan--featured" : ""}`} data-reveal data-shine={p.featured ? "" : undefined} style={{ "--d": i }}>
                   <div className="plan__look">
                     <p className="plan__label mono">{p.lookLabel}</p>
                     <PhoneFrame className="h-[31rem] w-[16.5rem]">
@@ -444,7 +575,7 @@ export default function HomePage() {
         {/* 7. Cierre */}
         <section className="cta" aria-labelledby="cta-t">
           <div className="wrap">
-            <div className="cta__panel" data-reveal>
+            <div className="cta__panel" data-reveal data-beam="">
               <div className="cta__glow" aria-hidden="true" />
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img src="/brand/godstap-logo.jpg" alt="" width={900} height={900} loading="lazy" className="cta__logo" />
@@ -481,6 +612,9 @@ export default function HomePage() {
         </div>
       </footer>
       <GpFamily />
+      <script type="application/json" id="gp-cmdk" dangerouslySetInnerHTML={{ __html: JSON.stringify(CMDK).replace(/</g, "\\u003c") }} />
+      {/* Kit de God's Plan: Motion, Embla, Floating UI, buscador, avisos y bordes animados (repo godsplan-site, kit/) */}
+      <Script src="/gp-kit.js" strategy="afterInteractive" />
     </div>
   );
 }

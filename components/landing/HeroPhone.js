@@ -94,7 +94,7 @@ export default function HeroPhone() {
       <div className="mt-6 text-center" aria-live="polite">
         <p className="text-xs font-medium uppercase tracking-[0.14em] text-slate-500">{m.type}</p>
         <p className="mt-1 font-display text-lg font-semibold text-slate-50">{m.name}</p>
-        <div className="mt-3 flex items-center justify-center gap-2">
+        <div className="mt-1 flex items-center justify-center">
           {MODELS.map((d, k) => (
             <button
               key={d.slug}
@@ -105,11 +105,14 @@ export default function HeroPhone() {
               }}
               aria-label={`Ver ${d.type}`}
               aria-current={k === i}
-              className={`h-2 rounded-full transition-all ${k === i ? "w-6 bg-brand-500" : "w-2 bg-slate-600 hover:bg-slate-500"}`}
-            />
+              className="group grid h-11 min-w-8 place-items-center px-1"
+            >
+              {/* El punto se ve chico, pero el área para tocar mide 44px de alto */}
+              <span className={`block h-2 rounded-full transition-all ${k === i ? "w-6 bg-brand-500" : "w-2 bg-slate-600 group-hover:bg-slate-500"}`} />
+            </button>
           ))}
         </div>
-        <Link href={`/demo/${m.slug}`} className="mt-4 inline-block text-sm font-medium text-brand-400 hover:text-brand-300">
+        <Link href={`/demo/${m.slug}`} className="mt-1 inline-flex min-h-11 items-center text-sm font-medium text-brand-400 hover:text-brand-300">
           Abrir este ejemplo completo →
         </Link>
       </div>
