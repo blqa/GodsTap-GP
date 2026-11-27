@@ -50,6 +50,8 @@ export const metadata = {
 // Se ejecuta antes de pintar la página para que no haya parpadeo al cambiar de tema.
 // Oscuro por defecto; si la persona eligió claro, se respeta.
 const themeScript = `try{var t=localStorage.getItem("gt-theme");document.documentElement.dataset.theme=t==="light"?"light":"dark"}catch(e){document.documentElement.dataset.theme="dark"}`;
+// Animaciones de la página principal solo si el usuario no pidió reducir movimiento
+const motionScript = `try{if(!matchMedia("(prefers-reduced-motion: reduce)").matches)document.documentElement.dataset.motion=""}catch(e){}`;
 
 export default function RootLayout({ children }) {
   return (
@@ -59,7 +61,7 @@ export default function RootLayout({ children }) {
       className={`${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+        <script dangerouslySetInnerHTML={{ __html: themeScript + ";" + motionScript }} />
       </head>
       <body className="flex min-h-full flex-col">{children}</body>
     </html>
